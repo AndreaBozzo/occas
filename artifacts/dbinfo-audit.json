@@ -1,0 +1,119 @@
+{
+  "total_logs": 450395,
+  "sitl": 33762,
+  "real_hardware": 416633,
+  "real_flight_hours": 24924,
+  "implausible_duration": 25,
+  "duration_s": {
+    "median": 79,
+    "p90": 520,
+    "p99": 2059,
+    "max": 54977
+  },
+  "h1_frame": {
+    "min_duration_s": 300,
+    "non_sitl_logs_at_or_above": 79477
+  },
+  "fixed_wing_or_vtol_real": 60079,
+  "declared_wind_speed": {
+    "logs": 23327,
+    "by_label": {
+      "not given": 427068,
+      "Calm": 18348,
+      "Breeze": 4107,
+      "Gale": 470,
+      "Storm": 402
+    }
+  },
+  "error_label_counts": {
+    "2": 478,
+    "4": 313,
+    "1": 217,
+    "6": 201,
+    "3": 196,
+    "7": 170,
+    "8": 160,
+    "5": 155
+  },
+  "distributions": {
+    "year": {
+      "2025": 163460,
+      "2026": 124656,
+      "2024": 123038,
+      "2018": 11856,
+      "2023": 7078,
+      "2017": 6234,
+      "2019": 5980,
+      "2020": 4150,
+      "2021": 2065,
+      "2022": 1801,
+      "2016": 77
+    },
+    "mav_type": {
+      "Quadrotor": 306807,
+      "Hexarotor": 36159,
+      "Fixed Wing": 26289,
+      "VTOL Standard": 24707,
+      "Octorotor": 17965,
+      "Tiltrotor VTOL": 10545,
+      "unknown type": 5667,
+      "Normal helicopter with tail rotor": 4405,
+      "Coaxial helicopter": 4220,
+      "Two-rotor VTOL (Tailsitter)": 3871,
+      "Quad-rotor VTOL (Tailsitter)": 2938,
+      "Ground Rover": 2642,
+      "Generic": 1591,
+      "Tricopter": 1589,
+      "Surface Vessel, Boat, Ship": 361
+    },
+    "estimator": {
+      "EKF2": 446969,
+      "Q": 2355,
+      "LPE": 596,
+      "INAV": 404,
+      "unknown (None)": 69,
+      "unknown (5)": 1,
+      "unknown (4)": 1
+    },
+    "rating": {
+      "": 427403,
+      "good": 18328,
+      "great": 2903,
+      "unsatisfactory": 1020,
+      "crash_sw_hw": 401,
+      "crash_pilot": 188,
+      "BRAVO!": 148,
+      "none": 2,
+      "BRAWO!": 1,
+      "1": 1
+    },
+    "sys_hw": {
+      "PX4_FMU_V6C": 74478,
+      "PX4_FMU_V5": 57788,
+      "PX4_FMU_V6X": 56251,
+      "PX4_SITL": 33762,
+      "CUAV_X7PRO": 25346,
+      "PX4_FMU_V3": 17770,
+      "HKUST_NXT_DUAL": 16538,
+      "CUBEPILOT_CUBEORANGEPLUS": 15618,
+      "CUBEPILOT_CUBEORANGE": 13191,
+      "PX4FMU_V2": 12975,
+      "MICOAIR_H743_V2": 10648,
+      "PX4_FMU_V4": 7131,
+      "CUAV_NORA": 6465,
+      "PX4_FMU_V2": 4547,
+      "PX4FMU_V4": 4298
+    },
+    "source": {
+      "webui": 437814,
+      "QGroundControl": 11381,
+      "auto": 967,
+      "auto-upload": 207,
+      "automation": 21,
+      "codex": 2,
+      "PX4 Flycore PR validation": 1,
+      "agent": 1,
+      "http://localhost:5006": 1
+    }
+  }
+}

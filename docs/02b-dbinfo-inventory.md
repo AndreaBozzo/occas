@@ -5,6 +5,13 @@ Computed from one retrieval of `https://cdn.logs.px4.io/dbinfo.json` on **2026-0
 
 This is most of what M2 was budgeted a week to discover, and it cost one request.
 
+**Reproduce:** `uv run python -m ingest.dbinfo_audit`. Every number below comes from
+[`../ingest/dbinfo_audit.py`](../ingest/dbinfo_audit.py), with results in
+`artifacts/dbinfo-audit.json` and manifest `artifacts/manifests/{mid}.json`
+recording the content hash of the exact dump used. The dump is regenerated daily, so
+a later run is a different sampling frame and will not reproduce these figures — which
+is what the manifest is for.
+
 ## Shape
 
 **450,395 public logs.** All 26 fields are present on every record:
