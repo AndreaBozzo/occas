@@ -42,6 +42,7 @@ generalised coordinates, publish the pipeline rather than the data.
 
 | # | Question | Answer | Checked on |
 |---|---|---|---|
+| C0 | Does prior work already join public flight logs to reanalysis per flight? | **Partly — the §1.5 gap claim needs narrowing.** Somanagoudar & Mérida, *Weather-aware energy management for unmanned aerial vehicles*, Eng. Appl. Artif. Intell., DOI 10.1016/j.engappai.2024.109596 (UBC, online 2024-11-12), uses publicly available UAV logs plus ERA5. From abstract-level sources the target is **energy prediction**, with ERA5 as an input feature; there is no indication they validate ERA5 against onboard wind. **Full text not read** — paywalled, and the open UBC copy is IP-blocked. Verify before any novelty claim. | 2026-08-20, partial |
 | C1 | UAV-SEAD licence | TBD | — |
 | C2 | UAV-SEAD anomaly classes and resolution | TBD | — |
 | C3 | ALFA licence and citation | TBD | — |
