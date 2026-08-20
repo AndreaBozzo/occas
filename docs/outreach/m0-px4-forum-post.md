@@ -1,3 +1,10 @@
+> **POSTED 2026-08-20** as AndreaBozzo, in category PX4:
+> <https://discuss.px4.io/t/characterising-the-public-log-corpus-450k-logs-and-a-question-about-acceptable-retrieval/49391>
+>
+> Awaiting reply. Answers are transcribed into
+> [`../01-source-audit.md`](../01-source-audit.md) with date and author, not left
+> to sit in the thread.
+
 **Title:** Characterising the public log corpus (450k logs) — and a question about acceptable retrieval
 
 **Where:** https://discuss.px4.io — register at https://discuss.px4.io/signup

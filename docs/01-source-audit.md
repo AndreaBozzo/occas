@@ -7,6 +7,12 @@ derived from per-run positions — gate G1.
 Answers record where they were checked and when. Nothing here is filled in from
 recollection.
 
+**Open questions are pending on the M0 forum thread**, posted 2026-08-20:
+<https://discuss.px4.io/t/characterising-the-public-log-corpus-450k-logs-and-a-question-about-acceptable-retrieval/49391> — see [`outreach/m0-px4-forum-post.md`](outreach/m0-px4-forum-post.md).
+A2 (acceptable retrieval), A6 (is `dbinfo` a supportable interface), B2/B3
+(personal data) and the `wind_speed` reading are all asked there. Answers get
+recorded here with the reply's date and author.
+
 **B-status: UNRESOLVED**
 
 ## A. PX4 Flight Review — access
