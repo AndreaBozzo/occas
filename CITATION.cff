@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this corpus, its pipeline or its schemas, please cite it."
+title: "Operational Context Corpus for Autonomous Systems"
+abstract: >-
+  A reproducible corpus linking real telemetry from autonomous systems to the
+  external operating conditions under which it was produced, with a queryable
+  schema, full provenance and a machine-readable representation of the
+  operational design domain.
+type: software
+authors:
+  - family-names: Bozzo
+    given-names: Andrea
+license: Apache-2.0
+version: 0.0.0
+date-released: 2026-08-20
+keywords:
+  - UAS
+  - PX4
+  - flight logs
+  - ERA5
+  - reanalysis
+  - operational design domain
+  - reproducibility

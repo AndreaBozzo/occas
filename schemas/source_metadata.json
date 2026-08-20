@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/source_metadata.json",
+  "title": "SourceMetadata",
+  "description": "Where a record came from, under which licence, and when it was retrieved. Retrieval metadata is captured at retrieval time; it cannot be reconstructed afterwards.",
+  "type": "object",
+  "required": ["source", "retrieved_at", "licence"],
+  "additionalProperties": false,
+  "properties": {
+    "source": { "type": "string", "description": "e.g. px4_flight_review, uav_sead, era5, copernicus_dem, metar" },
+    "source_version": { "type": ["string", "null"], "description": "Dataset or product ID and version as reported by the source." },
+    "source_record_id": { "type": ["string", "null"], "description": "Identifier of the record at the source, for attribution and re-retrieval." },
+    "source_url": { "type": ["string", "null"], "format": "uri" },
+    "retrieved_at": { "type": "string", "format": "date-time" },
+    "licence": { "type": "string", "description": "SPDX identifier where one exists, otherwise the licence name as published by the source." },
+    "attribution": { "type": ["string", "null"], "description": "Attribution string required by the source, carried into every derived artifact." },
+    "content_hash": { "type": ["string", "null"], "description": "Hash of the retrieved bytes, algorithm-prefixed (e.g. sha256:...)." }
+  }
+}

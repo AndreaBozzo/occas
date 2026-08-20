@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/run.json",
+  "title": "Run",
+  "description": "One flight, with vehicle, firmware and source metadata. Field-level coverage is recorded explicitly: a missing field is recorded as missing, never silently dropped.",
+  "type": "object",
+  "required": ["run_id", "source", "population", "field_coverage"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "Stable identifier for this flight within the corpus."
+    },
+    "source": { "$ref": "source_metadata.json" },
+    "population": {
+      "type": "string",
+      "enum": ["real", "sitl"],
+      "description": "SITL runs are a separate control population and are never merged into the real-flight study corpus."
+    },
+    "vehicle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "airframe_type": { "type": ["string", "null"], "enum": ["fixed_wing", "multicopter", "vtol", "other", null] },
+        "airframe_id": { "type": ["string", "null"] },
+        "has_airspeed_sensor": { "type": ["boolean", "null"] }
+      }
+    },
+    "firmware": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": ["string", "null"] },
+        "git_hash": { "type": ["string", "null"] },
+        "ulog_version": { "type": ["integer", "null"] }
+      }
+    },
+    "time_interval": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "utc_offset_known": { "type": "boolean" }
+      }
+    },
+    "geospatial_extent": {
+      "type": ["object", "null"],
+      "description": "Bounding box of the run. Generalised in published artifacts; see DATA_LICENSES.md.",
+      "required": ["min_lat", "min_lon", "max_lat", "max_lon", "coordinate_precision_deg"],
+      "additionalProperties": false,
+      "properties": {
+        "min_lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "min_lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "max_lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "max_lon": { "type": "number", "minimum": -180, "maximum": 180 },
+        "coordinate_precision_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Rounding applied to the coordinates as stored here."
+        }
+      }
+    },
+    "estimator_config_id": { "type": ["string", "null"] },
+    "duration_s": { "type": ["number", "null"], "minimum": 0 },
+    "field_coverage": {
+      "type": "object",
+      "description": "Per-field presence over the run. Keys are logical field names; values are the fraction of the run for which the field is present.",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "admitted": { "type": "boolean" },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

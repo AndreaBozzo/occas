@@ -1,0 +1,13 @@
+{
+  "_why_invalid": "provenance.method outside the enum would let a derived detection be recorded as if it were an expert annotation",
+  "_schema": "operational_event.json",
+  "_error_path": "provenance.method",
+  "event_id": "fixture-event-bad-0001",
+  "run_id": "fixture-run-0001",
+  "window_start": "2026-06-01T10:04:00+00:00",
+  "window_end": "2026-06-01T10:04:30+00:00",
+  "event_class": "state_estimation_anomaly",
+  "provenance": {
+    "method": "looked_about_right"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_why_invalid": "population must be 'real' or 'sitl'; a third value would let SITL leak into the study corpus under a new name",
+  "_schema": "run.json",
+  "_error_path": "population",
+  "run_id": "fixture-run-bad-0001",
+  "source": {
+    "source": "px4_flight_review",
+    "retrieved_at": "2026-08-20T09:00:00+00:00",
+    "licence": "CC-BY-4.0"
+  },
+  "population": "simulated",
+  "field_coverage": {
+    "position": 1.0
+  }
+}

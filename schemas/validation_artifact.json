@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/validation_artifact.json",
+  "title": "ValidationArtifact",
+  "description": "Agreement statistics between two uncertain estimates, for one regime. Neither source is ground truth: these are limits of agreement between measurement methods, not errors against a reference. See docs/04-methodology.md.",
+  "type": "object",
+  "required": ["validation_model_id", "regime", "sources_compared", "n_runs", "n_windows", "statistics"],
+  "additionalProperties": false,
+  "properties": {
+    "validation_model_id": { "type": "string" },
+    "regime": {
+      "type": "object",
+      "description": "The stratum this artifact applies to. Strata are declared a priori; see docs/04-methodology.md.",
+      "required": ["label", "criteria"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "criteria": {
+          "type": "object",
+          "description": "Machine-readable definition of the stratum, e.g. airframe_type, has_airspeed_sensor, variance band, altitude band, terrain class, season.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "sources_compared": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string" },
+      "description": "e.g. [\"era5_wind\", \"px4_ekf2_wind\"] or a three-way comparison including a METAR station."
+    },
+    "n_runs": { "type": "integer", "minimum": 0 },
+    "n_windows": { "type": "integer", "minimum": 0 },
+    "statistics": {
+      "type": "object",
+      "required": ["bias", "limits_of_agreement"],
+      "additionalProperties": false,
+      "properties": {
+        "bias": { "type": "number", "description": "Mean difference between the two estimates, in the stated unit." },
+        "bias_ci": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+        "limits_of_agreement": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" },
+          "description": "Lower and upper limits of agreement."
+        },
+        "limits_ci": {
+          "type": "array",
+          "description": "Confidence intervals for each limit.",
+          "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } }
+        },
+        "dispersion": { "type": ["number", "null"] },
+        "unit": { "type": "string" }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "description": "Bootstrap is by run, never by window: windows within a run are not independent and treating them as such inflates precision.",
+      "required": ["unit", "n_resamples", "seed"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": { "type": "string", "const": "run" },
+        "n_resamples": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" }
+      }
+    },
+    "useful_proxy": {
+      "type": ["boolean", "null"],
+      "description": "Whether the reanalysis is a useful proxy in this regime, against a threshold stated in the manifest. False is a publishable result."
+    },
+    "manifest_id": { "type": "string", "description": "The AnalysisManifest that produced these statistics. No result without a manifest." }
+  }
+}

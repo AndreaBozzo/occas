@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/operational_event.json",
+  "title": "OperationalEvent",
+  "description": "A time window with a class, a severity and a confidence. Event definition is the most fragile part of the project; H1 is deliberately constructed not to depend on it. Classes are reused from UAV-SEAD and from the diagnostic analysers already in flight-review-rs, not invented here.",
+  "type": "object",
+  "required": ["event_id", "run_id", "window_start", "window_end", "event_class", "provenance"],
+  "additionalProperties": false,
+  "properties": {
+    "event_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "window_start": { "type": "string", "format": "date-time" },
+    "window_end": { "type": "string", "format": "date-time" },
+    "event_class": {
+      "type": "string",
+      "description": "Vocabulary term. The vocabulary and its origin are recorded in event_class_vocabulary."
+    },
+    "event_class_vocabulary": {
+      "type": ["string", "null"],
+      "description": "e.g. uav_sead, flight_review_rs_analyser. Null only for an explicitly project-local class, which must be justified."
+    },
+    "severity": { "type": ["string", "null"], "enum": ["low", "medium", "high", "unknown", null] },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "provenance": {
+      "type": "object",
+      "required": ["method"],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["expert_annotation", "upstream_analyser", "project_extractor"],
+          "description": "How the event was determined. Expert annotation and derived detection are never conflated."
+        },
+        "annotator": { "type": ["string", "null"] },
+        "tool_version": { "type": ["string", "null"] },
+        "extractor_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

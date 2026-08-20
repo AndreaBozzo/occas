@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/estimator_config.json",
+  "title": "EstimatorConfig",
+  "description": "Mechanism, parameters and uncertainty of the onboard estimator. First-class data, not an implementation detail: H1 is an agreement analysis between two uncertain estimates, so the configuration of one of them is part of the measurement. See docs/adr/0003.",
+  "type": "object",
+  "required": ["estimator_config_id", "run_id", "reconstructible"],
+  "additionalProperties": false,
+  "properties": {
+    "estimator_config_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "reconstructible": {
+      "type": "boolean",
+      "description": "Whether the configuration could actually be recovered from the log. False is a legitimate and informative value."
+    },
+    "estimator": { "type": ["string", "null"], "description": "e.g. ekf2" },
+    "wind_estimation_mechanism": {
+      "type": ["string", "null"],
+      "enum": ["airspeed_sideslip_fusion", "drag_specific_forces", "other", "unknown", null],
+      "description": "Fixed-wing typically fuses airspeed and synthetic sideslip; multicopter infers from drag specific forces, which requires calibrated drag coefficients."
+    },
+    "drag_coefficients_present": {
+      "type": ["boolean", "null"],
+      "description": "Presence of the parameters, not evidence that they are correctly calibrated. Whether they are is generally not recoverable from the log."
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Relevant autopilot parameters as logged, verbatim.",
+      "additionalProperties": { "type": ["number", "string", "boolean", "null"] }
+    },
+    "reported_variance": {
+      "type": ["object", "null"],
+      "description": "Summary of the estimator-reported wind variance over the run.",
+      "additionalProperties": false,
+      "properties": {
+        "variance_north_median": { "type": ["number", "null"], "minimum": 0 },
+        "variance_east_median": { "type": ["number", "null"], "minimum": 0 },
+        "variance_north_p90": { "type": ["number", "null"], "minimum": 0 },
+        "variance_east_p90": { "type": ["number", "null"], "minimum": 0 }
+      }
+    }
+  }
+}

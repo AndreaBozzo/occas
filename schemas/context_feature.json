@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/context_feature.json",
+  "title": "ContextFeatureWindow",
+  "description": "A feature derived from an external source and joined to a run window. Reading one always answers two questions: what value was joined, and under which measured agreement regime it was produced.",
+  "type": "object",
+  "required": ["run_id", "window_start", "window_end", "feature_name", "value", "source", "join"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": { "type": "string" },
+    "window_start": { "type": "string", "format": "date-time" },
+    "window_end": { "type": "string", "format": "date-time" },
+    "feature_name": { "type": "string" },
+    "value": { "type": ["number", "string", "boolean", "null"] },
+    "unit": { "type": ["string", "null"] },
+    "source": { "$ref": "source_metadata.json" },
+    "processing_version": { "type": "string", "description": "Version of the code that produced this value." },
+    "join": {
+      "type": "object",
+      "required": ["join_method", "spatial_resolution_deg", "temporal_resolution_s", "quality_flags"],
+      "additionalProperties": false,
+      "properties": {
+        "join_method": { "type": "string", "description": "e.g. nearest_grid_point, bilinear" },
+        "interpolation_method": { "type": ["string", "null"] },
+        "spatial_resolution_deg": { "type": "number", "exclusiveMinimum": 0 },
+        "temporal_resolution_s": { "type": "number", "exclusiveMinimum": 0 },
+        "distance_to_grid_point_km": { "type": ["number", "null"], "minimum": 0 },
+        "temporal_mismatch_s": { "type": ["number", "null"], "description": "Signed offset between the window and the context timestamp actually used." },
+        "spatial_tolerance_km": { "type": ["number", "null"], "minimum": 0 },
+        "temporal_tolerance_s": { "type": ["number", "null"], "minimum": 0 },
+        "quality_flags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "context_uncertainty": {
+      "type": ["object", "null"],
+      "description": "A regime property, not a per-row observed error: there is no ground truth to subtract. Error statistics live in the referenced ValidationArtifact and are not replicated onto every row.",
+      "required": ["validation_model_id", "validation_regime"],
+      "additionalProperties": false,
+      "properties": {
+        "validation_model_id": { "type": "string", "description": "Identifier of the ValidationArtifact this uncertainty is drawn from." },
+        "validation_regime": { "type": "string", "description": "The regime, and therefore the population, to which the estimate applies." },
+        "applicable": { "type": ["boolean", "null"], "description": "False where this row falls outside every validated regime. Such rows are not silently treated as validated." }
+      }
+    }
+  }
+}

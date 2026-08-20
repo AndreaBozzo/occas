@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install the pinned environment
+        run: uv sync --all-extras --group dev --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Shell syntax
+        run: bash -n ingest/convert.sh
+
+      # The reproducibility claim is tested on every commit, not asserted:
+      # the pipeline re-runs over fixtures and the schemas are re-validated.
+      - name: Tests
+        run: uv run pytest
+
+      - name: Line endings
+        # core.autocrlf can store CRLF and make text-matching silently fail.
+        # .gitattributes pins LF; this catches a file that slipped past it.
+        run: |
+          if git grep -Il $'\r' -- ':!*.png' ':!*.parquet'; then
+            echo "CRLF found in tracked text files; see .gitattributes" >&2
+            exit 1
+          fi

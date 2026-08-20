@@ -1,0 +1,15 @@
+{
+  "estimator_config_id": "fixture-estimator-0001",
+  "run_id": "fixture-run-0001",
+  "reconstructible": true,
+  "estimator": "ekf2",
+  "wind_estimation_mechanism": "airspeed_sideslip_fusion",
+  "drag_coefficients_present": false,
+  "parameters": { "EKF2_ARSP_THR": 8.0, "EKF2_FUSE_BETA": 1 },
+  "reported_variance": {
+    "variance_north_median": 0.41,
+    "variance_east_median": 0.38,
+    "variance_north_p90": 1.02,
+    "variance_east_p90": 0.97
+  }
+}

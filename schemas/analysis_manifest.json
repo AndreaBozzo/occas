@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AndreaBozzo/operational-context-corpus/schemas/analysis_manifest.json",
+  "title": "AnalysisManifest",
+  "description": "Mandatory companion to every result. A figure or number without a manifest is not publishable. See docs/adr/0004.",
+  "type": "object",
+  "required": ["manifest_id", "created_at", "analysis", "code", "inputs", "environment", "parameters"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_id": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "analysis": {
+      "type": "object",
+      "required": ["name", "hypothesis"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "hypothesis": { "type": "string", "enum": ["H1", "H2", "H3", "H4", "none"] },
+        "description": { "type": ["string", "null"] }
+      }
+    },
+    "code": {
+      "type": "object",
+      "required": ["entrypoint", "git_commit", "dirty"],
+      "additionalProperties": false,
+      "properties": {
+        "entrypoint": { "type": "string" },
+        "git_commit": { "type": "string" },
+        "dirty": {
+          "type": "boolean",
+          "description": "True if the working tree had uncommitted changes. A dirty manifest is valid for exploration and not for publication."
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "content_hash"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "content_hash": { "type": "string" },
+          "source": { "$ref": "source_metadata.json" }
+        }
+      }
+    },
+    "external_tools": {
+      "type": "array",
+      "description": "Versions of tooling outside the Python environment, e.g. ulog-convert.",
+      "items": {
+        "type": "object",
+        "required": ["name", "version"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["python_version", "dependencies"],
+      "additionalProperties": false,
+      "properties": {
+        "python_version": { "type": "string" },
+        "platform": { "type": ["string", "null"] },
+        "dependencies": {
+          "type": "object",
+          "description": "Resolved package versions, name to version.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "parameters": { "type": "object", "additionalProperties": true },
+    "seed": { "type": ["integer", "null"] },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "content_hash"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "content_hash": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "_why_invalid": "context_uncertainty without validation_model_id: an uncertainty that points at no validation artifact is an unsourced number",
+  "_schema": "context_feature.json",
+  "_error_path": "context_uncertainty",
+  "run_id": "fixture-run-0001",
+  "window_start": "2026-06-01T10:00:00+00:00",
+  "window_end": "2026-06-01T10:10:00+00:00",
+  "feature_name": "era5_wind_speed_10m",
+  "value": 4.7,
+  "source": {
+    "source": "era5",
+    "retrieved_at": "2026-08-20T09:05:00+00:00",
+    "licence": "Copernicus"
+  },
+  "join": {
+    "join_method": "nearest_grid_point",
+    "spatial_resolution_deg": 0.25,
+    "temporal_resolution_s": 3600,
+    "quality_flags": []
+  },
+  "context_uncertainty": {
+    "validation_regime": "some_regime"
+  }
+}

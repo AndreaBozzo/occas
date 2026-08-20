@@ -1,0 +1,35 @@
+{
+  "run_id": "fixture-run-0001",
+  "window_start": "2026-06-01T10:00:00+00:00",
+  "window_end": "2026-06-01T10:10:00+00:00",
+  "feature_name": "era5_wind_speed_10m",
+  "value": 4.7,
+  "unit": "m/s",
+  "source": {
+    "source": "era5",
+    "source_version": "reanalysis-era5-single-levels/fixture",
+    "source_record_id": null,
+    "source_url": null,
+    "retrieved_at": "2026-08-20T09:05:00+00:00",
+    "licence": "Copernicus",
+    "attribution": "Generated using Copernicus Climate Change Service information.",
+    "content_hash": null
+  },
+  "processing_version": "0.0.0",
+  "join": {
+    "join_method": "nearest_grid_point",
+    "interpolation_method": null,
+    "spatial_resolution_deg": 0.25,
+    "temporal_resolution_s": 3600,
+    "distance_to_grid_point_km": 11.3,
+    "temporal_mismatch_s": -900,
+    "spatial_tolerance_km": 20.0,
+    "temporal_tolerance_s": 1800,
+    "quality_flags": ["within_tolerance"]
+  },
+  "context_uncertainty": {
+    "validation_model_id": "fixture-validation-0001",
+    "validation_regime": "fixed_wing_with_airspeed_low_variance",
+    "applicable": true
+  }
+}

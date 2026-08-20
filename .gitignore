@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local data. Raw logs and downloaded context are never committed.
+data/
+cache/
+*.ulg
+*.nc
+*.grib
+
+# Artifacts: manifests are committed, bulk outputs are not.
+artifacts/**/*.parquet
+artifacts/**/*.csv
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

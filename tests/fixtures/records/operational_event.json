@@ -1,0 +1,16 @@
+{
+  "event_id": "fixture-event-0001",
+  "run_id": "fixture-run-0001",
+  "window_start": "2026-06-01T10:04:00+00:00",
+  "window_end": "2026-06-01T10:04:30+00:00",
+  "event_class": "state_estimation_anomaly",
+  "event_class_vocabulary": "uav_sead",
+  "severity": "medium",
+  "confidence": 0.7,
+  "provenance": {
+    "method": "expert_annotation",
+    "annotator": "fixture",
+    "tool_version": null,
+    "extractor_id": null
+  }
+}

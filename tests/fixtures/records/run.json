@@ -1,0 +1,43 @@
+{
+  "run_id": "fixture-run-0001",
+  "source": {
+    "source": "px4_flight_review",
+    "source_version": null,
+    "source_record_id": "fixture-0001",
+    "source_url": "https://logs.px4.io/browse",
+    "retrieved_at": "2026-08-20T09:00:00+00:00",
+    "licence": "CC-BY-4.0",
+    "attribution": "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4.",
+    "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "population": "real",
+  "vehicle": {
+    "airframe_type": "fixed_wing",
+    "airframe_id": "fixture-airframe",
+    "has_airspeed_sensor": true
+  },
+  "firmware": { "version": "1.15.0", "git_hash": null, "ulog_version": 1 },
+  "time_interval": {
+    "start": "2026-06-01T10:00:00+00:00",
+    "end": "2026-06-01T10:23:00+00:00",
+    "utc_offset_known": true
+  },
+  "geospatial_extent": {
+    "min_lat": 45.4,
+    "min_lon": 9.1,
+    "max_lat": 45.5,
+    "max_lon": 9.2,
+    "coordinate_precision_deg": 0.1
+  },
+  "estimator_config_id": "fixture-estimator-0001",
+  "duration_s": 1380.0,
+  "field_coverage": {
+    "position": 1.0,
+    "wind_estimate": 0.82,
+    "wind_variance": 0.82,
+    "airspeed": 0.99,
+    "gnss_quality": 1.0,
+    "mode_transitions": 1.0
+  },
+  "admission": { "admitted": true, "reasons": [] }
+}
