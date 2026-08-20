@@ -5,9 +5,12 @@ A reproducible corpus linking **real telemetry from autonomous systems** to the
 schema, full provenance, and a machine-readable representation of the operational
 design domain (ODD).
 
-> Current status: **pre-data**. No log has been downloaded yet. The next artifact
-> due is [`docs/01-source-audit.md`](docs/01-source-audit.md), written by looking at
-> real files. See [`docs/00-scope.md`](docs/00-scope.md).
+> Current status: **pre-data**. No log has been downloaded. The public metadata for
+> all 450,395 logs has been characterised without downloading any —
+> see [`docs/02b-dbinfo-inventory.md`](docs/02b-dbinfo-inventory.md). The source audit
+> in [`docs/01-source-audit.md`](docs/01-source-audit.md) is in progress; its
+> personal-data section is unresolved and blocks publication. See
+> [`docs/00-scope.md`](docs/00-scope.md).
 
 ## What this is
 
@@ -45,7 +48,7 @@ geography. A negative result is publishable; a non-reproducible one is not.
 
 | Path | Purpose |
 |---|---|
-| `docs/` | Scope, source audit, data model, ODD representation, methodology, limitations, ADRs |
+| `docs/` | Scope, source audit, corpus inventory, data model, ODD representation, methodology, limitations, ADRs |
 | `ingest/` | Orchestration of existing tooling. **Contains no parsers.** |
 | `context/` | External context sources (ERA5, METAR, DEM) and the spatio-temporal join |
 | `events/` | Event extractors and the UAV-SEAD import |

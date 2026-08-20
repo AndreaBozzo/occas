@@ -5,11 +5,12 @@ parse anything. The upstream script is the interface to ``logs.px4.io``; what th
 is the part the project needs and upstream does not provide: a record of exactly what
 was retrieved, when, under which terms, so that a later manifest can point at it.
 
-Blocking precondition (gate G1): ``docs/01-source-audit.md`` is unanswered. Terms of
-service, rate limits and the personal-data assessment for PX4 logs are all open
-questions. Bulk retrieval before those are answered is exactly the mistake the audit
-exists to prevent, so this script refuses to run until the audit is marked started, or
-until ``--acknowledge-unaudited`` is passed for a deliberate small sample.
+Blocking precondition (gate G1): the personal-data section of
+``docs/01-source-audit.md`` is unresolved. Access and rate limits are now answered --
+the upstream client documents 10 requests/minute and treats excess as an IP block, and
+``logs.px4.io/robots.txt`` disallows crawling outright -- but B1-B5 are not. This
+script refuses to run while that section is marked unresolved, or until
+``--acknowledge-unaudited`` is passed for a deliberate small sample.
 """
 
 from __future__ import annotations
@@ -23,30 +24,32 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUDIT = REPO_ROOT / "docs" / "01-source-audit.md"
-UNSTARTED_MARKER = "Status: NOT STARTED"
+BLOCKING_MARKER = "B-status: UNRESOLVED"
 
 # CC-BY attribution travels with every artifact derived from these logs.
 PX4_ATTRIBUTION = "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4."
 
 
-def audit_is_unstarted() -> bool:
-    return AUDIT.exists() and UNSTARTED_MARKER in AUDIT.read_text(encoding="utf-8")
+def audit_is_blocking() -> bool:
+    """True while the personal-data section of the audit is unresolved (gate G1)."""
+    return AUDIT.exists() and BLOCKING_MARKER in AUDIT.read_text(encoding="utf-8")
 
 
 def write_retrieval_record(out_dir: Path, argv: list[str], returncode: int) -> Path:
     """Record what was asked for and when. Retrieval metadata cannot be reconstructed later."""
+    retrieved_at = datetime.now(UTC).isoformat()
     record = {
         "source": "px4_flight_review",
         "source_url": "https://logs.px4.io/browse",
-        "retrieved_at": datetime.now(UTC).isoformat(),
+        "retrieved_at": retrieved_at,
         "licence": "CC-BY-4.0",
         "attribution": PX4_ATTRIBUTION,
         "command": argv,
         "returncode": returncode,
-        "audit_status": "unstarted" if audit_is_unstarted() else "in progress or complete",
+        "audit_status": "personal-data section unresolved" if audit_is_blocking() else "resolved",
     }
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"retrieval-{record['retrieved_at'].replace(':', '')}.json"
+    path = out_dir / f"retrieval-{retrieved_at.replace(':', '')}.json"
     path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
     return path
 
@@ -75,12 +78,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if audit_is_unstarted() and not args.acknowledge_unaudited:
+    if audit_is_blocking() and not args.acknowledge_unaudited:
         print(
-            "Refusing to download: docs/01-source-audit.md is NOT STARTED.\n"
-            "Terms of service, rate limits and the personal-data assessment are open "
-            "(gate G1). Answer the audit, or pass --acknowledge-unaudited to pull a "
-            "small deliberate sample that must not be published.",
+            "Refusing to download: the personal-data section of "
+            "docs/01-source-audit.md is UNRESOLVED (gate G1).\n"
+            "Access and rate limits are answered; B1-B5 are not. Answer them, or "
+            "pass --acknowledge-unaudited to pull a small deliberate sample that "
+            "must not be published.",
             file=sys.stderr,
         )
         return 2

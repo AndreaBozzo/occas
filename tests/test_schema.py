@@ -83,9 +83,9 @@ def test_odd_taxonomy_is_not_written_yet() -> None:
     Delete this test in the same commit that records the check and writes the taxonomy.
     """
     doc = (SCHEMA_DIR.parent / "docs" / "03-odd-representation.md").read_text(encoding="utf-8")
-    if "TBD" not in doc:
-        pytest.skip("prior-art check recorded; the taxonomy may now exist")
+    if "unresolved" not in doc:
+        pytest.skip("prior-art check complete; the taxonomy may now exist")
     assert not (SCHEMA_DIR / "odd_taxonomy.yaml").exists(), (
         "schemas/odd_taxonomy.yaml exists while docs/03-odd-representation.md still "
-        "has open prior-art rows"
+        "has unresolved prior-art rows (JARUS)"
     )
