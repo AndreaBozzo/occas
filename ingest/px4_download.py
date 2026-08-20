@@ -35,9 +35,36 @@ def audit_is_blocking() -> bool:
     return AUDIT.exists() and BLOCKING_MARKER in AUDIT.read_text(encoding="utf-8")
 
 
-def write_retrieval_record(out_dir: Path, argv: list[str], returncode: int) -> Path:
-    """Record what was asked for and when. Retrieval metadata cannot be reconstructed later."""
+def upstream_command(upstream: Path, out_dir: Path, extra: list[str]) -> list[str]:
+    """Build the upstream invocation, forcing its download folder to ``out_dir``.
+
+    Without this the upstream default (``data/downloaded/``) wins and the logs land
+    somewhere other than the retrieval record that describes them — a record that
+    documents files it does not sit beside documents nothing. An explicit
+    ``-d``/``--download-folder`` in ``extra`` is respected and warned about.
+    """
+    if any(arg in ("-d", "--download-folder") for arg in extra):
+        print(
+            "Warning: --download-folder passed through to the upstream script; the "
+            "retrieval record will not sit beside the downloaded logs.",
+            file=sys.stderr,
+        )
+        return [sys.executable, str(upstream), *extra]
+    return [sys.executable, str(upstream), "--download-folder", str(out_dir), *extra]
+
+
+def write_retrieval_record(
+    out_dir: Path, argv: list[str], returncode: int, acknowledged: bool
+) -> Path:
+    """Record what was asked for and when. Retrieval metadata cannot be reconstructed later.
+
+    ``publication_eligibility`` is the taint: anything pulled while gate G1 is
+    unresolved must stay machine-readably unpublishable, so the constraint travels
+    with the data instead of living only in a markdown file and a warning that
+    scrolled past.
+    """
     retrieved_at = datetime.now(UTC).isoformat()
+    blocking = audit_is_blocking()
     record = {
         "source": "px4_flight_review",
         "source_url": "https://logs.px4.io/browse",
@@ -46,7 +73,11 @@ def write_retrieval_record(out_dir: Path, argv: list[str], returncode: int) -> P
         "attribution": PX4_ATTRIBUTION,
         "command": argv,
         "returncode": returncode,
-        "audit_status": "personal-data section unresolved" if audit_is_blocking() else "resolved",
+        "download_folder": str(out_dir),
+        "audit_status": "personal-data section unresolved" if blocking else "resolved",
+        "publication_eligibility": "blocked" if blocking else "eligible",
+        "policy_reason": "G1_PERSONAL_DATA_UNRESOLVED" if blocking else None,
+        "acknowledged_unaudited": acknowledged,
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"retrieval-{retrieved_at.replace(':', '')}.json"
@@ -68,8 +99,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--acknowledge-unaudited",
         action="store_true",
-        help="Proceed while docs/01-source-audit.md is unanswered. For a small deliberate "
-        "sample only; nothing retrieved this way may be published.",
+        help="Proceed while the personal-data section of docs/01-source-audit.md is "
+        "unresolved. For a small deliberate sample only; the retrieval record marks "
+        "everything pulled this way publication_eligibility=blocked.",
     )
     parser.add_argument(
         "upstream_args",
@@ -93,10 +125,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Upstream script not found: {args.upstream}", file=sys.stderr)
         return 2
 
-    command = [sys.executable, str(args.upstream), *args.upstream_args]
+    command = upstream_command(args.upstream, args.out_dir, args.upstream_args)
     completed = subprocess.run(command, check=False)
-    record = write_retrieval_record(args.out_dir, command, completed.returncode)
+    record = write_retrieval_record(
+        args.out_dir, command, completed.returncode, args.acknowledge_unaudited
+    )
     print(f"Retrieval record: {record}")
+    if audit_is_blocking():
+        print(
+            "Retrieved under G1_PERSONAL_DATA_UNRESOLVED: these files are marked "
+            "publication_eligibility=blocked and must not reach a published artifact.",
+            file=sys.stderr,
+        )
     return completed.returncode
 
 

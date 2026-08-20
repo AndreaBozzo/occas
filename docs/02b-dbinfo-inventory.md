@@ -49,10 +49,17 @@ implausible `duration_s` dropped).
 | logs ≥ 120 s | 161,243 |
 | logs ≥ 300 s | 79,477 |
 
-Most public logs are bench runs and short hops. Against an hourly 0.25° reanalysis,
-the usable population is bounded by the ≥ 300 s tier — **79,477 logs before any other
-filter**, not 450,395. This is the single most important number for gate G2 and it
-was previously unknown.
+Most public logs are bench runs and short hops. The usable population is bounded by
+the ≥ 300 s tier — **79,477 logs before any other filter**, not 450,395. This is the
+single most important number for gate G2 and it was previously unknown.
+
+**300 s is provisional and is not an ERA5 property.** A reanalysis supplies a
+background field for a two-minute flight as readily as for a twenty-minute one. What
+a short log fails to supply is the other side of the comparison: enough post-takeoff
+flight for the EKF wind state to converge, enough movement to excite it, and enough
+samples clear of transients. Where that boundary really falls is a question about the
+estimator, answerable only against real logs. It may land at 180 s or at 600 s; the
+threshold is a manifest parameter so the versions can be compared.
 
 ## Airframes (real hardware)
 

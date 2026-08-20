@@ -1,0 +1,33 @@
+{
+  "_why_invalid": "statistics with only scalar speed: wind is a vector, and speed agreement can be excellent while direction disagrees by ninety degrees (ADR-0006)",
+  "_schema": "validation_artifact.json",
+  "_error_path": "statistics",
+  "validation_model_id": "fixture-validation-bad-0002",
+  "regime": {
+    "label": "any",
+    "criteria": {}
+  },
+  "sources_compared": [
+    "era5_100m_wind",
+    "px4_ekf2_wind"
+  ],
+  "vertical_reference": "era5_100m",
+  "n_runs": 12,
+  "n_windows": 480,
+  "statistics": {
+    "speed": {
+      "bias": 0.0,
+      "limits_of_agreement": [
+        -2.9,
+        2.9
+      ]
+    },
+    "unit": "m/s"
+  },
+  "bootstrap": {
+    "unit": "run",
+    "n_resamples": 2000,
+    "seed": 1
+  },
+  "manifest_id": "fixture-manifest-0001"
+}

@@ -8,18 +8,93 @@
       "variance_east_p90_max": 1.5
     }
   },
-  "sources_compared": ["era5_wind_speed_10m", "px4_ekf2_wind_speed"],
+  "sources_compared": [
+    "era5_100m_wind",
+    "px4_ekf2_wind"
+  ],
   "n_runs": 12,
   "n_windows": 480,
   "statistics": {
-    "bias": 0.0,
-    "bias_ci": [-0.4, 0.4],
-    "limits_of_agreement": [-2.9, 2.9],
-    "limits_ci": [[-3.4, -2.4], [2.4, 3.4]],
-    "dispersion": 1.48,
+    "u": {
+      "bias": 0.1,
+      "bias_ci": [
+        -0.3,
+        0.5
+      ],
+      "limits_of_agreement": [
+        -2.7,
+        2.9
+      ],
+      "limits_ci": [
+        [
+          -3.2,
+          -2.2
+        ],
+        [
+          2.4,
+          3.4
+        ]
+      ],
+      "dispersion": 1.43
+    },
+    "v": {
+      "bias": -0.2,
+      "bias_ci": [
+        -0.6,
+        0.2
+      ],
+      "limits_of_agreement": [
+        -3.1,
+        2.7
+      ],
+      "limits_ci": [
+        [
+          -3.6,
+          -2.6
+        ],
+        [
+          2.2,
+          3.2
+        ]
+      ],
+      "dispersion": 1.48
+    },
+    "vector_difference_magnitude": {
+      "bias": 1.9,
+      "limits_of_agreement": [
+        0.1,
+        4.4
+      ]
+    },
+    "speed": {
+      "bias": 0.0,
+      "bias_ci": [
+        -0.4,
+        0.4
+      ],
+      "limits_of_agreement": [
+        -2.9,
+        2.9
+      ]
+    },
+    "direction": {
+      "speed_threshold_ms": 2.0,
+      "n_defined": 361,
+      "n_undefined": 119,
+      "mean_absolute_deg": 31.4,
+      "limits_of_agreement_deg": [
+        -78.0,
+        74.0
+      ]
+    },
     "unit": "m/s"
   },
-  "bootstrap": { "unit": "run", "n_resamples": 2000, "seed": 20260820 },
+  "bootstrap": {
+    "unit": "run",
+    "n_resamples": 2000,
+    "seed": 20260820
+  },
   "useful_proxy": null,
-  "manifest_id": "fixture-manifest-0001"
+  "manifest_id": "fixture-manifest-0001",
+  "vertical_reference": "era5_100m"
 }

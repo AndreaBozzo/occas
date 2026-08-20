@@ -29,9 +29,18 @@ from analysis.common.manifest import add_output, build_manifest, hash_file, writ
 
 DBINFO_URL = "https://review.px4.io/dbinfo"
 
-# A log enters the H1 frame only above this duration: an hourly, 0.25-degree reanalysis
-# says nothing useful about a 79-second bench run. Declared here rather than discovered,
-# so the manifest records it as a parameter.
+# PROVISIONAL inclusion threshold, to be revised against the first real logs.
+#
+# It is not derived from ERA5: a reanalysis supplies a background field for a
+# 120-second flight as readily as for a 20-minute one. What a short log fails to
+# supply is the *other* side of the comparison -- enough post-takeoff flight for the
+# EKF wind state to converge, enough movement to excite it, and enough samples clear
+# of transients to summarise. Where that boundary actually falls is an empirical
+# question about the estimator, and it is unanswerable until logs exist.
+#
+# 300 s is a placeholder chosen to exclude bench runs and the 79-second median. The
+# manifest records it as a parameter precisely so a later value can be compared
+# against this one. See docs/adr/0006-what-h1-compares.md for the comparison itself.
 MIN_DURATION_S = 300
 # Above this, duration_s is not a flight; a handful of records carry sentinel values.
 MAX_PLAUSIBLE_DURATION_S = 24 * 3600

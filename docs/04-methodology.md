@@ -17,6 +17,24 @@ Therefore: **methods for agreement between measurement methods** — bias and li
 agreement — and **not** regression of one on the other as if one were the true value.
 An R-squared between two uncertain estimates answers no question anyone asked.
 
+### What exactly is compared
+
+Specified in [`adr/0006-what-h1-compares.md`](adr/0006-what-h1-compares.md), fixed
+before any outcome is inspected:
+
+- **Vector, in components.** Bias and limits of agreement on the north and east
+  components separately, plus the magnitude of the vector difference. Wind-*speed*
+  bias is a secondary scalar summary and is labelled as one — speed can agree while
+  direction disagrees by ninety degrees.
+- **Direction wrapped, and only where defined.** Signed angle wrapped to
+  (−180°, 180°], so 359° against 1° is a 2° difference. Reported only where both
+  sources exceed a declared speed threshold; below it the window is counted as
+  *direction undefined* rather than dropped. That count is part of the result.
+- **Vertical reference declared: 100 m primary.** ERA5 single levels publishes
+  `100m_u/v_component_of_wind` as well as 10 m. Most of the corpus flies nearer 100 m.
+  The 10 m comparison is kept as a secondary, and the gap between the two is reported
+  as a stratifier — it separates vertical shear from source disagreement.
+
 ## Stratification
 
 Declared a priori, before looking at outcomes:

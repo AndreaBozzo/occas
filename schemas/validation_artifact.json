@@ -4,17 +4,32 @@
   "title": "ValidationArtifact",
   "description": "Agreement statistics between two uncertain estimates, for one regime. Neither source is ground truth: these are limits of agreement between measurement methods, not errors against a reference. See docs/04-methodology.md.",
   "type": "object",
-  "required": ["validation_model_id", "regime", "sources_compared", "n_runs", "n_windows", "statistics"],
+  "required": [
+    "validation_model_id",
+    "regime",
+    "sources_compared",
+    "vertical_reference",
+    "n_runs",
+    "n_windows",
+    "statistics"
+  ],
   "additionalProperties": false,
   "properties": {
-    "validation_model_id": { "type": "string" },
+    "validation_model_id": {
+      "type": "string"
+    },
     "regime": {
       "type": "object",
       "description": "The stratum this artifact applies to. Strata are declared a priori; see docs/04-methodology.md.",
-      "required": ["label", "criteria"],
+      "required": [
+        "label",
+        "criteria"
+      ],
       "additionalProperties": false,
       "properties": {
-        "label": { "type": "string" },
+        "label": {
+          "type": "string"
+        },
         "criteria": {
           "type": "object",
           "description": "Machine-readable definition of the stratum, e.g. airframe_type, has_airspeed_sensor, variance band, altitude band, terrain class, season.",
@@ -25,49 +40,315 @@
     "sources_compared": {
       "type": "array",
       "minItems": 2,
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "e.g. [\"era5_wind\", \"px4_ekf2_wind\"] or a three-way comparison including a METAR station."
     },
-    "n_runs": { "type": "integer", "minimum": 0 },
-    "n_windows": { "type": "integer", "minimum": 0 },
+    "n_runs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "n_windows": {
+      "type": "integer",
+      "minimum": 0
+    },
     "statistics": {
       "type": "object",
-      "required": ["bias", "limits_of_agreement"],
+      "description": "Wind is a vector: component-wise agreement is primary and scalar speed is secondary. See docs/adr/0006-what-h1-compares.md.",
+      "required": [
+        "u",
+        "v",
+        "unit"
+      ],
       "additionalProperties": false,
       "properties": {
-        "bias": { "type": "number", "description": "Mean difference between the two estimates, in the stated unit." },
-        "bias_ci": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
-        "limits_of_agreement": {
-          "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "items": { "type": "number" },
-          "description": "Lower and upper limits of agreement."
+        "u": {
+          "type": "object",
+          "required": [
+            "bias",
+            "limits_of_agreement"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bias": {
+              "type": "number",
+              "description": "Mean difference between the two estimates."
+            },
+            "bias_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "limits_of_agreement": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "description": "Lower and upper limits of agreement."
+            },
+            "limits_ci": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "dispersion": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "description": "Agreement on the north component."
         },
-        "limits_ci": {
-          "type": "array",
-          "description": "Confidence intervals for each limit.",
-          "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } }
+        "v": {
+          "type": "object",
+          "required": [
+            "bias",
+            "limits_of_agreement"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bias": {
+              "type": "number",
+              "description": "Mean difference between the two estimates."
+            },
+            "bias_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "limits_of_agreement": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "description": "Lower and upper limits of agreement."
+            },
+            "limits_ci": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "dispersion": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "description": "Agreement on the east component."
         },
-        "dispersion": { "type": ["number", "null"] },
-        "unit": { "type": "string" }
+        "vector_difference_magnitude": {
+          "type": "object",
+          "required": [
+            "bias",
+            "limits_of_agreement"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bias": {
+              "type": "number",
+              "description": "Mean difference between the two estimates."
+            },
+            "bias_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "limits_of_agreement": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "description": "Lower and upper limits of agreement."
+            },
+            "limits_ci": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "dispersion": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "description": "Magnitude of the vector difference between the two estimates."
+        },
+        "speed": {
+          "type": "object",
+          "required": [
+            "bias",
+            "limits_of_agreement"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "bias": {
+              "type": "number",
+              "description": "Mean difference between the two estimates."
+            },
+            "bias_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "limits_of_agreement": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              },
+              "description": "Lower and upper limits of agreement."
+            },
+            "limits_ci": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "dispersion": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "description": "Scalar wind-speed agreement. Secondary: speed can agree while direction does not. Never reported as the headline result."
+        },
+        "direction": {
+          "type": "object",
+          "description": "Circular difference wrapped to (-180, 180]. Computed only where both sources exceed speed_threshold_ms; elsewhere the window is counted in n_undefined rather than dropped.",
+          "required": [
+            "speed_threshold_ms",
+            "n_defined",
+            "n_undefined"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "speed_threshold_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "n_defined": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "n_undefined": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mean_absolute_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 180
+            },
+            "limits_of_agreement_deg": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "unit": {
+          "type": "string"
+        }
       }
     },
     "bootstrap": {
       "type": "object",
       "description": "Bootstrap is by run, never by window: windows within a run are not independent and treating them as such inflates precision.",
-      "required": ["unit", "n_resamples", "seed"],
+      "required": [
+        "unit",
+        "n_resamples",
+        "seed"
+      ],
       "additionalProperties": false,
       "properties": {
-        "unit": { "type": "string", "const": "run" },
-        "n_resamples": { "type": "integer", "minimum": 1 },
-        "seed": { "type": "integer" }
+        "unit": {
+          "type": "string",
+          "const": "run"
+        },
+        "n_resamples": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer"
+        }
       }
     },
     "useful_proxy": {
-      "type": ["boolean", "null"],
+      "type": [
+        "boolean",
+        "null"
+      ],
       "description": "Whether the reanalysis is a useful proxy in this regime, against a threshold stated in the manifest. False is a publishable result."
     },
-    "manifest_id": { "type": "string", "description": "The AnalysisManifest that produced these statistics. No result without a manifest." }
+    "manifest_id": {
+      "type": "string",
+      "description": "The AnalysisManifest that produced these statistics. No result without a manifest."
+    },
+    "vertical_reference": {
+      "type": "string",
+      "enum": [
+        "era5_10m",
+        "era5_100m",
+        "era5_pressure_level"
+      ],
+      "description": "Which ERA5 wind level this artifact compared against. 100 m is primary; the 10 m result is retained so the difference between them can be reported as a shear stratifier rather than absorbed into the error."
+    }
   }
 }
