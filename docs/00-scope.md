@@ -50,7 +50,7 @@ uncertain estimates. See [`04-methodology.md`](04-methodology.md).
 |---|---|---|---|
 | M0 | Practitioner check | 3 days | discuss.px4.io thread; contact UAV-SEAD authors; UAS ODD prior art (JARUS/ASTM/EASA); informal survey on the usefulness of ODD evidence for SORA |
 | M1 | Source & legal audit | 1 week | [`01-source-audit.md`](01-source-audit.md) |
-| M2 | Sample audit | 1 week | Inventory over ~10² logs: coverage, firmware, geography, SITL ratio, estimator configuration and uncertainty |
+| M2 | Sample audit | 1 week → **partly done** | Population-level questions answered from the metadata dump on 2026-08-20 ([`02b-dbinfo-inventory.md`](02b-dbinfo-inventory.md)), over all 450,395 logs rather than ~10². What remains needs the `.ulg`: field coverage, estimator configuration and uncertainty, geography |
 | M3 | Conversion pipeline | 1 week | Batch via `ulog-convert`, stable schema, manifests |
 | M4 | ERA5 join + agreement (H1) | 3 weeks | Stratified study; METAR third source if the budget allows |
 | M5 | Publication | 1 week | Post + repo + artifacts |
