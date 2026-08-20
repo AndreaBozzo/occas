@@ -35,6 +35,11 @@ work is added here the day it is discovered.
 
 - Event definitions are the most fragile part of the project. H1 is deliberately
   constructed not to depend on them.
+- **UAV-SEAD cannot serve H1.** 8.8% of its flight time has global position, its
+  schema carries no wind or airspeed topic, and it is multi-rotor and largely indoor.
+  The assumed trade — their annotations for our context — does not hold for the wind
+  study, and any event work using it draws on a different population from the public
+  PX4 corpus. Recorded as C2b in the source audit.
 - Estimator configuration may not be reconstructible from every log. If it is broadly
   absent, the study narrows to fixed-wing with airspeed (risk register, M2).
 - Firmware and schema drift across versions is expected; a support matrix and version

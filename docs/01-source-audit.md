@@ -49,12 +49,13 @@ generalised coordinates, publish the pipeline rather than the data.
 | # | Question | Answer | Checked on |
 |---|---|---|---|
 | C0 | Does prior work already join public flight logs to reanalysis per flight? | **Partly — the §1.5 gap claim needs narrowing.** Somanagoudar & Mérida, *Weather-aware energy management for unmanned aerial vehicles*, Eng. Appl. Artif. Intell., DOI 10.1016/j.engappai.2024.109596 (UBC, online 2024-11-12), uses publicly available UAV logs plus ERA5. From abstract-level sources the target is **energy prediction**, with ERA5 as an input feature; there is no indication they validate ERA5 against onboard wind. **Full text not read** — paywalled, and the open UBC copy is IP-blocked. Verify before any novelty claim. | 2026-08-20, partial |
-| C1 | UAV-SEAD licence | TBD | — |
-| C2 | UAV-SEAD anomaly classes and resolution | TBD | — |
+| C1 | UAV-SEAD licence | **CC-BY-4.0.** `aykutkabaoglu/uav-flight-anomaly-dataset` on HuggingFace, DOI 10.57967/hf/7772, curated by Aykut Kabaoglu (with Sanem Sariel), created 2025-09-28, updated 2026-05-19. Compatible with our publication policy. Tooling: `github.com/aykutkabaoglu/ulog_annotation_tool`. | 2026-08-20 |
+| C2 | UAV-SEAD anomaly classes and resolution | **Four anomaly classes plus Normal and Uncategorized**, annotated with anomaly *durations*, so labels are time-bounded rather than per-flight: Normal 900 flights (38:24:19) · External Position 197 (05:12:25, of which 01:17:02 anomalous) · Altitude 78 (02:41:21 / 00:25:57) · Mechanical and Electrical 47 (02:12:38 / 00:12:43) · Global Position 41 (01:40:42 / 00:36:23) · Uncategorized 141. 1,396 annotated flights, 52:20:05 total; 3,196 raw. Annotation is "Physically-Constrained Expert Evaluation". | 2026-08-20 |
+| C2b | **Is UAV-SEAD usable for H1?** | **No.** Three independent blockers, all from the dataset card: (a) only **04:35:24 of 52:20:05 (8.8%) has global position data** — the rest is indoor, on external/vision position, so there is nothing to join ERA5 *to*; (b) the 81-topic superset schema contains **no wind or airspeed topic at all**, so there is no onboard wind estimate to compare against; (c) the stated limitation is "limited to multi-rotor dynamics, limited outdoor flights with GPS availability". It remains relevant to H2 as an event vocabulary, on a different population. | 2026-08-20 |
 | C3 | ALFA licence and citation | TBD | — |
 | C4 | BASiC licence; confirm SITL-only | TBD | — |
-| C5 | ERA5 Copernicus licence version and attribution string | TBD | — |
-| C6 | How is ERA5T identified in the response? | TBD | — |
+| C5 | ERA5 Copernicus licence version and attribution string | CC-BY, cited by DOI **10.24381/cds.adbb2d47** for ERA5 single levels. Copernicus attribution required in derived artifacts. Registration and an API key are needed for CDS access — not yet obtained. | 2026-08-20 |
+| C6 | How is ERA5T identified in the response? | **Partially.** CDS documents that ERA5 updates daily with ~5 days latency, that the early release is called **ERA5T**, that it may differ from the final release 2–3 months later, and that users are notified if it does. It does **not** document a field that identifies which you received. Must be determined from an actual retrieval before any manifest can claim to record it. | 2026-08-20, partial |
 | C7 | Copernicus DEM licence and access | TBD | — |
 | C8 | METAR archive and terms | TBD | — |
 
