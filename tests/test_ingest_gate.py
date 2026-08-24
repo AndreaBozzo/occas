@@ -10,11 +10,50 @@ from ingest import px4_download
 
 
 def test_gate_is_derived_from_the_document() -> None:
-    """Opens by itself once B1-B5 are answered; the gate is not hard-coded."""
+    """The gate reads the audit rather than a hard-coded constant."""
     assert px4_download.AUDIT.exists()
-    assert px4_download.audit_is_blocking() is (
-        px4_download.BLOCKING_MARKER in px4_download.AUDIT.read_text(encoding="utf-8")
-    )
+    assert px4_download.G1_STATUS.search(px4_download.AUDIT.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    ("body", "blocking"),
+    [
+        ("**G1-status: NOT CLEARED**", True),
+        ("**G1-status: CLEARED**", False),
+        ("**G1-status:   CLEARED**", False),
+        # Fails closed: anything the gate does not positively recognise blocks.
+        ("the personal-data section is fine now, honest", True),
+        ("**G1-status: PROBABLY FINE**", True),
+        ("G1-status: CLEARED", True),
+        ("", True),
+    ],
+)
+def test_gate_fails_closed(tmp_path, monkeypatch, body: str, blocking: bool) -> None:
+    """Only an explicit CLEARED line opens G1.
+
+    The gate used to search for a phrase that also appeared in the audit's prose, so
+    rewriting the prose opened it silently. That happened on 2026-08-24: answering
+    B1-B5 removed the phrase and the download gate swung open, stamping retrieval
+    records publication_eligibility=eligible. The rows below are the shapes that
+    mistake can take.
+    """
+    audit = tmp_path / "01-source-audit.md"
+    audit.write_text("# audit\n\n" + body + "\n\nmore prose\n", encoding="utf-8")
+    monkeypatch.setattr(px4_download, "AUDIT", audit)
+    assert px4_download.audit_is_blocking() is blocking
+
+
+def test_gate_blocks_when_the_audit_is_missing(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(px4_download, "AUDIT", tmp_path / "gone.md")
+    assert px4_download.audit_is_blocking() is True
+
+
+def test_the_real_audit_still_blocks() -> None:
+    """G1 is not cleared: the assessment is provisional and unsigned.
+
+    When it is genuinely cleared this test is the deliberate act of clearing it.
+    """
+    assert px4_download.audit_is_blocking() is True
 
 
 @pytest.mark.skipif(not px4_download.audit_is_blocking(), reason="personal-data section resolved")

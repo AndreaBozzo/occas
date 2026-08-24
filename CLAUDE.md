@@ -49,9 +49,13 @@ one means writing an ADR, not editing code.
   enforces this (ADR-0002).
 - **`PX4_SITL` is a separate control population.** Never merged into the real-flight
   corpus, under any label.
-- **Raw geolocated trajectories are never redistributed.** Publish derived and
-  aggregate features with generalised coordinates; publish the pipeline instead of the
-  data. See [`DATA_LICENSES.md`](DATA_LICENSES.md).
+- **Positional results are published only in aggregate.** Raw geolocated trajectories
+  are never redistributed, and neither are generalised per-run rows: rounding is
+  pseudonymisation, not anonymisation, because the raw log stays public and the row
+  joins back to it. Publish statistics over runs — provisionally at least 20 runs and
+  10 vehicles per cell, suppressed cells reported with their counts — and publish the
+  pipeline instead of the data (ADR-0009,
+  [`docs/07-personal-data.md`](docs/07-personal-data.md), [`DATA_LICENSES.md`](DATA_LICENSES.md)).
 - **Bootstrap by run, never by window.** Windows within a run are not independent.
   The `validation_artifact.json` schema pins `bootstrap.unit` to `run`.
 

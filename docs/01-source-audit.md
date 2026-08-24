@@ -1,8 +1,11 @@
 # 01 — Source & legal audit (M1)
 
 **Status: IN PROGRESS.** Access questions (section A) are answered. Personal-data
-questions (section B) are **UNRESOLVED** and still block publication of anything
-derived from per-run positions — gate G1.
+questions (section B) now have **provisional answers** in
+[`07-personal-data.md`](07-personal-data.md), and they do not clear per-run positional
+publication — they close it. What they clear is the aggregate route, under
+[ADR-0009](adr/0009-aggregate-only-for-positional-results.md). Gate G1 is now waiting
+on the controller rather than on further reading.
 
 Answers record where they were checked and when. Nothing here is filled in from
 recollection.
@@ -22,7 +25,14 @@ A2 (acceptable retrieval), A6 (is `dbinfo` a supportable interface), B2/B3
 (personal data) and the `wind_speed` reading are all asked there. Answers get
 recorded here with the reply's date and author.
 
-**B-status: UNRESOLVED.** **Section C is closed except C0**, which needs the paywalled
+**G1-status: NOT CLEARED**
+
+That line is read by `ingest/px4_download.py`, which refuses to retrieve logs until it
+says `CLEARED`. It is a flag, not prose: change it when the gate is actually cleared —
+controller sign-off, privacy notice, DPIA screening — and not when the wording around
+it changes.
+
+**B-status: ANSWERED, PROVISIONALLY — G1 now turns on a signature, not on research.** B1-B5 are assessed in [`07-personal-data.md`](07-personal-data.md) from the GDPR text, WP216 and the case law, and the publication rule they imply is [ADR-0009](adr/0009-aggregate-only-for-positional-results.md). What remains is the controller's sign-off, a public privacy notice, an Art. 35 DPIA screening, and the Italian research provisions — listed at the end of that document. **Section C is closed except C0**, which needs the paywalled
 full text. C5 and C6 closed on 2026-08-24 against a live CDS account: the licence is the
 *Licence to use Copernicus Products* rev. 12 with its attribution strings read from the
 text, and `expver` was confirmed on real retrievals rather than from documentation —
@@ -48,11 +58,11 @@ still blocking.
 
 | # | Question | Answer | Checked on |
 |---|---|---|---|
-| B1 | Which fields could identify a natural person? | Partially narrowed: **`dbinfo` carries no coordinates**, so the metadata layer is comparatively low-risk. It does carry `vehicle_uuid`, `vehicle_name`, free-text `description` and `feedback`. Positions live only inside the `.ulg`. Full assessment TBD. | 2026-08-20 |
-| B2 | What are uploaders told about publication and re-use? | The upload form states publication under CC-BY (PR #302). Whether that constitutes adequate notice for data-protection purposes: TBD. | 2026-08-20 |
-| B3 | Which lawful basis applies to processing derived features? | TBD | — |
-| B4 | What coordinate generalisation is sufficient, and how justified? | TBD | — |
-| B5 | Does aggregate publication differ from per-run publication? | TBD | — |
+| B1 | Which fields could identify a natural person? | **Assessed** in [`07-personal-data.md`](07-personal-data.md). `dbinfo` carries no coordinates, so the metadata layer is comparatively low-risk, but it does carry `vehicle_uuid` — a persistent identifier linking every flight of one airframe, which Recital 26 treats as personal data — plus free-text `vehicle_name`, `description` and `feedback`, and `log_date`. Positions live only inside the `.ulg`, where take-off and landing points are this corpus's "home or office". **The data subject is the uploader-operator, not a bystander:** a ULog carries no imagery or audio. The uploader's email is collected at upload but is not among the 26 published fields. | 2026-08-20; assessed 2026-08-24 |
+| B2 | What are uploaders told about publication and re-use? | The upload form states publication under CC-BY (PR #302); `is_public` is settable only for `flightreport` uploads, so publication is an affirmative choice; and that branch sets `allow_for_analysis = 1` under the comment "always allow for statistical analysis". **Our position:** that is a copyright licence and a publication choice, not a data-protection notice and not consent — but it is good evidence of reasonable expectations under Recital 47, which is where it is used. Whether it is adequate notice is a question about *PX4's* obligations, not ours, and is still on the M0 thread. | 2026-08-20; positioned 2026-08-24 |
+| B3 | Which lawful basis applies to processing derived features? | **Art. 6(1)(f), legitimate interests**, with the research framing of Art. 5(1)(b) and the safeguards of Art. 89(1). The three-step assessment is written out in [`07-personal-data.md`](07-personal-data.md) and **needs the controller's sign-off**. Two consequences it creates: Art. 89(1) *requires* the aggregate-only design rather than merely permitting it, and Art. 14(5)(b)'s research exemption is conditional on "making the information publicly available" — so the repository owes a public privacy notice that does not yet exist. | 2026-08-24, provisional |
+| B4 | What coordinate generalisation is sufficient, and how justified? | **None is sufficient on a per-run row — the rounding is not the binding constraint.** WP216 holds event-level movement data to remain personal "as long as the data controller (or any other party) still has access to the original raw data"; here the raw logs are published permanently by PX4, so the re-identification key is a public download and a rounded row still joins back on duration, airframe, firmware and date. WP216 also cites the MIT result that four location points single out 95% of a population. Generalisation is a real Art. 89(1) safeguard and stays; it is pseudonymisation, not anonymisation. The Garante's deontological rules reach the same place explicitly: art. 4 lists "archivi, anche non nominativi" providing information beyond what is released among the reasonable means of identification. | 2026-08-24 |
+| B5 | Does aggregate publication differ from per-run publication? | **Yes, and aggregate is the only route WP216 endorses** — "aggregate statistics to third parties on a high level" qualify as anonymous where the individual events no longer do. Decided in [`adr/0009-aggregate-only-for-positional-results.md`](adr/0009-aggregate-only-for-positional-results.md) with a provisional threshold of 20 runs / 10 vehicles per published cell — above the Garante's floor of three (Allegato A5, art. 5), which must rise with sensitivity, and subject to art. 5(e)'s rule that separate releases must not be linkable to each other. Note that *EDPS v SRB* (C-413/23 P, 2025) does **not** rescue per-run publication: the Court set aside the General Court's judgment, made the perspective depend on the circumstances of each case, and the circumstance here is that the key is public. | 2026-08-24 |
 
 Standing policy until B1–B5 are answered: derived and aggregate features only,
 generalised coordinates, publish the pipeline rather than the data.
@@ -89,8 +99,10 @@ Not final — B is unresolved. Provisional position:
   wildcard disallow means this should be raised with the maintainers first.
 - **May process:** metadata, yes, freely — it is published as a CDN artifact and
   carries no coordinates.
-- **May publish:** derived and aggregate features with attribution. Anything keyed to
-  per-run position stays blocked until B1–B5 are answered.
+- **May publish:** aggregate features with attribution. Anything keyed to per-run
+  position is not blocked *pending* B1–B5 any more — B4 answers it, and the answer is
+  no. Per-run positional publication is closed for as long as the raw corpus is public,
+  which is to say permanently. The aggregate route is open, under ADR-0009.
 - **Other sources do not share PX4's terms.** C3–C8 are now answered and two of them
   carry obligations that travel to whoever takes our artifact: the Copernicus DEM's
   prescribed notices and flow-down clause, and WMO Resolution 40 on non-U.S. METAR.
