@@ -4,10 +4,11 @@ Contract, once written (M4):
 
 - request by (time interval, bounding box) for the variables H1 needs;
 - cache on disk, keyed by request, so an analysis re-run does not re-download;
-- **request GRIB, not NetCDF**, and read ``expver`` from the message header
-  (``0001`` final ERA5, ``0005`` ERA5T) into the manifest at retrieval time. NetCDF
-  carries no such marker unless a single response happens to mix both releases, so
-  the convenient format cannot satisfy the line below (docs/adr/0008);
+- read ``expver`` (``0001`` final ERA5, ``0005`` ERA5T) into the manifest at retrieval
+  time, and **fail loudly if it is absent** rather than recording nothing. Verified on
+  2026-08-24 to be present in both formats -- a GRIB header key, a NetCDF scalar
+  coordinate -- with identical values, so format is a preference (GRIB is native)
+  rather than the control (docs/adr/0008);
 - record ``dataset/product ID``, version and ``retrieved_at`` for every retrieval into
   a ``SourceMetadata`` record. **ERA5T is preliminary** and can be replaced by the
   final product, typically within 2-3 months: which one was used must be recoverable
