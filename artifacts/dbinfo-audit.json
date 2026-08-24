@@ -23,6 +23,12 @@
       "Breeze": 4107,
       "Gale": 470,
       "Storm": 402
+    },
+    "by_upload_type": {
+      "flightreport": {
+        "logs": 450395,
+        "declared": 23327
+      }
     }
   },
   "error_label_counts": {

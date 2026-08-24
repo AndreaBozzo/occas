@@ -76,6 +76,11 @@ optional: if the result moves under plausible tolerance choices, that is the fin
 - **Selection bias declared:** public logs are an *observational convenience sample*.
   They over-represent test flights and users seeking support. They do not generalise
   to a production fleet, and no result may be stated as if they did.
+  More precisely than "convenience": `flight_review` can only make an upload public
+  when its type is `flightreport`, and the dump confirms all 450,395 records are of
+  that type. The population is *uploads whose author chose to file a flight report and
+  tick public* — a selection on the uploader's intent, made before we ever see the
+  log. See [`02b-dbinfo-inventory.md`](02b-dbinfo-inventory.md).
 - **Confidence intervals always. Bootstrap by run, never by window** — windows within a
   run are not independent and treating them as such inflates precision.
 - **Language:** agreement, association, conditional risk, coverage. Never causality

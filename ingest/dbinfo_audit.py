@@ -46,6 +46,11 @@ MIN_DURATION_S = 300
 MAX_PLAUSIBLE_DURATION_S = 24 * 3600
 SITL_HW = "PX4_SITL"
 FIXED_WING_MARKERS = ("Fixed", "Plane", "VTOL")
+# Verified in flight_review source, not inferred from the values seen: the mapping is
+# ``DBData.wind_speed_str_static`` in ``app/plot_app/db_entry.py``, and
+# ``app/tornado_handlers/upload.py`` only reads ``windSpeed`` from the form when the
+# upload type is ``flightreport`` -- otherwise the field keeps its -1 default. So a
+# corpus-wide "not given" rate mostly counts uploads that were never asked.
 WIND_SPEED_LABELS = {-1: "not given", 0: "Calm", 5: "Breeze", 8: "Gale", 10: "Storm"}
 PX4_ATTRIBUTION = "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4."
 
@@ -104,6 +109,8 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
         for k in ("mav_type", "sys_hw", "estimator", "source", "rating", "year", "wind_speed")
     }
     error_labels: Counter = Counter()
+    upload_types: Counter = Counter()
+    declared_by_type: Counter = Counter()
     total = sitl = real = fixed_wing_real = declared_wind = 0
     implausible_duration = 0
     frame = 0
@@ -121,8 +128,11 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
 
         wind = row.get("wind_speed")
         wind = -1 if wind is None else wind
+        upload_type = row.get("type") or "unset"
+        upload_types[upload_type] += 1
         if wind >= 0:
             declared_wind += 1
+            declared_by_type[upload_type] += 1
 
         if hardware == SITL_HW:
             sitl += 1
@@ -166,6 +176,13 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
             "logs": declared_wind,
             "by_label": {
                 WIND_SPEED_LABELS.get(k, str(k)): v for k, v in counters["wind_speed"].most_common()
+            },
+            # The corpus-wide rate understates the field: only flight reports are asked
+            # for it. Coverage within the population that is asked is the honest figure,
+            # so both are reported and neither is presented alone.
+            "by_upload_type": {
+                str(name): {"logs": count, "declared": declared_by_type.get(name, 0)}
+                for name, count in upload_types.most_common()
             },
         },
         "error_label_counts": {str(k): v for k, v in error_labels.most_common()},

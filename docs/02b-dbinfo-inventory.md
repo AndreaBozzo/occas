@@ -76,6 +76,11 @@ with airspeed", 60k is the headroom for that fallback — comfortable.
 `wind_speed` is set by the uploader on the web form and encodes
 `{0: Calm, 5: Breeze, 8: Gale, 10: Storm}`; `-1` means not given.
 
+**The encoding is verified, not inferred** (2026-08-24). It is the literal dict in
+`DBData.wind_speed_str_static`, `app/plot_app/db_entry.py` in `PX4/flight_review`;
+the dump contains those four values and `-1`, and nothing else. This was one of the
+questions put to the maintainers on the M0 thread. It did not need them.
+
 | value | logs |
 |---|---|
 | −1 (not given) | 427,068 |
@@ -84,10 +89,28 @@ with airspeed", 60k is the headroom for that fallback — comfortable.
 | Gale | 470 |
 | Storm | 402 |
 
+**94.8 % not given is refusal, not a structural artifact.** The obvious explanation
+would be that only some uploads are shown the field — `app/tornado_handlers/upload.py`
+reads `windSpeed` only when the upload type is `flightreport`. It does not apply here:
+cross-tabulating the dump by `type` returns **one** group, `flightreport`, containing
+all 450,395 records. Every log in this corpus was asked, and 19 in 20 uploaders
+declined.
+
+The reason is in the same file: `is_public = 1` is only reachable inside the
+`upload_type == 'flightreport'` branch, so a non-flight-report upload cannot become
+public. **The public corpus is the flight-report population by construction** — not a
+sample of PX4 uploads, and not a sample that could be widened by asking. That is a
+selection statement about all 450k records, and it belongs in every claim made from
+them.
+
 **23,327 logs (5.2 %) carry a human-declared wind category** — coarse, subjective,
 and entirely independent of both ERA5 and EKF2. It is a cheaper third source than
 METAR and it needs no proximity to an airport. Only 1,113 of them are real-hardware
 fixed-wing or VTOL, so it strengthens rather than replaces the METAR subset.
+
+It is **declared, not measured**, and by the same person who flew the aircraft: four
+levels, chosen after the flight, by someone who already knew how it went. That makes
+it a weak cross-check on a disagreement between ERA5 and EKF2, never a referee of one.
 
 ## Labels that already exist
 

@@ -3,6 +3,10 @@
 Uses a hand-built fixture rather than the 356 MB dump: every branch that decides
 whether a log is SITL, real, fixed-wing, long enough, or has a declared wind is
 exercised by exactly one record, so a miscount points at one line.
+
+The fixture also splits declared wind across upload types, because only flight reports
+are ever asked for it: a corpus-wide coverage figure and a within-flightreport one are
+different claims, and the fixture is built so a test that confused them would fail.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ ROWS = [
         "mav_type": "Quadrotor",
         "duration_s": 600,
         "wind_speed": 5,
+        "type": "flightreport",
         "log_date": "2026-06-01",
         "estimator": "EKF2",
         "error_labels": [8],
@@ -30,6 +35,7 @@ ROWS = [
         "mav_type": "Fixed Wing",
         "duration_s": MIN_DURATION_S,
         "wind_speed": -1,
+        "type": "personal",
         "log_date": "2026-06-02",
         "estimator": "EKF2",
         "error_labels": [],
@@ -40,6 +46,7 @@ ROWS = [
         "mav_type": "VTOL Standard",
         "duration_s": MIN_DURATION_S - 1,
         "wind_speed": 0,
+        "type": "flightreport",
         "log_date": "2026-06-03",
         "estimator": "EKF2",
         "error_labels": [2],
@@ -50,6 +57,7 @@ ROWS = [
         "mav_type": "Quadrotor",
         "duration_s": 9000,
         "wind_speed": -1,
+        "type": "personal",
         "log_date": "2026-06-04",
         "estimator": "EKF2",
         "error_labels": [],
@@ -99,6 +107,21 @@ def test_declared_wind_is_labelled_not_numeric() -> None:
     assert by_label["Breeze"] == 1
     assert by_label["Calm"] == 1
     assert by_label["not given"] == 3
+
+
+def test_declared_wind_coverage_is_reported_per_upload_type() -> None:
+    """Corpus-wide coverage and coverage-where-asked are different numbers.
+
+    Only ``flightreport`` uploads are shown the wind field, so 2 declarations out of 5
+    logs is 40% of the corpus and 100% of the population that was asked. The fixture
+    makes the two disagree; reading either one as the other is then visible.
+    """
+    by_type = audit(iter(ROWS))["declared_wind_speed"]["by_upload_type"]
+    assert by_type["flightreport"] == {"logs": 2, "declared": 2}
+    assert by_type["personal"] == {"logs": 2, "declared": 0}
+    # a record with no `type` at all is counted, not dropped: coverage is recorded,
+    # never silently filtered
+    assert by_type["unset"] == {"logs": 1, "declared": 0}
 
 
 def test_error_labels_are_counted_per_occurrence() -> None:
