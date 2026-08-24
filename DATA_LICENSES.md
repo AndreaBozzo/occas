@@ -13,12 +13,12 @@ unverified row may be published.
 |---|---|---|---|
 | PX4 Flight Review (`logs.px4.io`) | Public ULog flight logs, real and SITL | CC-BY (PX4) | Attribution required in every artifact. Rate limits and ToS: **VERIFY (M1)** |
 | PX4 log coordinates | Geolocated trajectories | CC-BY does not address the GDPR | Personal-data assessment: **VERIFY (M1)** — see §"Personal data" |
-| UAV-SEAD | 1,396 real PX4 logs, ~52 h, 4 expert-annotated state-estimation anomaly classes | **VERIFY (M1)** — read the licence on the source repository | Not used until confirmed |
-| ALFA | Fixed-wing UAV faults and anomalies with temporal ground truth | **VERIFY** before use | Complementary, not in the first deliverable |
-| BASiC | 70 flights, simulated sensor faults in ArduPilot SITL | **VERIFY** before use | Synthetic baseline only |
-| ERA5 / ERA5T (Copernicus CDS) | Hourly reanalysis, 0.25° | Copernicus Licence | Attribution required; record `dataset/product ID`, version and `retrieved_at` |
-| Copernicus DEM | Elevation, slope | Copernicus Licence | Phase 2 (H3) |
-| METAR / airport stations | 10 m observations over a runway | Source-dependent | Optional third reference, restricted subset only |
+| UAV-SEAD | 1,396 real PX4 logs, ~52 h, 4 expert-annotated state-estimation anomaly classes | CC-BY-4.0 (HuggingFace dataset card, DOI 10.57967/hf/7772) — verified 2026-08-20 | Not usable for H1 (no wind topic, 8.8% with global position); H2 event vocabulary only |
+| ALFA | Fixed-wing UAV faults and anomalies with temporal ground truth | CC-BY-4.0 on the KiltHub record, CC0 in the record's own README — **conflicting, resolve before use** (verified 2026-08-24) | ArduPilot, not PX4, and no ULog: outside the corpus. Complementary to H2 only |
+| BASiC | 70 flights, simulated sensor faults in ArduPilot SITL | CC-BY-4.0 on the Zenodo record 10.5281/zenodo.8195068 — verified 2026-08-24 | Simulated *and* ArduPilot. Synthetic baseline only, never merged into the real-flight corpus |
+| ERA5 / ERA5T (Copernicus CDS, or the ARCO-ERA5 copy in Google Cloud Public Datasets) | Hourly reanalysis, 0.25°, incl. 100 m u/v wind | Copernicus Licence either way — the copy does not relicense the data; ARCO additionally asks to be cited (Carver & Merose 2023) | Attribution required; record `dataset/product ID`, version and `retrieved_at`, plus which route was used and its release marker (`expver` from CDS GRIB, `valid_time_stop_era5t` from ARCO) |
+| Copernicus DEM (WorldDEM-30, GLO-30/GLO-90) | Surface elevation, slope — a **Digital Surface Model**, not bare earth and not an obstacle map | COP-DEM-GLO-30-F "Full, Free & Open" licence — free, but **not** CC-BY: prescribed notices, a liability sentence, and flow-down to subsequent users (verified 2026-08-24) | Phase 2 (H3). Retrievable without credentials from `s3://copernicus-dem-30m` (eu-central-1, COG) |
+| METAR / airport stations | 10 m observations over a runway | **Non-U.S. observations cannot be redistributed** — WMO Resolution 40, stated in the NCEI ISD readme and inherited by IEM, which ingests ISD (verified 2026-08-24) | Optional third reference. Retrieve and process locally; publish per-station values for U.S. stations only |
 
 ## Attribution
 
@@ -26,6 +26,31 @@ Every published artifact carries the attribution required by its sources. For PX
 logs this means a CC-BY credit to PX4 and a pointer back to the source records; for
 Copernicus products it means the Copernicus attribution statement plus the product ID
 and version actually retrieved.
+
+### Copernicus DEM — the exact strings
+
+The DEM licence prescribes its notices word for word, and prescribes a *different* one
+once the data have been adapted. Any artifact derived from the DEM — which is every use
+we would make of it — carries the second:
+
+> produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and
+> Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all
+> rights reserved.
+
+Distributing it unmodified would instead require:
+
+> © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under
+> COPERNICUS by the European Union and ESA; all rights reserved.
+
+Either way, the licence or notice covering our distribution must also carry:
+
+> The organisations in charge of the Copernicus programme by law or by delegation do
+> not incur any liability for any use of the Copernicus WorldDEM-30.
+
+and must bind subsequent users to the same obligations. This is a flow-down term. It is
+why the closing rule of this document — *where an upstream licence imposes stricter
+terms, the stricter terms govern* — is not decorative: a DEM-derived artifact cannot be
+released under plain CC-BY-4.0 without carrying these terms with it.
 
 ## Personal data
 
@@ -43,6 +68,10 @@ are assessed separately in M1.
 
 ## Derived artifacts
 
-Unless a specific artifact states otherwise, derived artifacts published by this
-project are released under CC-BY-4.0, with upstream attribution preserved. Where an
-upstream licence imposes stricter terms, the stricter terms govern.
+Release terms are decided **per artifact, from the sources that artifact actually
+used**, and recorded in its manifest — not declared once for the repository. See
+[`docs/adr/0007-licences-travel-with-the-data.md`](docs/adr/0007-licences-travel-with-the-data.md).
+
+CC-BY-4.0 with upstream attribution preserved is the default for an artifact whose
+sources allow it. It is not a property of this repository: an artifact touching the
+Copernicus DEM or non-U.S. METAR observations cannot carry that label unchanged.
