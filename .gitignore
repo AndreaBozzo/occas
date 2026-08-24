@@ -18,6 +18,12 @@ cache/
 artifacts/**/*.parquet
 artifacts/**/*.csv
 
+# Secrets. The CDS personal access token lives here and is never committed.
+.env
+.env.*
+!.env.example
+.cdsapirc
+
 # Editors / OS
 .vscode/
 .idea/
