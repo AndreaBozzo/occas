@@ -76,13 +76,21 @@ Public logs **may contain** geolocated trajectories potentially attributable to
 natural persons. The project does not assume every trajectory is personal data; it
 assumes some may be. Consequently:
 
-- publish derived and aggregate features, never raw trajectories;
-- generalise or round coordinates in public artifacts;
+- publish positional results **only in aggregate**, never per run — a generalised
+  per-run row is pseudonymised, not anonymous, because the raw log stays public and
+  the row joins back to it on duration, airframe, firmware and date;
+- keep generalisation anyway: it is a real Article 89(1) safeguard, it is just not the
+  one doing the work;
+- never publish `vehicle_uuid`, hashed or otherwise, nor free text from `description`,
+  `vehicle_name` or `feedback`;
 - publish the pipeline so it can be re-run by anyone against the original source;
 - carry complete CC-BY attribution in every artifact.
 
-A permissive content licence does not settle the data-protection question. The two
-are assessed separately in M1.
+A permissive content licence does not settle the data-protection question. The two are
+assessed separately: the assessment is [`docs/07-personal-data.md`](docs/07-personal-data.md)
+and the publication rule it produces is
+[`docs/adr/0009-aggregate-only-for-positional-results.md`](docs/adr/0009-aggregate-only-for-positional-results.md).
+Both are provisional until the controller signs off.
 
 ## Derived artifacts
 

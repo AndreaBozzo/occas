@@ -5,18 +5,25 @@ parse anything. The upstream script is the interface to ``logs.px4.io``; what th
 is the part the project needs and upstream does not provide: a record of exactly what
 was retrieved, when, under which terms, so that a later manifest can point at it.
 
-Blocking precondition (gate G1): the personal-data section of
-``docs/01-source-audit.md`` is unresolved. Access and rate limits are now answered --
-the upstream client documents 10 requests/minute and treats excess as an IP block, and
-``logs.px4.io/robots.txt`` disallows crawling outright -- but B1-B5 are not. This
-script refuses to run while that section is marked unresolved, or until
-``--acknowledge-unaudited`` is passed for a deliberate small sample.
+Blocking precondition (gate G1): ``docs/01-source-audit.md`` carries a dedicated
+``G1-status`` line, and this script refuses to run unless it says ``CLEARED`` -- or
+until ``--acknowledge-unaudited`` is passed for a deliberate small sample. Access and
+rate limits are answered (10 requests/minute, ``robots.txt`` disallows crawling); B1-B5
+now have provisional answers in ``docs/07-personal-data.md``, which is not the same as
+the gate being cleared: that needs the controller's sign-off, a privacy notice and a
+DPIA screening.
+
+**The gate fails closed.** It reads one status line, and a missing file, a missing line
+or an unrecognised value all block. The previous version searched for a phrase used in
+the audit's prose, which meant rewriting that prose silently opened the gate -- which
+is exactly what happened on 2026-08-24 when the B section was answered.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -24,15 +31,26 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUDIT = REPO_ROOT / "docs" / "01-source-audit.md"
-BLOCKING_MARKER = "B-status: UNRESOLVED"
+# A dedicated flag, not a phrase from the prose: the gate must not turn on wording.
+G1_STATUS = re.compile(r"^\*\*G1-status:\s*(NOT CLEARED|CLEARED)\*\*", re.MULTILINE)
 
 # CC-BY attribution travels with every artifact derived from these logs.
 PX4_ATTRIBUTION = "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4."
 
 
 def audit_is_blocking() -> bool:
-    """True while the personal-data section of the audit is unresolved (gate G1)."""
-    return AUDIT.exists() and BLOCKING_MARKER in AUDIT.read_text(encoding="utf-8")
+    """True while gate G1 is not cleared.
+
+    Fails closed. Only an explicit ``**G1-status: CLEARED**`` line opens the gate;
+    a missing audit, a missing line, or anything unrecognised blocks. Absence of
+    evidence that publication is permitted is not evidence that it is.
+    """
+    if not AUDIT.exists():
+        return True
+    found = G1_STATUS.search(AUDIT.read_text(encoding="utf-8"))
+    if found is None:
+        return True
+    return found.group(1) == "NOT CLEARED"
 
 
 def upstream_command(upstream: Path, out_dir: Path, extra: list[str]) -> list[str]:
