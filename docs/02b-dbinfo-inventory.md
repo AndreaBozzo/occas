@@ -191,6 +191,51 @@ crash_sw_hw 401 · crash_pilot 188.
 Sparse, but free, human-applied, and already an ontology — consistent with not
 building one.
 
+## What the pilot found (G2), 2026-08-25
+
+100 runs retrieved and converted, 0 conversion failures. Stratified 25 per cell; see
+`artifacts/pilot-inventory.json`.
+
+**35 of 100 are usable for H1**, where usable means carrying *both* halves of the
+comparison: a `wind` topic with `windspeed_north`/`windspeed_east`, and
+`vehicle_global_position` with `lat`/`lon`. The binding constraint is not position —
+that is present on 87 of 100 — it is **`wind`, present on only 37**.
+
+| stratum | frame | usable / 25 | rate | implied usable |
+|---|---:|---:|---:|---:|
+| fixed_wing_or_vtol \| within_window | 6,185 | 19 | 76 % | 4,701 |
+| fixed_wing_or_vtol \| older | 10,497 | 13 | 52 % | 5,458 |
+| rotorcraft \| older | 40,578 | 2 | 8 % | 3,246 |
+| rotorcraft \| within_window | 22,217 | 1 | 4 % | 889 |
+| **total** | **79,477** | **35** | **35 %** | **≈ 14,300** |
+
+**Fixed-wing and VTOL are 64 % usable; rotorcraft are 6 %.** That is not a quality
+difference, it is a physics one: EKF2 estimates wind by fusing airspeed and sideslip,
+which multirotors mostly do not have. `airspeed` is present on 43 runs, closely tracking
+`wind`'s 37.
+
+**The consequence is a change of subject, and it should be stated as one.** H1's declared
+fallback under a failed estimator check — "narrow to fixed-wing with airspeed" — is not a
+fallback. It is the study. Fixed-wing and VTOL are **21 % of the frame but ~75 % of the
+usable population**, so a corpus-representative sample is not an H1-representative one,
+and any claim from this work is about fixed-wing and VTOL operations unless it says
+otherwise.
+
+**This is also why the pilot was stratified rather than drawn proportionally.** A
+proportional draw would have been ~85 % rotorcraft and returned roughly 10 usable runs
+out of 100 — a result that looks like the study is unviable, when what it actually
+measures is that multirotors do not log wind.
+
+**One clean positive.** Every one of the 37 runs carrying `wind` also carries
+`variance_north` and `variance_east`. `EstimatorConfig`'s reported variance is
+reconstructible whenever there is a wind estimate at all, so its `reconstructible: false`
+case does not arise for the variance — the uncertainty ADR-0003 needs is in the logs, not
+an assumption.
+
+**Gate G2: pass, with the scope change above.** ~14,300 implied usable runs against a
+design point of 10³ is ample headroom; the risk that materialised was composition, not
+volume.
+
 ## Consequences
 
 1. M2's sample audit is largely already done, on the full population rather than
