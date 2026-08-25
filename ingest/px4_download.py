@@ -204,7 +204,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Refusing to download: {error}", file=sys.stderr)
         return 2
 
-    command = upstream_command(args.upstream, args.out_dir, args.upstream_args)
+    # argparse.REMAINDER keeps the "--" that separates our flags from the upstream
+    # script's, and upstream's own argparse then rejects it as an unrecognised argument.
+    # The failure is quiet in the worst way: the wrapper still writes a retrieval record
+    # describing a run that downloaded nothing.
+    passthrough = args.upstream_args
+    if passthrough and passthrough[0] == "--":
+        passthrough = passthrough[1:]
+
+    command = upstream_command(args.upstream, args.out_dir, passthrough)
     completed = subprocess.run(command, check=False)
     record = write_retrieval_record(
         args.out_dir, command, completed.returncode, args.acknowledge_unaudited

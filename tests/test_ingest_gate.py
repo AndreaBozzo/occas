@@ -120,7 +120,9 @@ def gates_open(tmp_path, monkeypatch):
 
 
 def test_missing_upstream_script_is_reported(gates_open, tmp_path, capsys) -> None:
-    code = px4_download.main(["--upstream", str(tmp_path / "nope.py"), "--acknowledge-unaudited"])
+    code = px4_download.main(
+        ["--upstream", str(tmp_path / "nope.py"), "--out-dir", str(tmp_path / "raw")]
+    )
     assert code == 2
     assert "not found" in capsys.readouterr().err
 
@@ -167,7 +169,7 @@ def test_download_refuses_when_the_exclusion_list_is_missing(
     upstream.write_text("", encoding="utf-8")
     monkeypatch.setattr(exclusions, "EXCLUSIONS_PATH", tmp_path / "absent.jsonl")
 
-    code = px4_download.main(["--upstream", str(upstream), "--acknowledge-unaudited"])
+    code = px4_download.main(["--upstream", str(upstream), "--out-dir", str(tmp_path / "raw")])
     assert code == 2
     assert "does not exist" in capsys.readouterr().err
 
@@ -181,3 +183,39 @@ def test_the_retrieval_record_names_the_exclusion_state_not_the_objectors(tmp_pa
     assert state["digest"].startswith("sha256:")
     assert set(state) == {"path", "digest", "count", "latest_received"}
     assert state["count"] == exclusions.load().count
+
+
+def test_the_separator_is_not_passed_to_the_upstream_script(gates_open, tmp_path) -> None:
+    """`--` belongs to our argparse, not upstream's.
+
+    argparse.REMAINDER keeps the separator and upstream's own parser then rejects it as
+    an unrecognised argument -- downloading nothing while the wrapper still writes a
+    retrieval record describing the run. That happened on 2026-08-25 and cost a pilot
+    retrieval that looked like it had succeeded.
+
+    Driven through ``main`` on purpose: the stripping happens there, so a test against
+    ``upstream_command`` alone passes with and without the fix.
+    """
+    seen = tmp_path / "argv.json"
+    upstream = tmp_path / "download_logs.py"
+    upstream.write_text(
+        "import json, sys, pathlib\n"
+        f"pathlib.Path({str(seen)!r}).write_text(json.dumps(sys.argv[1:]))\n",
+        encoding="utf-8",
+    )
+    px4_download.main(
+        [
+            "--upstream",
+            str(upstream),
+            "--out-dir",
+            str(tmp_path / "raw"),
+            "--",
+            "--log-id",
+            "abc",
+            "--max-num",
+            "1",
+        ]
+    )
+    argv = json.loads(seen.read_text(encoding="utf-8"))
+    assert "--" not in argv
+    assert argv[-4:] == ["--log-id", "abc", "--max-num", "1"]
