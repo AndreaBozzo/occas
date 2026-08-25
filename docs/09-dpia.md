@@ -4,8 +4,10 @@
 > who accepted §5's conclusion that Art. 36(1) consultation is not required and the §7.4
 > gaps as stated. Gate G1 is `CLEARED` as of the same date and
 > `ingest/px4_download.py` will now retrieve — see
-> [ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md) and
-> [ADR-0013](adr/0013-g1-cleared-on-the-adopted-dpia.md). Article 35(11) requires review
+> [ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md). A second and
+> independent flag, `R5-encryption-at-rest` in §4.2, gates the same wrapper: G1 asks
+> whether this assessment was adopted, R5 whether one measure it relies on is real.
+> Article 35(11) requires review
 > when any §7.3 trigger fires; processing pauses until that review completes.
 
 | | |
@@ -14,7 +16,7 @@
 | Processing | occas — linking public PX4 flight telemetry to the external conditions it was flown in |
 | Assessment required by | Art. 35(1) via WP248 criteria 4, 5, 6; and Art. 35(4) via Garante items 4 and 9 |
 | Screening | [`08-dpia-screening.md`](08-dpia-screening.md), 2026-08-25 |
-| Version | 1 (draft) |
+| Version | 1 |
 | Drafted | 2026-08-25 |
 | Adopted | **2026-08-25**, version 1 |
 | Next review | on adoption + on any trigger in §7.3 |
@@ -37,15 +39,22 @@ decides Article 36, the review triggers, and the adoption block.
 2. **Sampling**. A stratified sample is drawn from the frame of **79,477** non-SITL logs
    of ≥ 300 s.
 
-   **The first retrieval is a pilot of 50–100 runs** (decided 2026-08-25). Its purpose is
-   to establish whether conversion works, whether estimator configuration is readable
-   across heterogeneous vehicles — gate G2's actual question — and whether the ERA5 join
-   holds end to end. **No agreement statistic is published from the pilot.** It tests the
-   design, not the hypothesis, so a number from it could only mislead.
+   **The pilot was 100 runs, and it ran on 2026-08-25.** Its purpose was to establish
+   whether conversion works, whether estimator configuration is readable across
+   heterogeneous vehicles — gate G2's actual question — and whether the ERA5 join holds
+   end to end. All three hold. **No agreement statistic was computed from it**: it tested
+   the design, not the hypothesis.
 
-   The design point beyond the pilot remains of order 10³ runs, and the frame is the upper
-   bound; anything past it is outside this assessment (§7.3). A pilot of this size also
-   holds R5 well under the severity cap §5 relies on.
+   It found that usability splits almost entirely by airframe — 72 % and 52 % of
+   fixed-wing/VTOL runs are usable against 8 % and 4 % of rotorcraft, because multirotors
+   mostly do not log wind. **The H1 draw is therefore 1,600 fixed-wing/VTOL logs**
+   (800 per retention cell, 1,584 distinct vehicles), expected to yield of order 10³
+   usable runs — the design point, reached with about a third of the downloads a
+   corpus-proportional draw would have needed.
+
+   The frame is the upper bound; anything past it is outside this assessment (§7.3). At
+   this size, and with raw logs deleted after conversion (§4.2), R5 stays under the
+   severity cap §5 relies on.
 3. **Retrieval**. The sampled `.ulg` files are downloaded through the maintainers' own
    client at its documented limits — 10 requests/minute, no bulk pull
    ([ADR-0005](adr/0005-sample-from-metadata-not-bulk-download.md),
@@ -93,9 +102,10 @@ from it, and one the data subjects did not choose.
   personal data is sent to them or to anyone else.
 - **Retention:** downloaded logs and derived intermediates are kept only while the
   analysis they support is produced and verified, then deleted. Published aggregates are
-  permanent and designed not to identify anyone. *(Ties to §7.3: a retention period that
-  is never enforced is not a retention period — the deletion step belongs in the pipeline,
-  not in a promise.)*
+  permanent and designed not to identify anyone. **The deletion step is in the pipeline as
+  of 2026-08-25**, not in a promise: `ingest/convert.sh` with `PRUNE_RAW=1` removes each
+  `.ulg` once its conversion has produced Parquet. A retention period that is never
+  enforced is not a retention period.
 
 ### 1.5 The legitimate interest pursued — Art. 6(1)(f), first limb
 

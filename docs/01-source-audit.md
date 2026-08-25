@@ -29,7 +29,7 @@ welcome and revises the row; nothing is blocked on it arriving.
 **G1-status: CLEARED**
 
 **Cleared on 2026-08-25**, on the DPIA adopted the same day
-([`09-dpia.md`](09-dpia.md), [ADR-0013](adr/0013-g1-cleared-on-the-adopted-dpia.md)).
+([`09-dpia.md`](09-dpia.md), [ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md)).
 
 That line is read by `ingest/px4_download.py`, which refuses to retrieve logs until it
 says `CLEARED`. It is a flag, not prose, and it was cleared deliberately rather than by
