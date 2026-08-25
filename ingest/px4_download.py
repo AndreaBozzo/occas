@@ -36,8 +36,21 @@ from analysis.common import exclusions
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUDIT = REPO_ROOT / "docs" / "01-source-audit.md"
+DPIA = REPO_ROOT / "docs" / "09-dpia.md"
 # A dedicated flag, not a phrase from the prose: the gate must not turn on wording.
 G1_STATUS = re.compile(r"^\*\*G1-status:\s*(NOT CLEARED|CLEARED)\*\*", re.MULTILINE)
+# The second gate, and it is independent of the first. The adopted DPIA lists encryption
+# at rest among the measures addressing R5 -- a geolocated corpus on a personal machine --
+# and on 2026-08-25 the machine was not encrypted. Rather than let an adopted assessment
+# describe a measure that does not exist, the measure gates the code.
+#
+# A declaration rather than a detection: verifying BitLocker needs elevation that a
+# download script must not have. manage-bde and the Win32_EncryptableVolume CIM class both
+# refused without it. A declaration that stops the pipeline beats a sentence that stops
+# nothing.
+R5_ENCRYPTION = re.compile(
+    r"^\s*\*\*R5-encryption-at-rest:\s*(NOT CONFIRMED|CONFIRMED)\*\*", re.MULTILINE
+)
 
 # CC-BY attribution travels with every artifact derived from these logs.
 PX4_ATTRIBUTION = "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4."
@@ -56,6 +69,24 @@ def audit_is_blocking() -> bool:
     if found is None:
         return True
     return found.group(1) == "NOT CLEARED"
+
+
+def encryption_is_blocking() -> bool:
+    """True while encryption at rest is not confirmed in the adopted DPIA.
+
+    Fails closed, for the same reason ``audit_is_blocking`` does and with the same
+    shape: a missing file, a missing line or an unrecognised value all block. This gate
+    is deliberately separate from G1. G1 asks whether the assessment exists and was
+    adopted; this asks whether one specific measure the assessment relies on is real.
+    Clearing the first does not clear the second, and collapsing them would let a
+    signature stand in for a disk.
+    """
+    if not DPIA.exists():
+        return True
+    found = R5_ENCRYPTION.search(DPIA.read_text(encoding="utf-8"))
+    if found is None:
+        return True
+    return found.group(1) == "NOT CONFIRMED"
 
 
 def upstream_command(upstream: Path, out_dir: Path, extra: list[str]) -> list[str]:
@@ -105,6 +136,7 @@ def write_retrieval_record(
         "publication_eligibility": "blocked" if blocking else "eligible",
         "policy_reason": "G1_PERSONAL_DATA_UNRESOLVED" if blocking else None,
         "acknowledged_unaudited": acknowledged,
+        "encryption_at_rest_confirmed": not encryption_is_blocking(),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"retrieval-{retrieved_at.replace(':', '')}.json"
@@ -145,6 +177,16 @@ def main(argv: list[str] | None = None) -> int:
             "Access and rate limits are answered; B1-B5 are not. Answer them, or "
             "pass --acknowledge-unaudited to pull a small deliberate sample that "
             "must not be published.",
+            file=sys.stderr,
+        )
+        return 2
+
+    if encryption_is_blocking():
+        print(
+            "Refusing to download: docs/09-dpia.md does not say "
+            "**R5-encryption-at-rest: CONFIRMED** (gate R5).\n"
+            "The adopted DPIA relies on encryption at rest to hold R5's residual severity "
+            "down. Enable full-disk encryption, then set that flag in the same change.",
             file=sys.stderr,
         )
         return 2

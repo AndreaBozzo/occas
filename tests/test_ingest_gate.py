@@ -48,23 +48,78 @@ def test_gate_blocks_when_the_audit_is_missing(tmp_path, monkeypatch) -> None:
     assert px4_download.audit_is_blocking() is True
 
 
-def test_the_real_audit_still_blocks() -> None:
-    """G1 is not cleared: the assessment is provisional and unsigned.
+def test_the_real_audit_is_cleared() -> None:
+    """G1 was cleared on 2026-08-25, on the DPIA adopted the same day.
 
-    When it is genuinely cleared this test is the deliberate act of clearing it.
+    This assertion is the deliberate act of clearing it: the previous version asserted
+    the gate blocked, and flipping it is meant to be a visible line in a diff rather than
+    a test that quietly started skipping. That is exactly how the gate was opened by
+    accident once before, on 2026-08-24, when prose was rewritten.
     """
-    assert px4_download.audit_is_blocking() is True
+    assert px4_download.audit_is_blocking() is False
 
 
-@pytest.mark.skipif(not px4_download.audit_is_blocking(), reason="personal-data section resolved")
-def test_refuses_to_download_while_personal_data_is_unresolved(tmp_path, capsys) -> None:
-    code = px4_download.main(["--upstream", str(tmp_path / "download_logs.py")])
-    assert code == 2
-    assert "UNRESOLVED" in capsys.readouterr().err
-    assert not (tmp_path / "retrieval").exists()
+def test_the_encryption_measure_is_confirmed() -> None:
+    """R5's measure is real as of 2026-08-25: EFS on data/, not merely declared.
+
+    This assertion flipped deliberately, in the commit that applied the encryption. It
+    asserted blocking while the machine was unencrypted -- which it was at adoption --
+    and a gate that opens without a visible line in a diff is the failure mode this
+    project has already had once.
+    """
+    assert px4_download.encryption_is_blocking() is False
 
 
-def test_missing_upstream_script_is_reported(tmp_path, capsys) -> None:
+@pytest.mark.parametrize(
+    ("body", "blocking"),
+    [
+        ("**R5-encryption-at-rest: NOT CONFIRMED**", True),
+        ("**R5-encryption-at-rest: CONFIRMED**", False),
+        ("  **R5-encryption-at-rest: CONFIRMED**", False),
+        # Fails closed, in the same shapes G1 does.
+        ("the disk is encrypted, trust me", True),
+        ("**R5-encryption-at-rest: PROBABLY**", True),
+        ("R5-encryption-at-rest: CONFIRMED", True),
+        ("", True),
+    ],
+)
+def test_encryption_gate_fails_closed(tmp_path, monkeypatch, body: str, blocking: bool) -> None:
+    dpia = tmp_path / "09-dpia.md"
+    dpia.write_text("# dpia\n\n" + body + "\n\nmore prose\n", encoding="utf-8")
+    monkeypatch.setattr(px4_download, "DPIA", dpia)
+    assert px4_download.encryption_is_blocking() is blocking
+
+
+def test_encryption_gate_blocks_when_the_dpia_is_missing(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(px4_download, "DPIA", tmp_path / "gone.md")
+    assert px4_download.encryption_is_blocking() is True
+
+
+def test_both_gates_are_open_against_the_real_documents() -> None:
+    """Retrieval is permitted. Recorded as an assertion so reverting either flag fails.
+
+    The parametrised tests above still hold both gates to failing closed on anything
+    unrecognised; this one records the live state the project is actually in.
+    """
+    assert px4_download.audit_is_blocking() is False
+    assert px4_download.encryption_is_blocking() is False
+
+
+@pytest.fixture
+def gates_open(tmp_path, monkeypatch):
+    """Open the permission gates so the operational checks below can be reached.
+
+    G1 and R5 are deliberately checked before anything else in ``main``, so a test about
+    a missing upstream script or a missing exclusion list would otherwise only ever
+    observe R5 refusing. Opening them here is scoped to the test, never to the repository.
+    """
+    dpia = tmp_path / "09-dpia.md"
+    dpia.write_text("**R5-encryption-at-rest: CONFIRMED**\n", encoding="utf-8")
+    monkeypatch.setattr(px4_download, "DPIA", dpia)
+    return tmp_path
+
+
+def test_missing_upstream_script_is_reported(gates_open, tmp_path, capsys) -> None:
     code = px4_download.main(["--upstream", str(tmp_path / "nope.py"), "--acknowledge-unaudited"])
     assert code == 2
     assert "not found" in capsys.readouterr().err
@@ -98,7 +153,9 @@ def test_retrieval_record_carries_the_g1_taint(tmp_path) -> None:
     assert record["download_folder"] == str(tmp_path)
 
 
-def test_download_refuses_when_the_exclusion_list_is_missing(tmp_path, monkeypatch, capsys) -> None:
+def test_download_refuses_when_the_exclusion_list_is_missing(
+    gates_open, tmp_path, monkeypatch, capsys
+) -> None:
     """Article 21 must not be honoured only when someone remembers to look.
 
     A missing list is not an empty one. Retrieving while unable to say which objections

@@ -1,9 +1,12 @@
 # 09 — Data Protection Impact Assessment (Article 35 GDPR)
 
-> **STATUS: DRAFT — NOT ADOPTED.** This is a document until the controller adopts it by
-> completing §8. It is not a defence, a record, or a compliance artefact before that. Gate
-> G1 stays `NOT CLEARED` and `ingest/px4_download.py` keeps refusing to retrieve until it
-> is adopted — see [ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md).
+> **STATUS: ADOPTED — version 1, 2026-08-25.** Adopted by the controller, Andrea Bozzo,
+> who accepted §5's conclusion that Art. 36(1) consultation is not required and the §7.4
+> gaps as stated. Gate G1 is `CLEARED` as of the same date and
+> `ingest/px4_download.py` will now retrieve — see
+> [ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md) and
+> [ADR-0013](adr/0013-g1-cleared-on-the-adopted-dpia.md). Article 35(11) requires review
+> when any §7.3 trigger fires; processing pauses until that review completes.
 
 | | |
 |---|---|
@@ -13,7 +16,7 @@
 | Screening | [`08-dpia-screening.md`](08-dpia-screening.md), 2026-08-25 |
 | Version | 1 (draft) |
 | Drafted | 2026-08-25 |
-| Adopted | *(pending)* |
+| Adopted | **2026-08-25**, version 1 |
 | Next review | on adoption + on any trigger in §7.3 |
 
 Article 35(7) prescribes four elements. They are §§1–4 below. §§5–8 are the parts that
@@ -32,8 +35,17 @@ decides Article 36, the review triggers, and the adoption block.
    [`02b-dbinfo-inventory.md`](02b-dbinfo-inventory.md); this step is the reason the
    remaining steps can be small.
 2. **Sampling**. A stratified sample is drawn from the frame of **79,477** non-SITL logs
-   of ≥ 300 s. Target size is of order 10³ runs. The frame's upper bound is the frame
-   itself; anything beyond it is outside this assessment (§7.3).
+   of ≥ 300 s.
+
+   **The first retrieval is a pilot of 50–100 runs** (decided 2026-08-25). Its purpose is
+   to establish whether conversion works, whether estimator configuration is readable
+   across heterogeneous vehicles — gate G2's actual question — and whether the ERA5 join
+   holds end to end. **No agreement statistic is published from the pilot.** It tests the
+   design, not the hypothesis, so a number from it could only mislead.
+
+   The design point beyond the pilot remains of order 10³ runs, and the frame is the upper
+   bound; anything past it is outside this assessment (§7.3). A pilot of this size also
+   holds R5 well under the severity cap §5 relies on.
 3. **Retrieval**. The sampled `.ulg` files are downloaded through the maintainers' own
    client at its documented limits — 10 requests/minute, no bulk pull
    ([ADR-0005](adr/0005-sample-from-metadata-not-bulk-download.md),
@@ -252,7 +264,17 @@ rather than assumed.
 - Positions are reduced to what the join needs immediately after conversion — the earliest
   technically possible point, since no interface serves position pre-generalised.
 - Positions are never transmitted. ERA5 is fetched by bounding box and hour.
-- Local store encrypted at rest; deletion on completion of the analysis it supports.
+- **Local store encrypted at rest.** Done 2026-08-25: EFS on `data/`, where the corpus
+  lands, via `cipher /e /s:data`. New files inherit it. Full-disk BitLocker was not used —
+  it needs elevation, and the exposure is one directory, not the machine.
+
+  **R5-encryption-at-rest: CONFIRMED**
+
+  `ingest/px4_download.py` reads that flag and fails closed on anything else, so the
+  measure gates the code rather than sitting in prose. What EFS covers: another local
+  account, and the drive read outside this Windows user. What it does not: compromise of
+  this account while logged in. That residual is R5's, and §5 grades it accordingly.
+- Deletion on completion of the analysis the data supports.
 - Manifests record what was read, so minimisation is auditable rather than asserted
   ([ADR-0004](adr/0004-no-result-without-a-manifest.md)).
 
@@ -361,7 +383,9 @@ Review is mandatory when any of these occurs, and processing pauses until it com
 - scope extends to H2, H3, DEM or GNSS;
 - publication moves beyond aggregate statistics in any respect;
 - a university affiliation arises, which makes the Garante's deontological rules binding
-  and adds art. 3's documented-project requirement;
+  and adds art. 3's documented-project requirement. **Confirmed 2026-08-25: none exists
+  and none is planned**, so the rules stay a voluntary benchmark. This trigger fires on
+  the affiliation arising, not on someone later noticing that it did;
 - an objection cannot be honoured by the §4.4 mechanism;
 - any personal-data breach, whether or not notifiable;
 - relevant new guidance or case law — the General Court's judgment on remittal in
@@ -378,8 +402,8 @@ than one that names them:
   adoption.
 - The retention period in §1.4 is a policy, not yet a pipeline step. It should become one
   before it is relied on.
-- Encryption at rest (§4.2) is a stated measure whose implementation is the controller's
-  to confirm on the actual machine.
+- Encryption at rest (§4.2) — **closed 2026-08-25**, EFS on `data/`. Listed here as it
+  stood at drafting, when it was outstanding.
 - R5's severity cap assumes the sample stays of order 10³. §7.3 makes that a review
   trigger for exactly this reason.
 
@@ -387,18 +411,36 @@ than one that names them:
 
 ## 8. Adoption
 
-This assessment takes effect when the controller completes this section, and not before.
-Adopting it means accepting §5's conclusion that Art. 36(1) consultation is not required,
-and the §7.4 gaps as acceptable or as closed.
+Adopted. Adoption meant accepting §5's conclusion that Art. 36(1) consultation is not
+required, and the §7.4 gaps as acceptable or closed.
 
 | | |
 |---|---|
-| Adopted by | |
+| Adopted by | **Andrea Bozzo** |
 | Role | Controller |
-| Date | |
-| Version adopted | |
-| Art. 36(1) consultation | not required / required — *delete as applicable* |
-| §7.4 gaps | accepted as stated / closed before adoption — *delete as applicable* |
+| Date | **2026-08-25** |
+| Version adopted | **1** |
+| Art. 36(1) consultation | **not required** — §5 |
+| §7.4 gaps | **accepted as stated** |
+
+The gaps accepted, restated so that accepting them is a decision on the record and not a
+sentence someone scrolled past:
+
+1. Art. 35(1), 35(3), 35(4) and 36(1) are quoted from **two independent mirrors that agree
+   verbatim**, because EUR-Lex returned an empty document on four attempts. Art. 35(7)'s
+   subparagraphs are followed in substance rather than quoted. Nothing in the reasoning
+   turns on a disputed word, but the confirmation remains outstanding.
+2. The **retention period in §1.4 is a policy, not yet a pipeline step.** It is relied on
+   only once data exists, so it must become code before the first retrieval is analysed —
+   not before the first retrieval happens.
+3. **Encryption at rest — closed the same day.** EFS applied to `data/`; the
+   `R5-encryption-at-rest` flag is `CONFIRMED` and gates the download wrapper. The part it
+   does not cover — compromise of the logged-in account — is stated in §4.2 and graded in
+   §5 rather than left unlisted.
+
+Item 2 is the one still carried on trust. If the retention step is not code by the time a
+corpus exists, R5's residual severity is understated and §5's Art. 36(1) conclusion should
+be revisited.
 
 **On adoption**, in the same change: set `**G1-status: CLEARED**` in
 [`01-source-audit.md`](01-source-audit.md), which is the single flag

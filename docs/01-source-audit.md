@@ -26,12 +26,18 @@ answer any more** — each carries a decision that holds without one, plus what 
 would change ([ADR-0012](adr/0012-no-open-question-waits-for-a-reply.md)). A late reply is
 welcome and revises the row; nothing is blocked on it arriving.
 
-**G1-status: NOT CLEARED**
+**G1-status: CLEARED**
+
+**Cleared on 2026-08-25**, on the DPIA adopted the same day
+([`09-dpia.md`](09-dpia.md), [ADR-0013](adr/0013-g1-cleared-on-the-adopted-dpia.md)).
 
 That line is read by `ingest/px4_download.py`, which refuses to retrieve logs until it
-says `CLEARED`. It is a flag, not prose: change it when the gate is actually cleared —
-controller sign-off, privacy notice, DPIA screening — and not when the wording around
-it changes.
+says `CLEARED`. It is a flag, not prose, and it was cleared deliberately rather than by
+a wording change — the commit that flipped it also flipped the test asserting it blocks.
+
+A second flag in the DPIA, `R5-encryption-at-rest`, gates the same wrapper independently:
+G1 asks whether the assessment was adopted, R5 whether one measure it relies on is real.
+Both are `CLEARED`/`CONFIRMED` as of 2026-08-25 — EFS was applied to `data/` the same day.
 
 **B-status: ANSWERED, PROVISIONALLY — G1 now turns on a signature, not on research.** B1-B5 are assessed in [`07-personal-data.md`](07-personal-data.md) from the GDPR text, WP216 and the case law, and the publication rule they imply is [ADR-0009](adr/0009-aggregate-only-for-positional-results.md). What remains is the controller's sign-off, a public privacy notice and **the DPIA itself**: the Art. 35 screening is closed as of 2026-08-25 ([`08-dpia-screening.md`](08-dpia-screening.md)) and it found the assessment required, and required *before the first retrieval* rather than before publication ([ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md)). Also the Italian research provisions — listed at the end of that document. **Section C is closed except C0**, which needs the paywalled
 full text. C5 and C6 closed on 2026-08-24 against a live CDS account: the licence is the
