@@ -1,0 +1,25 @@
+{
+  "requested": 100,
+  "available": 100,
+  "missing": 0,
+  "availability_rate": 1.0,
+  "oldest_available_log_date": "2017-09-18",
+  "by_stratum": {
+    "fixed_wing_or_vtol|older": {
+      "requested": 25,
+      "available": 25
+    },
+    "fixed_wing_or_vtol|within_window": {
+      "requested": 25,
+      "available": 25
+    },
+    "rotorcraft|older": {
+      "requested": 25,
+      "available": 25
+    },
+    "rotorcraft|within_window": {
+      "requested": 25,
+      "available": 25
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "analysis": {
+    "description": "Whether each sampled .ulg was retrievable, by stratum. Audit row A8, measured as a byproduct of the pilot retrieval rather than by a separate probe.",
+    "hypothesis": "none",
+    "name": "px4-pilot-availability"
+  },
+  "code": {
+    "dirty": true,
+    "entrypoint": "ingest/availability.py",
+    "git_commit": "0dad357f5e0e24e853c3d3804df016e710410e69"
+  },
+  "created_at": "2026-08-25T18:19:29.071093+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [],
+  "manifest_id": "a585ebf0-e940-40d9-9cd1-19b4cbf0654d",
+  "outputs": [
+    {
+      "content_hash": "sha256:5c4579e4a6b1d2b17ef3f82c9209595ed500cec39a918b0ccc1f1a4742dc1e67",
+      "path": "artifacts/pilot-availability.json"
+    }
+  ],
+  "parameters": {
+    "exclusions": {
+      "count": 0,
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "latest_received": null,
+      "path": "data/exclusions.jsonl"
+    },
+    "min_plausible_bytes": 4096,
+    "ulog_magic_checked": true
+  },
+  "seed": null
+}

@@ -94,11 +94,17 @@ sample of one to three thousand runs — the loss is not of *n* but of spread, s
 older records carry most of the firmware, airframe and geographic diversity H1
 stratifies on.
 
-This is an upper bound on what could be lost, not a measured loss: it counts metadata,
-because metadata is all we have. Settling it means one HEAD request per sampled log,
-which is exactly the retrieval that `robots.txt` and
-[ADR-0005](adr/0005-sample-from-metadata-not-bulk-download.md) put behind a decision.
-Audit row [A8](01-source-audit.md); asked on the M0 thread, unanswered.
+**Measured on 2026-08-25, and the exposure did not materialise.** The pilot retrieval
+drew 50 logs from outside the window and **all 50 downloaded**, with valid ULog headers;
+100/100 overall, oldest retrieved **2017-09-18**. Metadata and `.ulg` both outlive the
+announced retention. The frame therefore stays at 79,477, and the 28,402 figure above is
+what the risk *would* have cost, not what it did.
+
+The rule of three bounds the missing rate outside the window at about 6% at 95%
+confidence on 50 draws — high availability rather than a demonstrated 100%, and it is
+recomputed if a later sample starts missing files. Audit row
+[A8](01-source-audit.md), answered by measurement rather than by a reply
+([ADR-0012](adr/0012-no-open-question-waits-for-a-reply.md)).
 
 ## Airframes (real hardware)
 
