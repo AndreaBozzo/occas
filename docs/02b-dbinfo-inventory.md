@@ -196,20 +196,42 @@ building one.
 100 runs retrieved and converted, 0 conversion failures. Stratified 25 per cell; see
 `artifacts/pilot-inventory.json`.
 
-**35 of 100 are usable for H1**, where usable means carrying *both* halves of the
-comparison: a `wind` topic with `windspeed_north`/`windspeed_east`, and
-`vehicle_global_position` with `lat`/`lon`. The binding constraint is not position —
-that is present on 87 of 100 — it is **`wind`, present on only 37**.
+**34 of 100 are usable for H1.** Usable means three things, not two: a `wind` topic with
+`windspeed_north`/`windspeed_east`, `vehicle_global_position` with `lat`/`lon`, **and a
+recoverable UTC clock**. The binding constraint is not position — present on 87 of 100 —
+it is **`wind`, present on only 37**.
 
 | stratum | frame | usable / 25 | rate | implied usable |
 |---|---:|---:|---:|---:|
-| fixed_wing_or_vtol \| within_window | 6,185 | 19 | 76 % | 4,701 |
+| fixed_wing_or_vtol \| within_window | 6,185 | 18 | 72 % | 4,453 |
 | fixed_wing_or_vtol \| older | 10,497 | 13 | 52 % | 5,458 |
 | rotorcraft \| older | 40,578 | 2 | 8 % | 3,246 |
 | rotorcraft \| within_window | 22,217 | 1 | 4 % | 889 |
-| **total** | **79,477** | **35** | **35 %** | **≈ 14,300** |
+| **total** | **79,477** | **34** | **34 %** | **≈ 14,000** |
 
-**Fixed-wing and VTOL are 64 % usable; rotorcraft are 6 %.** That is not a quality
+### The clock is a third requirement, and it is not visible as a missing topic
+
+ULog timestamps are microseconds since boot; ERA5 is indexed by UTC. The only absolute
+time in a PX4 log is `vehicle_gps_position.time_utc_usec`, published against the same boot
+clock, so the offset is recoverable. Two things about it were found by trying:
+
+**A non-zero `time_utc_usec` is not a valid one, and `fix_type` is not evidence.** Run
+`405385f7` reports `fix_type = 3` on all 676 GPS rows with a non-zero `time_utc_usec`
+whose values start at 32 seconds and track the boot clock. The receiver never obtained a
+date. It has wind, it has position, it looked usable, and it would have joined to weather
+in **1970**. Rejected on an epoch check; 12 runs fail the clock requirement in total,
+though most were already unusable for other reasons — the net cost is one run.
+
+**`log_date` is the upload date, not the flight date.** 41 of 100 runs recover a GPS time
+*earlier* than their `log_date`, by 3 to 2,478 days, and **not one recovers a later time**.
+A wrong clock scatters in both directions; a flown-then-uploaded-later corpus lags one
+way. A symmetric cross-check rejected all 41 as broken before the asymmetry showed what
+they actually were, so the check is one-sided: a flight may precede its upload by years
+and cannot follow it. **This also means the ≥300 s duration frame and the retention
+strata are indexed by upload date** — which is the right variable for A8, since retention
+applies to stored objects, and the wrong one for anything seasonal.
+
+**Fixed-wing and VTOL are 72 % and 52 % usable by retention side; rotorcraft 8 % and 4 %.** That is not a quality
 difference, it is a physics one: EKF2 estimates wind by fusing airspeed and sideslip,
 which multirotors mostly do not have. `airspeed` is present on 43 runs, closely tracking
 `wind`'s 37.
@@ -232,7 +254,7 @@ reconstructible whenever there is a wind estimate at all, so its `reconstructibl
 case does not arise for the variance — the uncertainty ADR-0003 needs is in the logs, not
 an assumption.
 
-**Gate G2: pass, with the scope change above.** ~14,300 implied usable runs against a
+**Gate G2: pass, with the scope change above.** ~14,000 implied usable runs against a
 design point of 10³ is ample headroom; the risk that materialised was composition, not
 volume.
 

@@ -37,6 +37,7 @@ from typing import Any
 import pyarrow.parquet as pq
 
 from analysis.common.manifest import add_output, build_manifest, write_manifest
+from context import align
 
 # Both halves of H1's comparison, and the join key. Absence of any of these makes a run
 # unusable for H1 -- not lower quality, unusable.
@@ -79,7 +80,7 @@ def tool_version(summary_path: Path) -> str:
     return f"{reported} ({ULOG_CONVERT_REV})"
 
 
-def inspect(run_dir: Path) -> dict[str, Any]:
+def inspect(run_dir: Path, expected_date: str | None = None) -> dict[str, Any]:
     """Everything G2 needs to know about one converted run."""
     record: dict[str, Any] = {"log_id": run_dir.name, "topics": {}}
 
@@ -104,10 +105,35 @@ def inspect(run_dir: Path) -> dict[str, Any]:
         for n in REQUIRED_TOPICS
         if record["topics"][n]["present"] and not record["topics"][n]["rows"]
     ]
+    # Absolute time is a third requirement, and it is not visible as a missing topic.
+    # Run 405385f7 carries wind, position, and a GPS reporting fix_type 3 with a
+    # non-zero time_utc_usec that never contained a date -- so it looked usable and
+    # would have joined to weather in 1970. Checked here rather than discovered later.
+    try:
+        gps = pq.read_table(run_dir / "vehicle_gps_position.parquet")
+        anchor = align.clock_anchor(
+            {
+                "time_utc_usec": gps.column("time_utc_usec").to_pylist(),
+                "timestamp": gps.column("timestamp").to_pylist(),
+            },
+            expected_date=expected_date,
+        )
+        record["absolute_time"] = True
+        record["clock_spread_s"] = anchor.spread_s
+        record["clock_anchor_reason"] = None
+    except (align.NoAbsoluteTime, FileNotFoundError, KeyError) as error:
+        record["absolute_time"] = False
+        record["clock_spread_s"] = None
+        record["clock_anchor_reason"] = str(error)[:120]
+
     record["missing_required"] = missing
     record["empty_required"] = empty
     record["usable_for_h1"] = (
-        not missing and not empty and record["wind_components"] and record["position_columns"]
+        not missing
+        and not empty
+        and record["wind_components"]
+        and record["position_columns"]
+        and record["absolute_time"]
     )
     return record
 
@@ -128,7 +154,9 @@ def summarise(records: list[dict[str, Any]], strata: dict[str, str]) -> dict[str
                 reasons[f"missing:{name}"] += 1
             for name in record["empty_required"]:
                 reasons[f"empty:{name}"] += 1
-            if not record["missing_required"] and not record["empty_required"]:
+            if not record["absolute_time"]:
+                reasons["no_absolute_time"] += 1
+            elif not record["missing_required"] and not record["empty_required"]:
                 reasons["columns_absent"] += 1
         for name, info in record["topics"].items():
             if info["present"]:
@@ -181,14 +209,20 @@ def main(argv: list[str] | None = None) -> int:
 
     # encoding is explicit everywhere here: these files are UTF-8 and Windows would
     # otherwise decode them as cp1252, which fails on the first non-ASCII byte.
-    strata = {}
+    strata: dict[str, str] = {}
+    dates: dict[str, str | None] = {}
     if args.sample.exists():
         for line in args.sample.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 row = json.loads(line)
                 strata[row["log_id"]] = row["stratum"]
+                dates[row["log_id"]] = (row.get("log_date") or "")[:10] or None
 
-    records = [inspect(d) for d in sorted(args.parquet.iterdir()) if d.is_dir()]
+    records = [
+        inspect(d, expected_date=dates.get(d.name))
+        for d in sorted(args.parquet.iterdir())
+        if d.is_dir()
+    ]
     summary = summarise(records, strata)
 
     args.per_run.parent.mkdir(parents=True, exist_ok=True)

@@ -1,10 +1,11 @@
 {
   "runs": 100,
-  "usable_for_h1": 35,
-  "usable_rate": 0.35,
+  "usable_for_h1": 34,
+  "usable_rate": 0.34,
   "unusable_reasons": {
     "missing:vehicle_global_position": 13,
-    "missing:wind": 63
+    "missing:wind": 63,
+    "no_absolute_time": 12
   },
   "topic_presence": {
     "airspeed": 43,
@@ -23,7 +24,7 @@
     },
     "fixed_wing_or_vtol|within_window": {
       "runs": 25,
-      "usable": 19
+      "usable": 18
     },
     "rotorcraft|older": {
       "runs": 25,
