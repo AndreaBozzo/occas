@@ -11,7 +11,10 @@ until ``--acknowledge-unaudited`` is passed for a deliberate small sample. Acces
 rate limits are answered (10 requests/minute, ``robots.txt`` disallows crawling); B1-B5
 now have provisional answers in ``docs/07-personal-data.md``, which is not the same as
 the gate being cleared: that needs the controller's sign-off, a privacy notice and a
-DPIA screening.
+DPIA. The *screening* is done -- ``docs/08-dpia-screening.md``, 2026-08-25 -- and it
+concluded the assessment is required, and required **before** the first retrieval
+rather than before publication (``adr/0011``). So this gate is not a formality that
+publication will later satisfy; it is the thing standing in front of the download.
 
 **The gate fails closed.** It reads one status line, and a missing file, a missing line
 or an unrecognised value all block. The previous version searched for a phrase used in

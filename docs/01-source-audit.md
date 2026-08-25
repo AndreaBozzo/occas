@@ -32,7 +32,7 @@ says `CLEARED`. It is a flag, not prose: change it when the gate is actually cle
 controller sign-off, privacy notice, DPIA screening — and not when the wording around
 it changes.
 
-**B-status: ANSWERED, PROVISIONALLY — G1 now turns on a signature, not on research.** B1-B5 are assessed in [`07-personal-data.md`](07-personal-data.md) from the GDPR text, WP216 and the case law, and the publication rule they imply is [ADR-0009](adr/0009-aggregate-only-for-positional-results.md). What remains is the controller's sign-off, a public privacy notice, an Art. 35 DPIA screening, and the Italian research provisions — listed at the end of that document. **Section C is closed except C0**, which needs the paywalled
+**B-status: ANSWERED, PROVISIONALLY — G1 now turns on a signature, not on research.** B1-B5 are assessed in [`07-personal-data.md`](07-personal-data.md) from the GDPR text, WP216 and the case law, and the publication rule they imply is [ADR-0009](adr/0009-aggregate-only-for-positional-results.md). What remains is the controller's sign-off, a public privacy notice and **the DPIA itself**: the Art. 35 screening is closed as of 2026-08-25 ([`08-dpia-screening.md`](08-dpia-screening.md)) and it found the assessment required, and required *before the first retrieval* rather than before publication ([ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md)). Also the Italian research provisions — listed at the end of that document. **Section C is closed except C0**, which needs the paywalled
 full text. C5 and C6 closed on 2026-08-24 against a live CDS account: the licence is the
 *Licence to use Copernicus Products* rev. 12 with its attribution strings read from the
 text, and `expver` was confirmed on real retrievals rather than from documentation —

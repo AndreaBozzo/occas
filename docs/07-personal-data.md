@@ -259,8 +259,17 @@ where a thread already exists.
 
 ## Still open
 
-- **A DPIA screening under Article 35.** Location data at this scale plausibly triggers
-  it. Not assessed here, and not to be assumed either way.
+- **A DPIA under Article 35 — the screening is done and the answer is yes.**
+  [`08-dpia-screening.md`](08-dpia-screening.md), 2026-08-25. Not by Art. 35(3), whose
+  three cases are all absent, but by three of WP248's nine criteria against a threshold
+  of two, and by items 4 and 9 of the Garante's Art. 35(4) list — item 4 names
+  large-scale location data outright. **Art. 35(1) says "prior to the processing"**, so
+  the DPIA precedes the first `.ulg`, not the first publication; listing it here among
+  the publication tasks was the wrong placement
+  ([ADR-0011](adr/0011-the-dpia-is-a-precondition-of-retrieval.md)). Nothing done so far
+  required one: `dbinfo` carries no coordinates, so the metadata layer meets one
+  criterion, not three. Art. 36(1) prior consultation stays open until the DPIA grades
+  its own residual risk.
 - **Whether affiliation changes the answer.** The deontological rules are out of scope for
   an unaffiliated individual today. Any university involvement makes them binding and adds
   Article 3's documented-project requirement.
