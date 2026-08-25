@@ -1,4 +1,11 @@
 {
+  "retention_exposure": {
+    "window_days": 365,
+    "newest_log_date": "2026-08-19",
+    "cutoff": "2025-08-19",
+    "frame_within_window": 28402,
+    "frame_older_than_window": 51075
+  },
   "total_logs": 450395,
   "sitl": 33762,
   "real_hardware": 416633,
@@ -12,9 +19,20 @@
   },
   "h1_frame": {
     "min_duration_s": 300,
-    "non_sitl_logs_at_or_above": 79477
+    "non_sitl_logs_at_or_above": 79477,
+    "non_sitl_logs_by_tier": {
+      "120": 161243,
+      "180": 120548,
+      "300": 79477,
+      "600": 33356
+    }
   },
   "fixed_wing_or_vtol_real": 60079,
+  "airframe_class_real": {
+    "fixed_wing_or_vtol": 60079,
+    "rotorcraft": 346767,
+    "other": 9787
+  },
   "declared_wind_speed": {
     "logs": 23327,
     "by_label": {
@@ -54,23 +72,6 @@
       "2021": 2065,
       "2022": 1801,
       "2016": 77
-    },
-    "mav_type": {
-      "Quadrotor": 306807,
-      "Hexarotor": 36159,
-      "Fixed Wing": 26289,
-      "VTOL Standard": 24707,
-      "Octorotor": 17965,
-      "Tiltrotor VTOL": 10545,
-      "unknown type": 5667,
-      "Normal helicopter with tail rotor": 4405,
-      "Coaxial helicopter": 4220,
-      "Two-rotor VTOL (Tailsitter)": 3871,
-      "Quad-rotor VTOL (Tailsitter)": 2938,
-      "Ground Rover": 2642,
-      "Generic": 1591,
-      "Tricopter": 1589,
-      "Surface Vessel, Boat, Ship": 361
     },
     "estimator": {
       "EKF2": 446969,
@@ -120,6 +121,80 @@
       "PX4 Flycore PR validation": 1,
       "agent": 1,
       "http://localhost:5006": 1
+    },
+    "mav_type_all": {
+      "Quadrotor": 306807,
+      "Hexarotor": 36159,
+      "Fixed Wing": 26289,
+      "VTOL Standard": 24707,
+      "Octorotor": 17965,
+      "Tiltrotor VTOL": 10545,
+      "unknown type": 5667,
+      "Normal helicopter with tail rotor": 4405,
+      "Coaxial helicopter": 4220,
+      "Two-rotor VTOL (Tailsitter)": 3871,
+      "Quad-rotor VTOL (Tailsitter)": 2938,
+      "Ground Rover": 2642,
+      "Generic": 1591,
+      "Tricopter": 1589,
+      "Surface Vessel, Boat, Ship": 361,
+      "VTOL reserved 4": 275,
+      "VTOL Tailsitter": 75,
+      "Submarine": 73,
+      "Rocket": 73,
+      "Airship, controlled": 69,
+      "Free balloon, uncontrolled": 48,
+      "VTOL reserved 3": 23,
+      "Ground installation": 2,
+      "VTOL reserved 5": 1
+    },
+    "mav_type_real": {
+      "Quadrotor": 284433,
+      "Hexarotor": 34614,
+      "Fixed Wing": 23301,
+      "VTOL Standard": 21462,
+      "Octorotor": 17564,
+      "Tiltrotor VTOL": 9096,
+      "unknown type": 5397,
+      "Normal helicopter with tail rotor": 4386,
+      "Coaxial helicopter": 4216,
+      "Two-rotor VTOL (Tailsitter)": 3616,
+      "Quad-rotor VTOL (Tailsitter)": 2320,
+      "Ground Rover": 2288,
+      "Generic": 1566,
+      "Tricopter": 1554,
+      "Surface Vessel, Boat, Ship": 331,
+      "VTOL reserved 4": 204,
+      "Rocket": 68,
+      "Submarine": 67,
+      "VTOL Tailsitter": 57,
+      "Free balloon, uncontrolled": 48,
+      "VTOL reserved 3": 23,
+      "Airship, controlled": 20,
+      "Ground installation": 2
+    },
+    "mav_type_sitl": {
+      "Quadrotor": 22374,
+      "VTOL Standard": 3245,
+      "Fixed Wing": 2988,
+      "Hexarotor": 1545,
+      "Tiltrotor VTOL": 1449,
+      "Quad-rotor VTOL (Tailsitter)": 618,
+      "Octorotor": 401,
+      "Ground Rover": 354,
+      "unknown type": 270,
+      "Two-rotor VTOL (Tailsitter)": 255,
+      "VTOL reserved 4": 71,
+      "Airship, controlled": 49,
+      "Tricopter": 35,
+      "Surface Vessel, Boat, Ship": 30,
+      "Generic": 25,
+      "Normal helicopter with tail rotor": 19,
+      "VTOL Tailsitter": 18,
+      "Submarine": 6,
+      "Rocket": 5,
+      "Coaxial helicopter": 4,
+      "VTOL reserved 5": 1
     }
   }
 }

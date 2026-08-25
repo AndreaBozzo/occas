@@ -1,0 +1,66 @@
+{
+  "analysis": {
+    "description": "Population characterisation of the public PX4 log corpus from its published metadata dump. No logs downloaded.",
+    "hypothesis": "none",
+    "name": "px4-dbinfo-corpus-audit"
+  },
+  "code": {
+    "dirty": false,
+    "entrypoint": "ingest/dbinfo_audit.py",
+    "git_commit": "9d1c944f5222ad3dbff937ba744e3e04a0e53048"
+  },
+  "created_at": "2026-08-25T16:28:03.412791+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [
+    {
+      "content_hash": "sha256:9e4a76c6ad2524300318ac312cd0224728e97467904de89cf0789549a2ceaca5",
+      "path": "data/dbinfo.json.gz",
+      "source": {
+        "attribution": "Flight logs from PX4 Flight Review (logs.px4.io), CC-BY PX4.",
+        "licence": "CC-BY-4.0",
+        "retrieved_at": "2026-08-20T21:08:00+00:00",
+        "source": "px4_flight_review",
+        "source_url": "https://cdn.logs.px4.io/dbinfo.json",
+        "source_version": "gzip header mtime 2026-08-20T00:00:52Z"
+      }
+    }
+  ],
+  "manifest_id": "47674dda-58a4-427c-909b-172c85efd916",
+  "outputs": [
+    {
+      "content_hash": "sha256:a5ec1230145f6bba8ba0bf8eb29da1e591aa0a6dae5b4a8ee7e80a456a9d3dd5",
+      "path": "artifacts/dbinfo-audit.json"
+    }
+  ],
+  "parameters": {
+    "duration_tiers": [
+      120,
+      180,
+      300,
+      600
+    ],
+    "max_plausible_duration_s": 86400,
+    "min_duration_s": 300,
+    "retention_window_days": 365,
+    "sitl_hw": "PX4_SITL"
+  },
+  "seed": null
+}
