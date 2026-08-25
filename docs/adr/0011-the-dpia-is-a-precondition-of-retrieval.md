@@ -53,13 +53,13 @@ it from the publication tasks.
   code change is needed to enforce this — but its docstring named "a DPIA screening" among
   the things G1 waits on, which was accurate and is now stale in the other direction: the
   screening is done, and what remains is the DPIA itself.
-- `--acknowledge-unaudited` needs the controller's eye. It exists so a deliberate small
-  sample can be taken with the block recorded rather than bypassed, and the retrieval
-  record does stamp `publication_eligibility=blocked`. But an acknowledgement flag is a
-  record of a decision, not a legal basis: if Article 35(1) requires an assessment prior
-  to processing, a small sample of geolocated logs is still processing. **This ADR does
-  not change the flag's behaviour** — that is the controller's call, and a gate quietly
-  tightened by an author who is not the controller is its own failure. It flags it.
+- `--acknowledge-unaudited` was flagged here for the controller's eye and **removed on
+  2026-08-25 at their instruction**. It existed so a deliberate small sample could be
+  taken with the block recorded rather than bypassed, and the retrieval record did stamp
+  `publication_eligibility=blocked`. But an acknowledgement is a record of a decision,
+  not a legal basis: Article 35(1) requires the assessment prior to the processing, and a
+  small sample of geolocated logs is still processing. A gate with a documented way
+  around it is a suggestion. `tests/test_ingest_gate.py` now asserts it has not returned.
 - Article 36(1) prior consultation with the Garante becomes a live question, answerable
   only once the DPIA grades its own residual risk. The mitigations already designed are
   substantial and it is plausibly not reached. "Plausibly not" is not a finding.

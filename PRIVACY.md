@@ -1,9 +1,11 @@
 # Privacy notice
 
-**Status: DRAFT — not yet published.** It becomes effective when the controller fills in
-the contact details below, publishes it, and records that in
-[`docs/outreach/README.md`](docs/outreach/README.md). Until then it is a document, not a
-notice.
+**Status: READY TO PUBLISH — contact details filled in 2026-08-25.** It becomes a notice
+when the controller publishes it where the data subjects read, and records that in
+[`docs/outreach/README.md`](docs/outreach/README.md). Until published it is a document,
+not a notice: art. 6(3) of the Garante's deontological rules is explicit that the
+information has to reach people through a channel they actually use, and a file in a
+repository is not one.
 
 This notice exists because of Article 14(5)(b) GDPR. This project processes personal data
 that it did not obtain from the people it concerns, so the ordinary duty is to inform each
@@ -18,7 +20,7 @@ that measure. The reasoning behind every statement here is in
 | | |
 |---|---|
 | Controller | Andrea Bozzo |
-| Contact | `<contact address — to be filled in before publication>` |
+| Contact | <andreabozzo92@gmail.com> |
 | Project | occas — an open research corpus linking PX4 flight telemetry to the external conditions it was flown in |
 
 ## What data, and where it comes from

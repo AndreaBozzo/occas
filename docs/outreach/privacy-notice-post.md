@@ -57,7 +57,7 @@ against the same public logs.
 full notice, including retention and your rights, is here: `<link to PRIVACY.md>`.
 
 **If you would rather your flights were not used**, reply here or write to
-`<contact address>` with your `vehicle_uuid`, a log id, or a link. I will exclude them and
+<andreabozzo92@gmail.com> with your `vehicle_uuid`, a log id, or a link. I will exclude them and
 keep them excluded — no reason needed, and no argument from me. Note that this only
 affects my corpus; your log stays public on `logs.px4.io` unless you ask the maintainers
 separately.
@@ -69,7 +69,7 @@ rather the point of posting.
 
 ## Before posting
 
-- fill in the contact address and the link, in both this post and `PRIVACY.md`;
+- ~~fill in the contact address~~ — done 2026-08-25; the stable link is still needed;
 - publish `PRIVACY.md` at a stable URL, so the link does not rot;
 - record the date and the URL in [`README.md`](README.md) in this folder, since the
   outreach log is the record, not the thread;

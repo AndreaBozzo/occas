@@ -275,7 +275,8 @@ where a thread already exists.
   Article 3's documented-project requirement.
 - **Publishing the privacy notice.** Drafted at [`../PRIVACY.md`](../PRIVACY.md), with a
   forum version at [`outreach/privacy-notice-post.md`](outreach/privacy-notice-post.md).
-  It needs a contact address and a stable URL, and it is not a notice until it is
+  The contact address is filled in as of 2026-08-25; it still needs a stable URL, and it
+  is not a notice until it is
   actually published — in a channel the data subjects read, per art. 6(3) of the
   deontological rules.
 - **The exclusion list the notice promises — built, 2026-08-25.**

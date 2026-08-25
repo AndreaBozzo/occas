@@ -6,15 +6,23 @@ is the part the project needs and upstream does not provide: a record of exactly
 was retrieved, when, under which terms, so that a later manifest can point at it.
 
 Blocking precondition (gate G1): ``docs/01-source-audit.md`` carries a dedicated
-``G1-status`` line, and this script refuses to run unless it says ``CLEARED`` -- or
-until ``--acknowledge-unaudited`` is passed for a deliberate small sample. Access and
-rate limits are answered (10 requests/minute, ``robots.txt`` disallows crawling); B1-B5
-now have provisional answers in ``docs/07-personal-data.md``, which is not the same as
-the gate being cleared: that needs the controller's sign-off, a privacy notice and a
-DPIA. The *screening* is done -- ``docs/08-dpia-screening.md``, 2026-08-25 -- and it
-concluded the assessment is required, and required **before** the first retrieval
-rather than before publication (``adr/0011``). So this gate is not a formality that
-publication will later satisfy; it is the thing standing in front of the download.
+``G1-status`` line, and this script refuses to run unless it says ``CLEARED``. There is
+no override: an ``--acknowledge-unaudited`` flag existed until 2026-08-25, letting a
+"deliberate small sample" past the gate with the record stamped blocked. It was removed
+once the DPIA made clear that an acknowledgement is a record of a decision and not a
+legal basis -- Article 35(1) requires the assessment before the processing, and a small
+sample of geolocated logs is still processing. A gate with a documented way around it is
+a suggestion.
+
+A **second and independent** gate follows it: ``R5-encryption-at-rest`` in the DPIA. G1
+asks whether the assessment was adopted; R5 asks whether one measure it relies on is
+real. Clearing the first does not clear the second, because a signature must not stand
+in for a disk.
+
+Both were opened on 2026-08-25, on the DPIA adopted the same day
+(``docs/09-dpia.md``, ``adr/0011``) and with EFS applied to ``data/``. Access and rate
+limits were already answered: 10 requests/minute, and ``robots.txt`` disallows crawling,
+so retrieval stays inside the maintainers' own documented limits (``adr/0012``).
 
 **The gate fails closed.** It reads one status line, and a missing file, a missing line
 or an unrecognised value all block. The previous version searched for a phrase used in
@@ -107,9 +115,7 @@ def upstream_command(upstream: Path, out_dir: Path, extra: list[str]) -> list[st
     return [sys.executable, str(upstream), "--download-folder", str(out_dir), *extra]
 
 
-def write_retrieval_record(
-    out_dir: Path, argv: list[str], returncode: int, acknowledged: bool
-) -> Path:
+def write_retrieval_record(out_dir: Path, argv: list[str], returncode: int) -> Path:
     """Record what was asked for and when. Retrieval metadata cannot be reconstructed later.
 
     ``publication_eligibility`` is the taint: anything pulled while gate G1 is
@@ -135,7 +141,6 @@ def write_retrieval_record(
         "audit_status": "personal-data section unresolved" if blocking else "resolved",
         "publication_eligibility": "blocked" if blocking else "eligible",
         "policy_reason": "G1_PERSONAL_DATA_UNRESOLVED" if blocking else None,
-        "acknowledged_unaudited": acknowledged,
         "encryption_at_rest_confirmed": not encryption_is_blocking(),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -157,26 +162,18 @@ def main(argv: list[str] | None = None) -> int:
         "--out-dir", type=Path, default=REPO_ROOT / "data" / "raw", help="Download destination."
     )
     parser.add_argument(
-        "--acknowledge-unaudited",
-        action="store_true",
-        help="Proceed while the personal-data section of docs/01-source-audit.md is "
-        "unresolved. For a small deliberate sample only; the retrieval record marks "
-        "everything pulled this way publication_eligibility=blocked.",
-    )
-    parser.add_argument(
         "upstream_args",
         nargs=argparse.REMAINDER,
         help="Arguments passed through to the upstream script verbatim.",
     )
     args = parser.parse_args(argv)
 
-    if audit_is_blocking() and not args.acknowledge_unaudited:
+    if audit_is_blocking():
         print(
-            "Refusing to download: the personal-data section of "
-            "docs/01-source-audit.md is UNRESOLVED (gate G1).\n"
-            "Access and rate limits are answered; B1-B5 are not. Answer them, or "
-            "pass --acknowledge-unaudited to pull a small deliberate sample that "
-            "must not be published.",
+            "Refusing to download: docs/01-source-audit.md does not say "
+            "**G1-status: CLEARED** (gate G1).\n"
+            "There is no override. Clearing G1 means adopting the DPIA "
+            "(docs/09-dpia.md) and setting that flag deliberately.",
             file=sys.stderr,
         )
         return 2
@@ -214,9 +211,7 @@ def main(argv: list[str] | None = None) -> int:
 
     command = upstream_command(args.upstream, args.out_dir, passthrough)
     completed = subprocess.run(command, check=False)
-    record = write_retrieval_record(
-        args.out_dir, command, completed.returncode, args.acknowledge_unaudited
-    )
+    record = write_retrieval_record(args.out_dir, command, completed.returncode)
     print(f"Retrieval record: {record}")
     if audit_is_blocking():
         print(

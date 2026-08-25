@@ -146,12 +146,12 @@ def test_explicit_download_folder_is_respected_with_a_warning(tmp_path, capsys) 
 
 def test_retrieval_record_carries_the_g1_taint(tmp_path) -> None:
     """A blocked pull stays machine-readably blocked, not just warned about."""
-    path = px4_download.write_retrieval_record(tmp_path, ["cmd"], 0, acknowledged=True)
+    path = px4_download.write_retrieval_record(tmp_path, ["cmd"], 0)
     record = json.loads(path.read_text(encoding="utf-8"))
     blocking = px4_download.audit_is_blocking()
     assert record["publication_eligibility"] == ("blocked" if blocking else "eligible")
     assert record["policy_reason"] == ("G1_PERSONAL_DATA_UNRESOLVED" if blocking else None)
-    assert record["acknowledged_unaudited"] is True
+    assert "acknowledged_unaudited" not in record
     assert record["download_folder"] == str(tmp_path)
 
 
@@ -178,7 +178,7 @@ def test_the_retrieval_record_names_the_exclusion_state_not_the_objectors(tmp_pa
     """The record must say which exclusions applied, and never whose logs they were."""
     from analysis.common import exclusions
 
-    path = px4_download.write_retrieval_record(tmp_path, ["cmd"], 0, acknowledged=True)
+    path = px4_download.write_retrieval_record(tmp_path, ["cmd"], 0)
     state = json.loads(path.read_text(encoding="utf-8"))["exclusions"]
     assert state["digest"].startswith("sha256:")
     assert set(state) == {"path", "digest", "count", "latest_received"}
@@ -219,3 +219,19 @@ def test_the_separator_is_not_passed_to_the_upstream_script(gates_open, tmp_path
     argv = json.loads(seen.read_text(encoding="utf-8"))
     assert "--" not in argv
     assert argv[-4:] == ["--log-id", "abc", "--max-num", "1"]
+
+
+def test_there_is_no_way_past_the_g1_gate() -> None:
+    """The override was removed on 2026-08-25 and must not come back.
+
+    `--acknowledge-unaudited` let a "deliberate small sample" through with the record
+    stamped blocked. The DPIA made clear that an acknowledgement is a record of a
+    decision, not a legal basis: Art. 35(1) requires the assessment before the
+    processing, and a small sample of geolocated logs is still processing. A gate with a
+    documented way around it is a suggestion.
+    """
+    import inspect
+
+    source = inspect.getsource(px4_download)
+    assert "add_argument" in source, "guarding the wrong thing if the parser is gone"
+    assert "--acknowledge-unaudited" not in source.split('"""', 2)[2]
