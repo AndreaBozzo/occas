@@ -1,0 +1,21 @@
+{
+  "runs_attempted": 34,
+  "runs_paired": 34,
+  "windows_seen": 44,
+  "windows_paired": 42,
+  "context_features": 168,
+  "failures": {
+    "window:incomplete": 2
+  },
+  "quality_flags": {},
+  "distance_to_grid_point_km": {
+    "min": 1.19,
+    "median": 11.07,
+    "max": 15.41
+  },
+  "release_markers": {
+    "0001": 36,
+    "0005": 6
+  },
+  "note": "No agreement statistic is computed here. See docs/09-dpia.md 1.1."
+}

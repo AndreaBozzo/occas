@@ -254,6 +254,34 @@ reconstructible whenever there is a wind estimate at all, so its `reconstructibl
 case does not arise for the variance — the uncertainty ADR-0003 needs is in the logs, not
 an assumption.
 
+### The ERA5 join runs (M4), and 14 % of it is on preliminary data
+
+All 34 usable runs paired: 44 windows seen, **42 paired**, 168 `ContextFeatureWindow`
+rows, every one validating against the schema. Two windows were incomplete — wind
+without position or the reverse — and are recorded as such rather than dropped.
+
+Distance from aircraft to its ERA5 grid point: **1.2 km min, 11.1 km median, 15.4 km
+max**, all inside the declared 30 km tolerance and inside half a cell diagonal, so
+nearest-grid-point is behaving as the geometry says it must. No quality flag was raised
+on any window. Most runs are one window: 26 runs have a single ERA5 hour and 8 have two,
+which means the run and the window are nearly the same unit here — so ADR-0003's
+"bootstrap by run, never by window" costs less independence than it was written to
+protect.
+
+**6 of the 42 windows carry `expver=0005`** — ERA5T, the preliminary release, which the
+final ERA5 may replace two or three months later. This is the exact risk
+[ADR-0008](adr/0008-record-the-era5-release-marker.md) was written for, now observed
+rather than anticipated: **14 % of the pilot's context can change underneath it**. The
+marker is recorded per row, so those windows are identifiable and re-retrievable. Any
+published H1 result must either re-retrieve them after the final release or report the
+ERA5T share as a limitation. It cannot do neither.
+
+**No agreement statistic was computed.** Both sides were checked independently and are
+populated and physically plausible — onboard components span −6.5 to +9.6 m s⁻¹, ERA5
+100 m spans −5.8 to +7.6 — and no differences were taken. That is H1's work on the full
+sample, pre-specified in [ADR-0006](adr/0006-what-h1-compares.md), and computing it now
+would mean choosing the full analysis already knowing which way the pilot went.
+
 **Gate G2: pass, with the scope change above.** ~14,000 implied usable runs against a
 design point of 10³ is ample headroom; the risk that materialised was composition, not
 volume.
