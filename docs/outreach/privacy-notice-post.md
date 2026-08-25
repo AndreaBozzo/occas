@@ -1,6 +1,6 @@
 # M0b — the privacy notice, as a forum post
 
-**Not sent.** Draft for the PX4 forum. Publishing it is the controller's to do.
+**Not sent — but complete, as of 2026-08-25.** Draft for the PX4 forum, carrying the full Article 14 notice inline so it needs no working link to be effective. Publishing it is the controller's to do.
 
 ## Why the forum and not just the repository
 
@@ -53,8 +53,32 @@ airframes, at a spatial resolution no finer than the weather grid itself (0.25°
 25 km). What gets published instead of data is the pipeline, so anyone can re-run it
 against the same public logs.
 
-**Legal basis** is legitimate interests, Article 6(1)(f), for scientific research. The
-full notice, including retention and your rights, is here: `<link to PRIVACY.md>`.
+**Legal basis** is legitimate interests, Article 6(1)(f), for scientific research, as
+further processing for research purposes under Article 5(1)(b) with the safeguards in
+Article 89(1). This post *is* the notice — everything Article 14 requires is below rather
+than behind a link, so there is nothing to click and nothing to rot.
+
+**Who is responsible.** Controller: Andrea Bozzo. Contact: <andreabozzo92@gmail.com>. No
+DPO is appointed; the processing does not meet the Article 37(1) thresholds.
+
+**Where the data comes from.** Nothing is collected from you directly. Everything comes
+from the public corpus at `logs.px4.io` and its public metadata dump.
+
+**Recipients and transfers.** None. Nothing is shared with anyone. Weather data is
+*retrieved from* Copernicus/ECMWF, which involves sending them nothing about you.
+
+**How long.** Downloaded logs are deleted once converted; derived intermediate data is
+kept only while the analysis it supports is being produced and verified. Published
+aggregates are permanent and are designed not to identify anyone.
+
+**Your rights.** Access, rectification, erasure, restriction, and — because the basis is
+legitimate interests — the right to **object at any time under Article 21**. You may also
+complain to the Garante per la protezione dei dati personali (`garanteprivacy.it`) or to
+the authority where you live.
+
+**What this project does not do.** No automated decision-making, no profiling of people,
+no attempt to identify anyone, no advertising, no sale of data. The question is about the
+weather, not about you.
 
 **If you would rather your flights were not used**, reply here or write to
 <andreabozzo92@gmail.com> with your `vehicle_uuid`, a log id, or a link. I will exclude them and
@@ -69,8 +93,14 @@ rather the point of posting.
 
 ## Before posting
 
-- ~~fill in the contact address~~ — done 2026-08-25; the stable link is still needed;
-- publish `PRIVACY.md` at a stable URL, so the link does not rot;
+- ~~fill in the contact address~~ — done 2026-08-25;
+- ~~publish `PRIVACY.md` at a stable URL~~ — **dropped 2026-08-25, and the post rewritten
+  to carry the whole notice inline.** The repository is private, so a link to `PRIVACY.md`
+  would have 404'd for every single person it was meant to inform — which is not
+  "making the information publicly available" in any sense Article 14(5)(b) recognises.
+  A notice that depends on a link is a notice that can fail; this one cannot. When the
+  repository goes public, add the link *as a backup*, because a forum thread can be
+  edited or deleted and `PRIVACY.md` is then the durable copy;
 - record the date and the URL in [`README.md`](README.md) in this folder, since the
   outreach log is the record, not the thread;
 - decide whether to accept opt-outs by forum reply as well as by email. Accepting replies

@@ -17,6 +17,7 @@
 #     ingest/inventory.py reads this file rather than re-deriving them.
 set -euo pipefail
 
+# PRUNE_RAW=1 deletes each .ulg once its conversion has produced output. See below.
 IN_DIR="${1:?usage: convert.sh <input-dir> <output-dir>}"
 OUT_DIR="${2:?usage: convert.sh <input-dir> <output-dir>}"
 ULOG_CONVERT="${ULOG_CONVERT:-ulog-convert}"
@@ -54,6 +55,41 @@ cat > "$OUT_DIR/conversion-summary.json" <<JSON
   "completed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSON
+
+# Retention, as code rather than as a sentence. docs/09-dpia.md 1.4 says downloaded logs
+# are deleted once the analysis they support no longer needs them, and 7.4 recorded that
+# this was still policy and not a pipeline step. It is a step now.
+#
+# Deleting is safe here because the .ulg is not the evidence: logs.px4.io publishes it
+# permanently, the manifest records the log_id, and anything removed is re-retrievable.
+# What it buys is R5 -- the DPIA's largest residual risk is a geolocated corpus sitting on
+# a personal machine, and this makes that corpus roughly a third of the size.
+#
+# A log is deleted only when its conversion produced **at least one .parquet file**, and
+# that bar is deliberately higher than it looks. Neither weaker test works:
+#
+#   - `ulog-convert` reports `"converted": true` for a 10-byte file that is not a ULog.
+#     Verified 2026-08-25 by feeding it one.
+#   - It also creates an output directory for that file, containing manifest.json and
+#     metadata.json and no data.
+#
+# So the tool's own success flag and the directory's existence both say "converted" for a
+# file it could not read. Parquet on disk is the only claim that survives contact with a
+# broken input, and this is a delete: the guard has to be the strong one.
+if [ "${PRUNE_RAW:-0}" = "1" ]; then
+  pruned=0
+  kept=0
+  while IFS= read -r -d '' log; do
+    stem="$(basename "$log" .ulg)"
+    if [ -n "$(find "$OUT_DIR/$stem" -maxdepth 1 -name '*.parquet' -print -quit 2>/dev/null)" ]; then
+      rm -f "$log"
+      pruned=$((pruned + 1))
+    else
+      kept=$((kept + 1))
+    fi
+  done < <(find "$IN_DIR" -type f -name '*.ulg' -print0)
+  echo "Pruned $pruned converted .ulg files; kept $kept whose conversion produced nothing."
+fi
 
 echo "Inputs $INPUT_COUNT, results $RESULT_LINES, exit $STATUS."
 echo "Per-file: $RESULTS"

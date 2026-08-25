@@ -1,0 +1,19 @@
+{
+  "frame_size": 79477,
+  "drawn": 1600,
+  "cutoff": "2025-08-19",
+  "per_stratum": {
+    "fixed_wing_or_vtol|within_window": 800,
+    "fixed_wing_or_vtol|older": 800
+  },
+  "frame_per_stratum": {
+    "rotorcraft|within_window": 22217,
+    "rotorcraft|older": 40578,
+    "fixed_wing_or_vtol|within_window": 6185,
+    "fixed_wing_or_vtol|older": 10497
+  },
+  "distinct_vehicles": 1584,
+  "classes": [
+    "fixed_wing_or_vtol"
+  ]
+}

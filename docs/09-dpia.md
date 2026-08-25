@@ -430,17 +430,21 @@ sentence someone scrolled past:
    verbatim**, because EUR-Lex returned an empty document on four attempts. Art. 35(7)'s
    subparagraphs are followed in substance rather than quoted. Nothing in the reasoning
    turns on a disputed word, but the confirmation remains outstanding.
-2. The **retention period in §1.4 is a policy, not yet a pipeline step.** It is relied on
-   only once data exists, so it must become code before the first retrieval is analysed —
-   not before the first retrieval happens.
+2. ~~The retention period in §1.4 is a policy, not yet a pipeline step.~~ **Closed
+   2026-08-25**: `ingest/convert.sh` deletes each `.ulg` once its conversion has produced
+   Parquet (`PRUNE_RAW=1`). The guard is deliberately strong — `ulog-convert` reports
+   `"converted": true` and creates an output directory for a file that is not a ULog at
+   all, so neither its success flag nor the directory's existence is evidence, and this is
+   a delete. Only Parquet on disk counts. Roughly a two-thirds reduction in the geolocated
+   corpus held locally, which is R5's exposure.
 3. **Encryption at rest — closed the same day.** EFS applied to `data/`; the
    `R5-encryption-at-rest` flag is `CONFIRMED` and gates the download wrapper. The part it
    does not cover — compromise of the logged-in account — is stated in §4.2 and graded in
    §5 rather than left unlisted.
 
-Item 2 is the one still carried on trust. If the retention step is not code by the time a
-corpus exists, R5's residual severity is understated and §5's Art. 36(1) conclusion should
-be revisited.
+**Both items with teeth are now closed** — encryption on 2026-08-25, retention the same
+day. What remains outstanding is item 1, the EUR-Lex confirmation, which affects the
+citation of the articles and not the reasoning drawn from them.
 
 **On adoption**, in the same change: set `**G1-status: CLEARED**` in
 [`01-source-audit.md`](01-source-audit.md), which is the single flag

@@ -81,6 +81,7 @@ def draw(
     cutoff: str,
     per_cell: int = PER_CELL,
     seed: int = SEED,
+    classes: tuple[str, ...] = ("fixed_wing_or_vtol", "rotorcraft"),
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Pick up to ``per_cell`` runs per stratum, at most one per vehicle.
 
@@ -97,9 +98,12 @@ def draw(
     available: dict[str, int] = defaultdict(int)
 
     for row in ordered:
+        klass = airframe_class(row.get("mav_type") or "")
         side = "within_window" if (row.get("log_date") or "")[:10] >= cutoff else "older"
-        stratum = f"{airframe_class(row.get('mav_type') or '')}|{side}"
+        stratum = f"{klass}|{side}"
         available[stratum] += 1
+        if klass not in classes:
+            continue
         if per_stratum[stratum] >= per_cell:
             continue
         vehicle = row.get("vehicle_uuid")
@@ -131,9 +135,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("data/pilot-sample.jsonl"))
     parser.add_argument("--summary", type=Path, default=Path("artifacts/pilot-sample-summary.json"))
     parser.add_argument("--per-cell", type=int, default=PER_CELL)
+    parser.add_argument(
+        "--classes",
+        default="fixed_wing_or_vtol,rotorcraft",
+        help="Airframe classes to draw from. The pilot measured 72%% and 52%% of "
+        "fixed-wing/VTOL draws usable against 8%% and 4%% of rotorcraft, because "
+        "multirotors mostly do not log wind -- so an H1 draw restricted to "
+        "fixed_wing_or_vtol costs about a third as many downloads per usable run.",
+    )
     parser.add_argument("--seed", type=int, default=SEED)
     args = parser.parse_args(argv)
 
+    classes = tuple(c.strip() for c in args.classes.split(",") if c.strip())
     excluded = exclusions.load()
     headers = {}
     if headers_path(args.cache).exists():
@@ -163,6 +176,7 @@ def main(argv: list[str] | None = None) -> int:
             "min_duration_s": MIN_DURATION_S,
             "per_cell": args.per_cell,
             "max_per_vehicle": MAX_PER_VEHICLE,
+            "classes": list(classes),
             "retention_window_days": RETENTION_WINDOW_DAYS,
             "exclusions": excluded.state(),
         },
@@ -173,7 +187,11 @@ def main(argv: list[str] | None = None) -> int:
     newest = max((r.get("log_date") or "")[:10] for r in rows)
     cutoff = (datetime.fromisoformat(newest) - timedelta(days=RETENTION_WINDOW_DAYS)).date()
     chosen, available = draw(
-        rows, cutoff=cutoff.isoformat(), per_cell=args.per_cell, seed=args.seed
+        rows,
+        cutoff=cutoff.isoformat(),
+        per_cell=args.per_cell,
+        seed=args.seed,
+        classes=classes,
     )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -188,6 +206,7 @@ def main(argv: list[str] | None = None) -> int:
         "per_stratum": dict(Counter(c["stratum"] for c in chosen)),
         "frame_per_stratum": available,
         "distinct_vehicles": len({c["vehicle_uuid"] for c in chosen if c["vehicle_uuid"]}),
+        "classes": list(classes),
     }
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8", newline="\n")

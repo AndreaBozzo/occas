@@ -1,11 +1,14 @@
 # Privacy notice
 
-**Status: READY TO PUBLISH — contact details filled in 2026-08-25.** It becomes a notice
-when the controller publishes it where the data subjects read, and records that in
-[`docs/outreach/README.md`](docs/outreach/README.md). Until published it is a document,
-not a notice: art. 6(3) of the Garante's deontological rules is explicit that the
-information has to reach people through a channel they actually use, and a file in a
-repository is not one.
+**Status: the operative notice is the forum post, not this file.** This repository is
+private, so a link here reaches nobody it is meant to inform —
+[`docs/outreach/privacy-notice-post.md`](docs/outreach/privacy-notice-post.md) therefore
+carries the whole Article 14 notice inline and depends on no link at all. This file is the
+same notice in the repository, kept in step with it, and becomes a useful durable copy if
+the repository is ever made public: a forum thread can be edited or deleted.
+
+Publishing the post is the controller's to do, and it is recorded in
+[`docs/outreach/README.md`](docs/outreach/README.md) when done.
 
 This notice exists because of Article 14(5)(b) GDPR. This project processes personal data
 that it did not obtain from the people it concerns, so the ordinary duty is to inform each
