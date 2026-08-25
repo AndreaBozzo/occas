@@ -21,7 +21,7 @@ import gzip
 import json
 from collections import Counter
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -42,10 +42,28 @@ DBINFO_URL = "https://review.px4.io/dbinfo"
 # manifest records it as a parameter precisely so a later value can be compared
 # against this one. See docs/adr/0006-what-h1-compares.md for the comparison itself.
 MIN_DURATION_S = 300
+# Because the threshold is provisional, its neighbours are counted in the same pass.
+# "Where does the boundary actually fall" is then a question answered against one
+# artifact rather than by re-running the audit with the constant changed, and the tier
+# quoted in prose is one the script emitted. MIN_DURATION_S is one of them by
+# construction.
+DURATION_TIERS = (120, 180, MIN_DURATION_S, 600)
 # Above this, duration_s is not a flight; a handful of records carry sentinel values.
 MAX_PLAUSIBLE_DURATION_S = 24 * 3600
 SITL_HW = "PX4_SITL"
+# Dronecode announced a 12-month retention policy for uploaded logs on 2024-10-14,
+# retroactively ("we will automatically remove everything older than one year"), yet
+# this dump still describes records from 2016 -- so metadata plainly outlives something.
+# Whether it outlives the .ulg is unanswered (audit row A8) and decides how much of the
+# frame can actually be retrieved. The window is measured back from the newest log_date
+# in the dump rather than from the wall clock, so the figure is a property of the input
+# and re-running next year does not silently move it.
+RETENTION_WINDOW_DAYS = 365
 FIXED_WING_MARKERS = ("Fixed", "Plane", "VTOL")
+# Matched lowercased, and only on what the fixed-wing markers did not already claim:
+# "Tiltrotor VTOL" contains "rotor" and is not a rotorcraft. "Ground Rover" contains
+# neither. Whatever matches nothing is counted as "other" rather than dropped.
+ROTORCRAFT_MARKERS = ("rotor", "copter", "helicopter")
 # Verified in flight_review source, not inferred from the values seen: the mapping is
 # ``DBData.wind_speed_str_static`` in ``app/plot_app/db_entry.py``, and
 # ``app/tornado_handlers/upload.py`` only reads ``windSpeed`` from the form when the
@@ -102,6 +120,32 @@ def records(cache: Path) -> Iterator[dict[str, Any]]:
         yield obj
 
 
+def _retention_exposure(frame_dates: list[str]) -> dict[str, Any]:
+    """How much of the H1 frame a 12-month retention policy would still leave.
+
+    This counts metadata records, and metadata is what we have: whether the ``.ulg``
+    behind an old record is still downloadable is audit row A8, and is unanswered. So
+    the number is an *upper bound on what could be lost*, not a measured loss. It is
+    computed anyway because it is the difference between a frame of 79k and a frame of
+    28k, and that decides how the sample is stratified rather than merely how large it
+    is.
+    """
+    if not frame_dates:
+        return {}
+    newest = max(frame_dates)
+    cutoff = (
+        (datetime.fromisoformat(newest) - timedelta(days=RETENTION_WINDOW_DAYS)).date().isoformat()
+    )
+    within = sum(1 for d in frame_dates if d >= cutoff)
+    return {
+        "window_days": RETENTION_WINDOW_DAYS,
+        "newest_log_date": newest,
+        "cutoff": cutoff,
+        "frame_within_window": within,
+        "frame_older_than_window": len(frame_dates) - within,
+    }
+
+
 def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
     """Compute the population summary. Takes an iterator so tests can pass fixtures."""
     counters: dict[str, Counter] = {
@@ -111,9 +155,15 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
     error_labels: Counter = Counter()
     upload_types: Counter = Counter()
     declared_by_type: Counter = Counter()
-    total = sitl = real = fixed_wing_real = declared_wind = 0
+    # mav_type is counted three ways because it was previously counted once, over every
+    # log, and then quoted in prose next to a fixed-wing total counted over real
+    # hardware only. The two do not sum, and nothing in the artifact said why.
+    mav_type_real: Counter = Counter()
+    mav_type_sitl: Counter = Counter()
+    tiers: Counter = Counter()
+    frame_dates: list[str] = []
+    total = sitl = real = fixed_wing_real = rotorcraft_real = declared_wind = 0
     implausible_duration = 0
-    frame = 0
     durations: list[float] = []
     real_seconds = 0.0
 
@@ -134,13 +184,18 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
             declared_wind += 1
             declared_by_type[upload_type] += 1
 
+        mav_type = row.get("mav_type") or ""
         if hardware == SITL_HW:
             sitl += 1
+            mav_type_sitl[row.get("mav_type")] += 1
             continue
 
         real += 1
-        if any(marker in (row.get("mav_type") or "") for marker in FIXED_WING_MARKERS):
+        mav_type_real[row.get("mav_type")] += 1
+        if any(marker in mav_type for marker in FIXED_WING_MARKERS):
             fixed_wing_real += 1
+        elif any(marker in mav_type.lower() for marker in ROTORCRAFT_MARKERS):
+            rotorcraft_real += 1
 
         duration = row.get("duration_s")
         if not isinstance(duration, int | float) or not 0 <= duration <= MAX_PLAUSIBLE_DURATION_S:
@@ -148,12 +203,16 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
             continue
         durations.append(duration)
         real_seconds += duration
+        for tier in DURATION_TIERS:
+            if duration >= tier:
+                tiers[tier] += 1
         if duration >= MIN_DURATION_S:
-            frame += 1
+            frame_dates.append((row.get("log_date") or "")[:10])
 
     durations.sort()
     n = len(durations)
     return {
+        "retention_exposure": _retention_exposure(frame_dates),
         "total_logs": total,
         "sitl": sitl,
         "real_hardware": real,
@@ -169,9 +228,18 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
         else {},
         "h1_frame": {
             "min_duration_s": MIN_DURATION_S,
-            "non_sitl_logs_at_or_above": frame,
+            "non_sitl_logs_at_or_above": tiers[MIN_DURATION_S],
+            "non_sitl_logs_by_tier": {str(tier): tiers[tier] for tier in DURATION_TIERS},
         },
         "fixed_wing_or_vtol_real": fixed_wing_real,
+        # Every real log lands in exactly one class, so the three sum to real_hardware
+        # and "other" -- rovers, boats, generic and unknown types -- stays visible
+        # instead of being the difference between two numbers quoted in prose.
+        "airframe_class_real": {
+            "fixed_wing_or_vtol": fixed_wing_real,
+            "rotorcraft": rotorcraft_real,
+            "other": real - fixed_wing_real - rotorcraft_real,
+        },
         "declared_wind_speed": {
             "logs": declared_wind,
             "by_label": {
@@ -188,7 +256,15 @@ def audit(rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
         "error_label_counts": {str(k): v for k, v in error_labels.most_common()},
         "distributions": {
             k: {str(v): c for v, c in counters[k].most_common(15)}
-            for k in ("year", "mav_type", "estimator", "rating", "sys_hw", "source")
+            for k in ("year", "estimator", "rating", "sys_hw", "source")
+        }
+        # Split by population and not truncated. The top-15 cut was hiding the VTOL
+        # variants that FIXED_WING_MARKERS does match, so even the all-log subtypes did
+        # not sum to the all-log total.
+        | {
+            "mav_type_all": {str(v): c for v, c in counters["mav_type"].most_common()},
+            "mav_type_real": {str(v): c for v, c in mav_type_real.most_common()},
+            "mav_type_sitl": {str(v): c for v, c in mav_type_sitl.most_common()},
         },
     }
 
@@ -203,10 +279,10 @@ def main(argv: list[str] | None = None) -> int:
     hp = headers_path(cache)
     headers = json.loads(hp.read_text(encoding="utf-8")) if hp.exists() else {}
 
-    result = audit(records(cache))
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-
+    # Built before the artifact is written, not after. ``build_manifest`` captures the
+    # state of the working tree, and args.out is tracked in git: rewriting it first
+    # dirties the tree, so every run that changed its own result used to report
+    # ``dirty: true`` and could never be published. See docs/adr/0010.
     manifest = build_manifest(
         name="px4-dbinfo-corpus-audit",
         hypothesis="none",
@@ -229,13 +305,23 @@ def main(argv: list[str] | None = None) -> int:
         ],
         parameters={
             "min_duration_s": MIN_DURATION_S,
+            "duration_tiers": list(DURATION_TIERS),
             "max_plausible_duration_s": MAX_PLAUSIBLE_DURATION_S,
+            "retention_window_days": RETENTION_WINDOW_DAYS,
             "sitl_hw": SITL_HW,
         },
     )
+
+    result = audit(records(cache))
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    # newline="\n": the manifest records a hash of these bytes, and the repository
+    # stores and checks the file back out as LF.
+    args.out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8", newline="\n")
+
     add_output(manifest, args.out)
     path = write_manifest(manifest)
-    print(f"{args.out} ({result['total_logs']} logs)\nmanifest: {path}")
+    state = "exploratory: dirty tree" if manifest["code"]["dirty"] else "publishable"
+    print(f"{args.out} ({result['total_logs']} logs, {state})\nmanifest: {path}")
     return 0
 
 

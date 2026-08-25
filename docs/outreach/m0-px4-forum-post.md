@@ -53,6 +53,16 @@ rather ask about retrieval than assume.
   and similar. `rating` is denser: good 18,328, great 2,903, unsatisfactory 1,020,
   crash_sw_hw 401, crash_pilot 188
 
+> **Correction, 2026-08-25 — found here, not yet posted to the thread.** The fixed-wing
+> and VTOL subtypes above are wrong as sent. 60,079 is the real-hardware total, but the
+> subtypes printed beside it were counted over *all* logs, SITL included, so they sum to
+> 68,350 against a stated 60,079. The real-hardware split is Fixed Wing 23,301 · VTOL
+> Standard 21,462 · Tiltrotor VTOL 9,096 · tailsitters 5,993 · VTOL reserved 227.
+> **Every other figure in this post was re-verified against the artifact and stands.**
+> The sent text is left as sent, because this file is the record of what was sent;
+> whether to correct the thread is yours. Cause and fix:
+> [ADR-0010](../adr/0010-manifests-are-verified-against-the-repository.md).
+
 The duration distribution surprised me most. A lot of what I'd have naively counted as
 "flights" are bench runs and short hops, which matters a great deal if you're joining
 against an hourly reanalysis.

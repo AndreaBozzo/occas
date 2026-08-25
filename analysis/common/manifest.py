@@ -30,7 +30,14 @@ _HASH_CHUNK = 1 << 20
 
 
 def hash_file(path: Path, algorithm: str = "sha256") -> str:
-    """Return an algorithm-prefixed hash of a file's bytes, read in binary."""
+    """Return an algorithm-prefixed hash of a file's bytes, read in binary.
+
+    The hash is over bytes as they sit on disk, so anything whose hash is recorded has
+    to be written with ``newline="\\n"``: ``write_text`` translates on Windows,
+    ``.gitattributes`` checks the file back out as LF, and the recorded hash then
+    reproduces for nobody who clones the repository. ``tests/test_manifest.py`` holds
+    that line against the committed artifacts rather than against a temporary file.
+    """
     digest = hashlib.new(algorithm)
     with path.open("rb") as handle:
         while chunk := handle.read(_HASH_CHUNK):
@@ -91,7 +98,15 @@ def build_manifest(
     external_tools: Iterable[Mapping[str, str]] = (),
     description: str | None = None,
 ) -> dict[str, Any]:
-    """Assemble a manifest record. Inputs may be paths or pre-built input mappings."""
+    """Assemble a manifest record. Inputs may be paths or pre-built input mappings.
+
+    **Call this before the outputs are written.** It captures ``git_state``, which reads
+    ``git status`` over the whole tree; an output that is tracked in git dirties that
+    tree the moment it is rewritten. Built afterwards, a manifest reports ``dirty: true``
+    for every run that changed its own result, and ``require_publishable`` can never
+    pass. ``code.dirty`` is about the state of the code that ran, not about the result
+    it has just produced.
+    """
     commit, dirty = git_state()
     resolved_inputs: list[dict[str, Any]] = []
     for item in inputs:
@@ -153,5 +168,7 @@ def write_manifest(manifest: Mapping[str, Any], directory: Path = MANIFEST_DIR) 
     validate_manifest(manifest)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{manifest['manifest_id']}.json"
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
     return path

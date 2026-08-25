@@ -81,3 +81,45 @@ def test_write_manifest_round_trips(tmp_path) -> None:
     built = m.build_manifest(name="x", hypothesis="H1", entrypoint="x.py")
     path = m.write_manifest(built, directory=tmp_path)
     assert json.loads(path.read_text(encoding="utf-8"))["manifest_id"] == built["manifest_id"]
+
+
+def test_write_manifest_writes_lf_only(tmp_path) -> None:
+    """Hashes are over bytes, so the writer must not emit CRLF on Windows.
+
+    ``write_text`` translates ``\n`` to ``\r\n`` on Windows unless told otherwise,
+    while ``.gitattributes`` stores and checks out LF. A manifest written with CRLF
+    therefore records a hash that nobody who clones the repository can reproduce.
+    """
+    path = m.write_manifest(
+        m.build_manifest(name="x", hypothesis="H1", entrypoint="x.py"), tmp_path
+    )
+    assert b"\r\n" not in path.read_bytes()
+
+
+def test_every_artifact_in_the_repository_is_attested_by_a_manifest() -> None:
+    """The provenance chain must close against the repository, not against a temp file.
+
+    Each artifact in the tree must be re-hashable to the hash some manifest recorded
+    for it, which in CI is the committed content. *Some*, not all: a superseded
+    manifest legitimately attests an earlier version of the same path, and that
+    history is kept rather than rewritten.
+    What must never happen is an artifact no manifest attests -- which is what a
+    newline translated on the way to disk produces.
+    """
+    attested: dict[str, set[str]] = {}
+    for path in sorted(m.MANIFEST_DIR.glob("*.json")):
+        for output in json.loads(path.read_text(encoding="utf-8"))["outputs"]:
+            attested.setdefault(output["path"], set()).add(output["content_hash"])
+    assert attested, "no manifest records an output"
+
+    checked = 0
+    for relative, hashes in sorted(attested.items()):
+        produced = m.REPO_ROOT / relative
+        if not produced.exists():
+            continue  # not every output is committed; those that are must be attested
+        assert m.hash_file(produced) in hashes, (
+            f"{relative} is committed but no committed manifest attests its bytes: "
+            f"it hashes to {m.hash_file(produced)}, manifests record {sorted(hashes)}"
+        )
+        checked += 1
+    assert checked, "no committed output was actually re-hashed"

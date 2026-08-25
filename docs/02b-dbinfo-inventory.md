@@ -12,6 +12,12 @@ recording the content hash of the exact dump used. The dump is regenerated daily
 a later run is a different sampling frame and will not reproduce these figures — which
 is what the manifest is for.
 
+**"Every number" is now a test, not a promise.** It was a promise until 2026-08-25 and
+two numbers on this page escaped it, one of them wrong; the manifests also recorded
+output hashes that nobody cloning the repository could reproduce. Both are fixed and
+both are held by `tests/test_manifest.py` and `tests/test_dbinfo_audit.py` —
+[ADR-0010](adr/0010-manifests-are-verified-against-the-repository.md).
+
 ## Shape
 
 **450,395 public logs.** All 26 fields are present on every record:
@@ -46,12 +52,21 @@ implausible `duration_s` dropped).
 | median | **79 s** |
 | p90 | 520 s |
 | p99 | 2,059 s |
-| logs ≥ 120 s | 161,243 |
-| logs ≥ 300 s | 79,477 |
+
+Non-SITL logs surviving each candidate threshold, all four counted in the same pass:
+
+| ≥ 120 s | ≥ 180 s | ≥ 300 s | ≥ 600 s |
+|---|---|---|---|
+| 161,243 | 120,548 | **79,477** | 33,356 |
 
 Most public logs are bench runs and short hops. The usable population is bounded by
 the ≥ 300 s tier — **79,477 logs before any other filter**, not 450,395. This is the
 single most important number for gate G2 and it was previously unknown.
+
+The tiers are counted together because the threshold is the thing least settled here:
+across the plausible range it moves the frame by a factor of five, and every one of
+those frames is a different study. Quoting one of them requires the others to be
+visible next to it.
 
 **300 s is provisional and is not an ERA5 property.** A reanalysis supplies a
 background field for a two-minute flight as readily as for a twenty-minute one. What
@@ -61,10 +76,57 @@ samples clear of transients. Where that boundary really falls is a question abou
 estimator, answerable only against real logs. It may land at 180 s or at 600 s; the
 threshold is a manifest parameter so the versions can be compared.
 
+## The frame counts metadata, and metadata may outlive the log
+
+Dronecode announced a **12-month retention policy** for uploaded logs on 2024-10-14,
+retroactively. This dump still describes records from 2016, so metadata outlives
+something — but whether it outlives the `.ulg` is unknown, and it is the difference
+between two quite different studies:
+
+| ≥ 300 s, non-SITL | logs |
+|---|---|
+| logged within 365 days of the dump's newest record (cutoff 2025-08-19) | 28,402 |
+| older | 51,075 |
+
+**Only 35.7 % of the frame is inside the retention window.** If the policy is enforced
+as announced, the retrievable frame is 28k rather than 79k. That is still ample for a
+sample of one to three thousand runs — the loss is not of *n* but of spread, since the
+older records carry most of the firmware, airframe and geographic diversity H1
+stratifies on.
+
+This is an upper bound on what could be lost, not a measured loss: it counts metadata,
+because metadata is all we have. Settling it means one HEAD request per sampled log,
+which is exactly the retrieval that `robots.txt` and
+[ADR-0005](adr/0005-sample-from-metadata-not-bulk-download.md) put behind a decision.
+Audit row [A8](01-source-audit.md); asked on the M0 thread, unanswered.
+
 ## Airframes (real hardware)
 
-Fixed-wing and VTOL together: **60,079**. Fixed Wing 26,289 · VTOL Standard 24,707 ·
-Tiltrotor VTOL 10,545 · tailsitters ~6,809. Multirotor and helicopter: 346,742.
+Every real-hardware log falls into exactly one class, and the three sum to 416,633:
+
+| class | logs |
+|---|---|
+| Fixed-wing and VTOL | **60,079** |
+| Rotorcraft | 346,767 |
+| Everything else | 9,787 |
+
+Fixed-wing and VTOL by subtype: Fixed Wing 23,301 · VTOL Standard 21,462 · Tiltrotor
+VTOL 9,096 · tailsitters 5,993 · VTOL reserved variants 227.
+
+"Everything else" is mostly `unknown type` (5,397) and ground rovers (2,288), and it
+is where the corpus stops being an aircraft corpus: 331 boats, 68 rockets, 67
+submarines, 48 free balloons, an airship, two ground installations. Recorded, not
+filtered — but nothing outside the first row is a candidate for H1.
+
+**These are real-hardware counts, and an earlier version of this page was not.** It
+printed subtypes counted over *all* logs beside a total counted over real hardware
+only: the parts summed to 68,350 against a stated 60,079, and even that all-log list
+was short, because the distribution was truncated to the top fifteen and the VTOL
+variants fell off the end. SITL is the whole of the difference — 8,645 of the 68,724
+fixed-wing and VTOL logs are simulated. `mav_type` is now emitted three ways,
+`mav_type_all` / `mav_type_real` / `mav_type_sitl`, none of them truncated, so the two
+populations cannot be quoted as one again. The rotorcraft figure was also wrong by 25
+and was not computed by the script at all; it is now.
 
 Since H1's fallback under a failed estimator-config check is "narrow to fixed-wing
 with airspeed", 60k is the headroom for that fallback — comfortable.
@@ -129,5 +191,7 @@ building one.
    ~10² logs. Its remaining content is the part that needs the `.ulg`: field
    coverage, estimator configuration, and geography.
 2. Download budget should be spent on a **stratified sample of the ≥ 300 s,
-   non-SITL tier**, drawn using these metadata as the sampling frame.
+   non-SITL tier**, drawn using these metadata as the sampling frame — but the
+   stratification must survive the frame being 28k rather than 79k, because A8 is
+   unanswered and the sampler should not be written assuming the larger one.
 3. `wind_speed` gives an independent third source for H1 at zero retrieval cost.
