@@ -278,14 +278,19 @@ where a thread already exists.
   It needs a contact address and a stable URL, and it is not a notice until it is
   actually published — in a channel the data subjects read, per art. 6(3) of the
   deontological rules.
-- **The exclusion list the notice promises.** Article 21 objections have to be honoured
-  by something, and a promise with no mechanism behind it is worse than no promise. It
-  is deliberately unbuilt until retrieval starts — but it must exist before the first
-  published result, and the manifest should record which exclusions were in force for
-  a run.
-- **B2's remaining half**: whether PX4's own notice at upload is adequate is a question
-  about *their* controller obligations, not ours. It was asked on the M0 thread and has had
-  no reply.
+- **The exclusion list the notice promises — built, 2026-08-25.**
+  `analysis/common/exclusions.py`, enforced in `ingest/px4_download.py` before anything
+  is fetched, tested in `tests/test_exclusions.py`. A missing list is fatal rather than
+  read as an empty one; a vehicle-level objection covers later uploads so it cannot
+  quietly lapse; links are accepted as well as identifiers. **The list is never
+  published** — that would announce which operators exercised a right — so manifests
+  record its digest and count and never its contents. The cost is stated: a third party
+  cannot reproduce our exact excluded set.
+- **B2's remaining half — closed as out of scope, 2026-08-25.** Whether PX4's own notice
+  at upload is adequate is a question about *their* obligations as controller of their
+  service. Our Article 14(5)(b) route does not turn on the answer: our notice is required
+  whatever they did, and their compliance is neither our defence nor our liability.
+  Asked on the M0 thread, unanswered, and it no longer blocks anything ([ADR-0012](adr/0012-no-open-question-waits-for-a-reply.md)).
 
 ## Sources
 

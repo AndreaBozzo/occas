@@ -96,3 +96,31 @@ def test_retrieval_record_carries_the_g1_taint(tmp_path) -> None:
     assert record["policy_reason"] == ("G1_PERSONAL_DATA_UNRESOLVED" if blocking else None)
     assert record["acknowledged_unaudited"] is True
     assert record["download_folder"] == str(tmp_path)
+
+
+def test_download_refuses_when_the_exclusion_list_is_missing(tmp_path, monkeypatch, capsys) -> None:
+    """Article 21 must not be honoured only when someone remembers to look.
+
+    A missing list is not an empty one. Retrieving while unable to say which objections
+    were in force is the failure this blocks, and it blocks before anything is fetched.
+    """
+    from analysis.common import exclusions
+
+    upstream = tmp_path / "download_logs.py"
+    upstream.write_text("", encoding="utf-8")
+    monkeypatch.setattr(exclusions, "EXCLUSIONS_PATH", tmp_path / "absent.jsonl")
+
+    code = px4_download.main(["--upstream", str(upstream), "--acknowledge-unaudited"])
+    assert code == 2
+    assert "does not exist" in capsys.readouterr().err
+
+
+def test_the_retrieval_record_names_the_exclusion_state_not_the_objectors(tmp_path) -> None:
+    """The record must say which exclusions applied, and never whose logs they were."""
+    from analysis.common import exclusions
+
+    path = px4_download.write_retrieval_record(tmp_path, ["cmd"], 0, acknowledged=True)
+    state = json.loads(path.read_text(encoding="utf-8"))["exclusions"]
+    assert state["digest"].startswith("sha256:")
+    assert set(state) == {"path", "digest", "count", "latest_received"}
+    assert state["count"] == exclusions.load().count

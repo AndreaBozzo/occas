@@ -32,6 +32,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from analysis.common import exclusions
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUDIT = REPO_ROOT / "docs" / "01-source-audit.md"
 # A dedicated flag, not a phrase from the prose: the gate must not turn on wording.
@@ -87,6 +89,10 @@ def write_retrieval_record(
     retrieved_at = datetime.now(UTC).isoformat()
     blocking = audit_is_blocking()
     record = {
+        # Which Article 21 objections were in force when this was pulled -- a digest and
+        # a count, never the identifiers. See analysis/common/exclusions.py for why the
+        # list itself does not travel.
+        "exclusions": exclusions.load().state(),
         "source": "px4_flight_review",
         "source_url": "https://logs.px4.io/browse",
         "retrieved_at": retrieved_at,
@@ -102,7 +108,8 @@ def write_retrieval_record(
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"retrieval-{retrieved_at.replace(':', '')}.json"
-    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    # newline="\n": records are hashed and compared across machines; see adr/0010.
+    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -144,6 +151,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.upstream.exists():
         print(f"Upstream script not found: {args.upstream}", file=sys.stderr)
+        return 2
+
+    # Checked before anything is fetched, and not caught: retrieving while unable to say
+    # which objections were in force would mean honouring Article 21 only when someone
+    # remembered to look. An empty list is a valid answer; a missing one is not.
+    try:
+        exclusions.load()
+    except exclusions.ExclusionListMissing as error:
+        print(f"Refusing to download: {error}", file=sys.stderr)
         return 2
 
     command = upstream_command(args.upstream, args.out_dir, args.upstream_args)
