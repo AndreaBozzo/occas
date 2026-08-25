@@ -117,8 +117,18 @@ def test_every_artifact_in_the_repository_is_attested_by_a_manifest() -> None:
         produced = m.REPO_ROOT / relative
         if not produced.exists():
             continue  # not every output is committed; those that are must be attested
+        # Checked first, and separately, because it is the failure this test exists
+        # for and the hash comparison alone would miss it on the machine that caused
+        # it: a CRLF artifact hashed on Windows matches the CRLF hash recorded beside
+        # it. The two only disagree once git has round-tripped the file to LF, which
+        # is to say in CI and on everyone else's clone.
+        if relative.endswith(".json"):
+            assert b"\r\n" not in produced.read_bytes(), (
+                f"{relative} contains CRLF; git stores it as LF, so the hash recorded "
+                f"for it here will not reproduce from a clean checkout"
+            )
         assert m.hash_file(produced) in hashes, (
-            f"{relative} is committed but no committed manifest attests its bytes: "
+            f"{relative} is in the tree but no manifest attests its bytes: "
             f"it hashes to {m.hash_file(produced)}, manifests record {sorted(hashes)}"
         )
         checked += 1
