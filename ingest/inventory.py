@@ -191,10 +191,16 @@ def main(argv: list[str] | None = None) -> int:
 
     conversion = args.parquet / "conversion-summary.json"
     manifest = build_manifest(
-        name="px4-pilot-inventory",
+        # Named after the draw it inventoried, not after the first one that ever ran.
+        # The corpus directory holds more than one sample and this manifest is how a
+        # reader tells which was measured; "px4-pilot-inventory" over the H1 draw would
+        # be a provenance record naming the wrong population.
+        name=f"px4-{args.sample.stem.removesuffix('-sample')}-inventory",
         hypothesis="none",
         entrypoint="ingest/inventory.py",
-        description="Field coverage and H1 usability of the converted pilot sample. Gate G2.",
+        description=(
+            f"Field coverage and H1 usability of the converted runs in {args.sample.name}. Gate G2."
+        ),
         # The schema allows a tool exactly a name and a version, so the version string
         # carries the git rev too: "0.1.0" alone does not identify a build of an
         # unreleased crate, and the whole point of recording the tool is to be able to
