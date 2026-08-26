@@ -34,13 +34,32 @@ VERSION="$("$ULOG_CONVERT" --version 2>&1 | head -1)"
 echo "Using: $VERSION"
 
 RESULTS="$OUT_DIR/conversion-results.jsonl"
+BATCH_RESULTS="$OUT_DIR/conversion-results.batch.jsonl"
 # Not `set -e`-fatal: a batch where some files fail still produced the ones that did not,
 # and which failed is the finding. The summary records the exit code rather than hiding it.
+#
+# The batch writes to its own file and is then APPENDED to the cumulative one. A `>` onto
+# the cumulative file was correct while the corpus arrived in a single batch and silently
+# wrong the moment it did not: the H1 draw is retrieved in chunks, because 1,600 log ids
+# on one command line exceed the Windows 32,767-character limit, and each chunk would
+# have erased the record of every chunk before it. The counts below are taken from the
+# batch file, so they stay per-batch rather than becoming a running total.
 STATUS=0
-"$ULOG_CONVERT" batch "$IN_DIR" --output "$OUT_DIR" --format json > "$RESULTS" || STATUS=$?
+"$ULOG_CONVERT" batch "$IN_DIR" --output "$OUT_DIR" --format json > "$BATCH_RESULTS" || STATUS=$?
 
-RESULT_LINES="$(wc -l < "$RESULTS" | tr -d ' ')"
+RESULT_LINES="$(wc -l < "$BATCH_RESULTS" | tr -d ' ')"
 INPUT_COUNT="$(find "$IN_DIR" -type f -name '*.ulg' | wc -l | tr -d ' ')"
+cat "$BATCH_RESULTS" >> "$RESULTS"
+rm -f "$BATCH_RESULTS"
+
+# `ulog-convert batch` writes its own index.json describing the batch it just ran. Left
+# in place across chunks it is a file sitting next to 1,600 runs announcing "total": 100.
+# Nothing here reads it -- ingest/inventory.py walks the run directories -- so each
+# batch's index is kept under a stamped name rather than merged, and no file is left
+# claiming to describe a corpus it only partly saw.
+if [ -f "$OUT_DIR/index.json" ]; then
+  mv "$OUT_DIR/index.json" "$OUT_DIR/index-$(date -u +%Y%m%dT%H%M%SZ).json"
+fi
 
 cat > "$OUT_DIR/conversion-summary.json" <<JSON
 {

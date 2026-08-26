@@ -43,16 +43,36 @@ def is_a_real_ulog(path: Path) -> bool:
         return handle.read(len(ULOG_MAGIC)) == ULOG_MAGIC
 
 
-def assess(sample: list[dict[str, Any]], raw_dir: Path) -> tuple[list[dict[str, Any]], dict]:
-    """Fill ``ulg_available`` per row and summarise by stratum."""
-    by_stratum: dict[str, dict[str, int]] = defaultdict(lambda: {"requested": 0, "available": 0})
+def observe(sample: list[dict[str, Any]], raw_dir: Path) -> list[dict[str, Any]]:
+    """Fill ``ulg_available`` per row by looking at what is on disk.
+
+    Only valid while the ``.ulg`` files are still there. ``ingest/convert.sh`` deletes
+    each one whose conversion produced Parquet (DPIA 1.4), so for any corpus retrieved
+    with pruning on, the observation has to be made at retrieval time and this must not
+    be re-run afterwards: it would see the successes as missing, because success is
+    exactly what deletes the file. ``ingest/retrieve_h1.py`` observes per chunk for that
+    reason.
+    """
+    for row in sample:
+        row["ulg_available"] = is_a_real_ulog(raw_dir / f"{row['log_id']}.ulg")
+    return sample
+
+
+def summarise(sample: list[dict[str, Any]]) -> dict:
+    """Summarise recorded availability by stratum, from the rows rather than from disk."""
+    by_stratum: dict[str, dict[str, int]] = defaultdict(
+        lambda: {"requested": 0, "available": 0, "unobserved": 0}
+    )
     oldest_available = None
     for row in sample:
-        available = is_a_real_ulog(raw_dir / f"{row['log_id']}.ulg")
-        row["ulg_available"] = available
         cell = by_stratum[row["stratum"]]
         cell["requested"] += 1
-        if available:
+        recorded = row.get("ulg_available")
+        if recorded is None:
+            # Never looked at is not the same as looked at and absent. Counting it as
+            # missing would report an unfinished retrieval as a failed one.
+            cell["unobserved"] += 1
+        elif recorded:
             cell["available"] += 1
             date = (row.get("log_date") or "")[:10]
             if date and (oldest_available is None or date < oldest_available):
@@ -60,14 +80,22 @@ def assess(sample: list[dict[str, Any]], raw_dir: Path) -> tuple[list[dict[str, 
 
     requested = sum(c["requested"] for c in by_stratum.values())
     available = sum(c["available"] for c in by_stratum.values())
-    return sample, {
+    unobserved = sum(c["unobserved"] for c in by_stratum.values())
+    observed = requested - unobserved
+    return {
         "requested": requested,
         "available": available,
-        "missing": requested - available,
-        "availability_rate": round(available / requested, 4) if requested else None,
+        "missing": observed - available,
+        "unobserved": unobserved,
+        "availability_rate": round(available / observed, 4) if observed else None,
         "oldest_available_log_date": oldest_available,
         "by_stratum": {k: dict(v) for k, v in sorted(by_stratum.items())},
     }
+
+
+def assess(sample: list[dict[str, Any]], raw_dir: Path) -> tuple[list[dict[str, Any]], dict]:
+    """Fill ``ulg_available`` per row and summarise by stratum."""
+    return observe(sample, raw_dir), summarise(sample)
 
 
 def main(argv: list[str] | None = None) -> int:
