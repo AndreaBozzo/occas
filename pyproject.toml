@@ -20,7 +20,10 @@ dependencies = [
 
 [project.optional-dependencies]
 # M4 onwards: ERA5 retrieval and agreement statistics.
-context = ["cdsapi>=0.7", "xarray>=2024.10", "netCDF4>=1.7"]
+# zarr + gcsfs are the ARCO-ERA5 read path (adr/0013): H1 reads ~1,200 windows and
+# that is more than the free CDS queue should be asked for. cdsapi stays -- the CDS
+# remains the authoritative route and the citable identity of the product.
+context = ["cdsapi>=0.7", "xarray>=2024.10", "netCDF4>=1.7", "zarr>=3.0", "gcsfs>=2024.10"]
 analysis = ["scipy>=1.14", "pandas>=2.2", "matplotlib>=3.9"]
 
 [dependency-groups]

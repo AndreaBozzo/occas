@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -92,9 +93,36 @@ def era5_at(window: dict[str, Any], cache_dir: Path) -> tuple[dict[str, float], 
     }
 
 
-def pair(window: dict[str, Any], cache_dir: Path) -> tuple[list[dict], dict[str, Any]]:
+def arco_at(
+    window: dict[str, Any], dataset: Any, coverage: era5.ArcoCoverage
+) -> tuple[dict[str, float], dict[str, Any]]:
+    """The same read through the account-free copy (``adr/0013``).
+
+    Same shape as ``era5_at`` and the same grid cell -- verified on all 42 pilot windows,
+    where the two routes chose identical cells and agreed to 6e-4 m s-1. What differs is
+    the provenance: there is no retrieved file to hash, so the store and the boundaries
+    it declared at open time identify the read instead.
+
+    No cache. A read costs one whole global field per variable and the windows of a run
+    are consecutive *distinct* hours, so within a run there is nothing to hit; across
+    runs, two windows sharing an hour are rare enough that a cache would be built on a
+    guess. If an H1 run shows otherwise, that is the moment to add one.
+    """
+    when = window["window_start"]
+    marker = coverage.release_marker(when)
+    values, grid_lat, grid_lon = era5.arco_values_at(dataset, when, window["lat"], window["lon"])
+    return values, {
+        "grid_lat": grid_lat,
+        "grid_lon": grid_lon,
+        "release_marker": marker,
+        "cached": False,
+        "source": era5.arco_source_metadata(release_marker=marker, coverage=coverage),
+    }
+
+
+def pair(window: dict[str, Any], read: Callable) -> tuple[list[dict], dict[str, Any]]:
     """One window -> its schema-valid context features, plus the paired row H1 reads."""
-    values, meta = era5_at(window, cache_dir)
+    values, meta = read(window)
     # ERA5 hourly fields are instantaneous at the stamp, and the window is the hour that
     # begins there, so the field sits at the window's start.
     context_time = window["window_start"]
@@ -145,6 +173,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--features", type=Path, default=Path("data/pilot-context-features.jsonl"))
     parser.add_argument("--out", type=Path, default=Path("artifacts/pilot-join-summary.json"))
     parser.add_argument("--limit", type=int, default=None, help="First N usable runs only.")
+    parser.add_argument(
+        "--route",
+        choices=("arco", "cds"),
+        default="arco",
+        help="Which ERA5 route to read. arco (default, adr/0013) is account-free and "
+        "does not queue; cds is the authoritative one and is what a spot-check uses.",
+    )
     args = parser.parse_args(argv)
 
     dates = {}
@@ -153,6 +188,22 @@ def main(argv: list[str] | None = None) -> int:
             if line.strip():
                 row = json.loads(line)
                 dates[row["log_id"]] = (row.get("log_date") or "")[:10] or None
+
+    # The route is chosen before the manifest is built, because on the ARCO route the
+    # store's declared boundaries are part of what identifies the run and they are only
+    # knowable once it is open. They move; a rerun in three months reads different ones.
+    dataset = None
+    if args.route == "arco":
+        dataset, coverage = era5.open_arco()
+        route_parameters = {"era5_route": "arco", "arco_coverage": coverage.state()}
+
+        def read(window: dict[str, Any]) -> tuple[dict[str, float], dict[str, Any]]:
+            return arco_at(window, dataset, coverage)
+    else:
+        route_parameters = {"era5_route": "cds", "cds_dataset": era5.DATASET}
+
+        def read(window: dict[str, Any]) -> tuple[dict[str, float], dict[str, Any]]:
+            return era5_at(window, args.cache)
 
     manifest = build_manifest(
         name="h1-pilot-pairs",
@@ -167,6 +218,7 @@ def main(argv: list[str] | None = None) -> int:
             "min_samples_per_window": align.MIN_SAMPLES_PER_WINDOW,
             "era5_variables": list(era5.WIND_VARIABLES),
             "processing_version": PROCESSING_VERSION,
+            **route_parameters,
         },
     )
 
@@ -193,7 +245,7 @@ def main(argv: list[str] | None = None) -> int:
                 failures["window:incomplete"] += 1
                 continue
             try:
-                features, row = pair(window, args.cache)
+                features, row = pair(window, read)
             except Exception as error:
                 failures[f"era5:{type(error).__name__}"] += 1
                 continue
@@ -202,6 +254,11 @@ def main(argv: list[str] | None = None) -> int:
             for flag in row["quality_flags"]:
                 flags[flag] += 1
         print(f"{run_id[:8]} {len(pairs_out):>4} pairs so far", flush=True)
+
+    if dataset is not None:
+        # Without this the process never exits: gcsfs leaves its event loop running and
+        # the interpreter waits on it, which looks exactly like a hung read.
+        dataset.close()
 
     for feature in features_out:
         validate(feature, "context_feature.json")

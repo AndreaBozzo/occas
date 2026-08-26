@@ -60,7 +60,12 @@ prefer GRIB, where the marker is native and no conversion sits between us and it
 - ARCO-ERA5, the account-free copy, marks the boundary differently — a store attribute
   `valid_time_stop_era5t`, plus a documented monthly job that revalidates ERA5T against
   final ERA5. A run against the copy records the store and that attribute. Same
-  requirement, different evidence, both recordable.
+  requirement, different evidence, both recordable. **Built and measured on 2026-08-26**
+  ([`0013`](0013-h1-reads-era5-from-the-account-free-copy.md)), which turned up something
+  this bullet did not anticipate: the copy's boundary *lags* the authority's by about a
+  month, so the two routes assign different markers to the same window and the ERA5T
+  share depends on which one produced it. The requirement stands; what it identifies is
+  the release *as served by a named route on a named day*, not a property of the window.
 - Audit row C6 is closed by observation rather than by documentation, and says so.
 
 ## Alternatives considered

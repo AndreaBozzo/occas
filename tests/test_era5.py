@@ -157,3 +157,120 @@ def test_attribution_is_the_modified_form() -> None:
     record = era5.source_metadata(release_marker="0001")
     assert record["attribution"].startswith("Contains modified")
     assert record["licence"] == "Licence to use Copernicus Products, revision 12"
+
+
+# --------------------------------------------------------------------------------------
+# ARCO-ERA5, the second route (adr/0013). Still no network: the store's grid convention
+# and its release boundaries are both reproducible offline, and both are places where a
+# mistake returns a plausible number instead of an error.
+# --------------------------------------------------------------------------------------
+
+# The boundaries the real store declared on 2026-08-26, which is when the semantics below
+# were established by reading 42 windows through both routes.
+COVERAGE = era5.ArcoCoverage(
+    valid_time_start="1940-01-01",
+    valid_time_stop="2026-04-30",
+    valid_time_stop_era5t="2026-08-20",
+    last_updated="2026-08-26 03:15:47.457969+00:00",
+)
+
+
+def _arco_shaped(lons, lats, values):
+    """A store-shaped dataset: longitudes 0..360, latitudes descending, one hour."""
+    when = np.array([np.datetime64("2026-01-15T12:00:00")])
+    data = np.asarray(values, dtype="float32").reshape(1, len(lats), len(lons))
+    return xr.Dataset(
+        {name: (("time", "latitude", "longitude"), data) for name in era5.ARCO_VARIABLES},
+        coords={
+            "time": when,
+            "latitude": np.array(lats, dtype="float32"),
+            "longitude": np.array(lons, dtype="float32"),
+        },
+    )
+
+
+def test_a_western_longitude_reaches_the_western_cell() -> None:
+    """The trap this route brings with it, and the reason it is worth a test.
+
+    ARCO is on ERA5's native 0..360 grid; everything else here works in -180..180. A
+    position at -122.25 asked of the store unconverted does not fail -- ``nearest``
+    clamps it to longitude 0.0 and returns a wind speed from the Gulf of Guinea. Four of
+    the pilot's 42 windows are at negative longitudes, so this is the ordinary case, not
+    an edge one.
+    """
+    dataset = _arco_shaped(lons=[0.0, 237.75], lats=[37.75], values=[[[-99.0, 4.25]]])
+    when = datetime(2026, 1, 15, 12, tzinfo=UTC)
+
+    values, grid_lat, grid_lon = era5.arco_values_at(dataset, when, 37.75, -122.25)
+
+    assert values["u100"] == 4.25, "read the prime meridian instead of California"
+    assert grid_lat == 37.75
+    # Reported back in the caller's frame: align.haversine_km compares this against the
+    # window's own longitude, and 237.75 against -122.25 is most of a hemisphere.
+    assert grid_lon == -122.25
+
+
+def test_an_eastern_longitude_is_left_alone() -> None:
+    dataset = _arco_shaped(lons=[104.25, 237.75], lats=[30.5], values=[[[1.5, -99.0]]])
+    values, _, grid_lon = era5.arco_values_at(
+        dataset, datetime(2026, 1, 15, 12, tzinfo=UTC), 30.5, 104.166
+    )
+    assert values["v10"] == 1.5
+    assert grid_lon == 104.25
+
+
+def test_the_release_marker_follows_the_stores_own_boundaries() -> None:
+    """Final ERA5 up to and including ``valid_time_stop``; ERA5T beyond it.
+
+    The boundary day is included: the attributes are dates and the data is hourly, so
+    ``valid_time_stop = 2026-04-30`` covers every hour of 30 April.
+    """
+    assert COVERAGE.release_marker(datetime(2026, 4, 30, 23, tzinfo=UTC)) == "0001"
+    assert COVERAGE.release_marker(datetime(2026, 5, 1, 0, tzinfo=UTC)) == "0005"
+    assert COVERAGE.release_marker(datetime(2026, 8, 20, 23, tzinfo=UTC)) == "0005"
+
+
+def test_an_hour_the_store_does_not_hold_is_fatal() -> None:
+    """The store's time axis runs to 2050; its data does not.
+
+    Selecting an hour past the end returns a fill value rather than raising, so the
+    check has to happen before the read. A flight from next week joining to a field of
+    zeros would look like data.
+    """
+    with pytest.raises(era5.OutsideStoreCoverage, match="ERA5T horizon"):
+        COVERAGE.release_marker(datetime(2026, 8, 21, 0, tzinfo=UTC))
+    with pytest.raises(era5.OutsideStoreCoverage, match="precedes"):
+        COVERAGE.release_marker(datetime(1939, 12, 31, 23, tzinfo=UTC))
+
+
+def test_a_store_that_stops_declaring_its_boundaries_is_fatal() -> None:
+    """Same rule as a missing ``expver``: no marker, no retrieval (adr/0008).
+
+    This route's marker is derived from store attributes rather than read off a field,
+    so the failure this guards against is the store quietly dropping one.
+    """
+    dataset = _arco_shaped(lons=[0.0], lats=[0.0], values=[[[1.0]]])
+    dataset.attrs.update(valid_time_start="1940-01-01", valid_time_stop="2026-04-30")
+    with pytest.raises(era5.MissingReleaseMarker, match="valid_time_stop_era5t"):
+        era5.ArcoCoverage.from_dataset(dataset, store="test://store")
+
+
+def test_the_arco_record_carries_both_attributions() -> None:
+    """The Copernicus licence applies to the data; the copy asks to be cited as a copy.
+
+    Dropping either is a licence problem, so both travel in one string (audit row C5).
+    """
+    from analysis.common.schema import validate
+
+    record = era5.arco_source_metadata(
+        release_marker="0005",
+        coverage=COVERAGE,
+        retrieved_at=datetime(2026, 8, 26, 12, tzinfo=UTC),
+    )
+    validate(record, "source_metadata.json")
+    assert record["attribution"].startswith("Contains modified")
+    assert "Carver & Merose" in record["attribution"]
+    assert record["licence"] == era5.LICENCE
+    # No file was downloaded, so there are no bytes to hash. Null rather than invented.
+    assert record["content_hash"] is None
+    assert "last_updated=2026-08-26" in record["source_version"]

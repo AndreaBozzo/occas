@@ -1,0 +1,46 @@
+{
+  "windows": 42,
+  "unit": "m s-1",
+  "per_variable": {
+    "era5_100m_u": {
+      "compared": 42,
+      "max_abs_difference": 0.0005207061767578125,
+      "median_abs_difference": 0.0002028942108154297
+    },
+    "era5_100m_v": {
+      "compared": 42,
+      "max_abs_difference": 0.0006237030029296875,
+      "median_abs_difference": 0.0001335740089416504
+    },
+    "era5_10m_u": {
+      "compared": 42,
+      "max_abs_difference": 0.0003947019577026367,
+      "median_abs_difference": 0.00018045306205749512
+    },
+    "era5_10m_v": {
+      "compared": 42,
+      "max_abs_difference": 0.00040602684020996094,
+      "median_abs_difference": 0.00012409687042236328
+    }
+  },
+  "release_marker": {
+    "agree": 41,
+    "disagree": 1,
+    "disagreements": [
+      {
+        "window_start": "2026-05-07T10:00:00+00:00",
+        "cds": "0001",
+        "arco": "0005"
+      }
+    ],
+    "cds_era5t": 6,
+    "arco_era5t": 7
+  },
+  "arco_coverage": {
+    "store": "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3",
+    "valid_time_start": "1940-01-01",
+    "valid_time_stop": "2026-04-30",
+    "valid_time_stop_era5t": "2026-08-20",
+    "last_updated": "2026-08-26 03:15:47.457969+00:00"
+  }
+}

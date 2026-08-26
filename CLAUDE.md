@@ -39,6 +39,11 @@ one means writing an ADR, not editing code.
 - **Neither wind source is ground truth.** H1 compares ERA5 reanalysis against an EKF2
   *estimate*. Use bias and limits of agreement between measurement methods; never
   regress one on the other, and never treat the onboard estimate as truth (ADR-0003).
+- **The ARCO copy is not the authority.** H1 reads ERA5 from ARCO-ERA5 because ~1,200
+  windows is more than the free CDS queue should be asked for; the CDS stays the citable
+  identity and the marker vocabulary. The copy is on ERA5's native 0-360 longitude grid
+  and its release boundary lags the CDS's by about a month, so the recorded ERA5T share
+  is a property of the route and the day it ran (ADR-0013).
 - **No result without a manifest.** Every analysis emits an `AnalysisManifest` through
   `analysis/common/manifest.py` before it may emit a number. Retrieval and environment
   metadata are captured *at run time* — a manifest written afterwards is wrong

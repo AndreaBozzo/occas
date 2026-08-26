@@ -23,10 +23,13 @@ The CDS personal access token is read from the environment, never from this repo
 ``CDSAPI_KEY``, or ``~/.cdsapirc``). The token is not logged and does not enter a
 manifest; what gets recorded is the retrieval, not the credential.
 
-Still open: ARCO-ERA5, the account-free copy, marks the release boundary with a store
-attribute ``valid_time_stop_era5t`` rather than a per-field ``expver``. It is a second
-route to the same requirement and is deliberately unwritten -- no analysis needs it yet,
-and it would add ``zarr`` and ``gcsfs`` to the dependency set to serve none.
+**There are two routes to the same data, and this module holds both.** The CDS above is
+the authoritative one and stays the citable identity of the product. ARCO-ERA5 -- the
+account-free copy in Google Cloud Public Datasets -- is the one H1 reads at scale, because
+a thousand usable runs is a thousand requests to a queued free service and that is more
+than it should be asked for (``adr/0013``). The copy marks the release boundary with store
+attributes rather than a per-field ``expver``, so the same requirement is met with
+different evidence, and the two do not always agree: see ``ArcoCoverage``.
 """
 
 from __future__ import annotations
@@ -34,7 +37,8 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from dataclasses import dataclass
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -209,6 +213,204 @@ def read_release_marker(path: Path) -> str:
     if not found or found == [""]:
         raise MissingReleaseMarker(f"{path} carries an empty expver (docs/adr/0008).")
     return ",".join(found)
+
+
+# --------------------------------------------------------------------------------------
+# ARCO-ERA5: the account-free route (adr/0013)
+# --------------------------------------------------------------------------------------
+
+# Read anonymously; the bucket is part of Google Cloud Public Datasets. The "-v3" is part
+# of the store's name, not its Zarr format -- it carries v2 consolidated metadata, which
+# is why it opens in one request instead of several hundred.
+ARCO_STORE = "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3"
+ARCO_SOURCE_URL = "https://cloud.google.com/storage/docs/public-datasets/era5"
+# The data stays under the Copernicus licence above; the copy asks to be cited too
+# (audit row C5). Both travel, because dropping either is a licence problem.
+ARCO_CITATION = "Carver & Merose, ARCO-ERA5, 22nd Conf. on AI for Env. Science, AMS, 2023"
+
+# The store spells the variables out. Everything downstream speaks the CDS NetCDF short
+# names, so the mapping lives here rather than in the analysis: one vocabulary, whichever
+# route produced the numbers.
+ARCO_VARIABLES: dict[str, str] = {
+    "100m_u_component_of_wind": "u100",
+    "100m_v_component_of_wind": "v100",
+    "10m_u_component_of_wind": "u10",
+    "10m_v_component_of_wind": "v10",
+}
+
+# Verified against the store on 2026-08-26, because getting either wrong is silent:
+# latitude runs 90 -> -90 descending, and longitude runs 0 -> 359.75. The CDS route works
+# in -180..180. A position at -122.3 asked of this store with no conversion does not
+# fail -- `method="nearest"` clamps it to longitude 0.0 and returns a plausible wind
+# speed from the Gulf of Guinea.
+ARCO_LON_MIN, ARCO_LON_MAX = 0.0, 360.0
+
+
+class OutsideStoreCoverage(RuntimeError):
+    """Raised when a time falls outside what the ARCO store currently holds.
+
+    Fatal, and it has to be: the store's ``time`` axis runs from 1900 to 2050 while its
+    data begins in 1940 and ends a few days ago. Selecting an hour beyond the end does
+    not raise -- the chunk is simply absent and Zarr hands back the fill value. Without
+    this check a flight from next week would join to a field of NaNs, or worse to zeros,
+    and nothing downstream would look wrong.
+    """
+
+
+@dataclass(frozen=True)
+class ArcoCoverage:
+    """What the store said about its own release boundaries, when it was opened.
+
+    Recorded at read time and never inferred, for the reason ``adr/0004`` gives: these
+    move. ``valid_time_stop`` advances monthly as final ERA5 is published and
+    ``valid_time_stop_era5t`` advances daily, so the same window read three months apart
+    can be ERA5T once and final the next time -- which is the whole point of recording a
+    release marker at all.
+
+    **The two routes can disagree, and on 2026-08-26 they did.** Of the pilot's 42
+    windows, 41 got the same marker from the CDS and from this rule; one -- 2026-05-07 --
+    was final ERA5 to the CDS on 2026-08-25 and ERA5T here, because this copy's
+    ``valid_time_stop`` was still 2026-04-30. The copy lags the authority by about a
+    month. That is a property of the copy, not an error, and it is why the marker is
+    recorded together with the store and these boundaries rather than on its own.
+    """
+
+    valid_time_start: str
+    valid_time_stop: str
+    valid_time_stop_era5t: str
+    last_updated: str
+    store: str = ARCO_STORE
+
+    @classmethod
+    def from_dataset(cls, dataset: Any, store: str = ARCO_STORE) -> ArcoCoverage:
+        try:
+            return cls(
+                valid_time_start=str(dataset.attrs["valid_time_start"]),
+                valid_time_stop=str(dataset.attrs["valid_time_stop"]),
+                valid_time_stop_era5t=str(dataset.attrs["valid_time_stop_era5t"]),
+                last_updated=str(dataset.attrs["last_updated"]),
+                store=store,
+            )
+        except KeyError as error:
+            # The same rule as the CDS route's missing expver: a store that stopped
+            # declaring its boundaries cannot support a release marker, and guessing one
+            # is worse than stopping.
+            raise MissingReleaseMarker(
+                f"{store} does not declare {error}; the ERA5 release of anything read "
+                f"from it would be unrecoverable (docs/adr/0008)."
+            ) from error
+
+    def release_marker(self, when: datetime) -> str:
+        """``0001`` for final ERA5, ``0005`` for ERA5T -- the CDS's own vocabulary.
+
+        The boundaries are dates and the data is hourly, so the comparison is by date and
+        the boundary day is included: ``valid_time_stop = 2026-04-30`` means final ERA5
+        covers every hour of 30 April.
+        """
+        day = when.astimezone(UTC).date()
+        if day < date.fromisoformat(self.valid_time_start):
+            raise OutsideStoreCoverage(
+                f"{when.isoformat()} precedes the store's {self.valid_time_start}."
+            )
+        if day <= date.fromisoformat(self.valid_time_stop):
+            return "0001"
+        if day <= date.fromisoformat(self.valid_time_stop_era5t):
+            return "0005"
+        raise OutsideStoreCoverage(
+            f"{when.isoformat()} is beyond the store's ERA5T horizon "
+            f"({self.valid_time_stop_era5t}); it holds no data there and would return "
+            f"a fill value rather than fail."
+        )
+
+    def state(self) -> dict[str, str]:
+        """The boundaries as they were read, for a manifest's parameters."""
+        return {
+            "store": self.store,
+            "valid_time_start": self.valid_time_start,
+            "valid_time_stop": self.valid_time_stop,
+            "valid_time_stop_era5t": self.valid_time_stop_era5t,
+            "last_updated": self.last_updated,
+        }
+
+
+def open_arco(store: str = ARCO_STORE) -> tuple[Any, ArcoCoverage]:
+    """Open the ARCO store read-only and anonymously. Returns ``(dataset, coverage)``.
+
+    ``chunks=None`` keeps Dask out of it: a chunk here is one whole global field for one
+    hour, so there is nothing to parallelise over for a point read and a scheduler would
+    only add a dependency. ``consolidated=True`` is what makes the open cost one request
+    rather than several hundred over 273 variables.
+    """
+    import xarray as xr
+
+    dataset = xr.open_zarr(
+        store,
+        chunks=None,
+        consolidated=True,
+        decode_timedelta=False,
+        storage_options={"token": "anon"},
+    )
+    return dataset, ArcoCoverage.from_dataset(dataset, store)
+
+
+def arco_values_at(
+    dataset: Any, when: datetime, lat: float, lon: float
+) -> tuple[dict[str, float], float, float]:
+    """The four ADR-0006 wind components at the grid point nearest a position.
+
+    Returns the values under the CDS short names, plus the grid point actually used in
+    the caller's own ``-180..180`` frame -- so the recorded distance-to-grid-point means
+    the same thing whichever route produced the row.
+
+    One point read pulls one whole global field per variable, because the store is
+    chunked ``[1, 721, 1440]``. That is about 4 MB uncompressed per variable-hour and it
+    is the price of the route: the caller should ask once per distinct hour, not once per
+    window.
+    """
+    point = dataset[list(ARCO_VARIABLES)].sel(
+        time=when.astimezone(UTC).replace(tzinfo=None),
+        latitude=lat,
+        longitude=lon % ARCO_LON_MAX,
+        method="nearest",
+    )
+    values = {short: float(point[name].values.ravel()[0]) for name, short in ARCO_VARIABLES.items()}
+    grid_lat = float(point["latitude"].values)
+    grid_lon = float(point["longitude"].values)
+    # Back to the frame the window is in, so haversine_km compares like with like rather
+    # than measuring the long way round the planet.
+    if grid_lon > 180.0:
+        grid_lon -= 360.0
+    return values, grid_lat, grid_lon
+
+
+def arco_source_metadata(
+    *,
+    release_marker: str,
+    coverage: ArcoCoverage,
+    retrieved_at: datetime | None = None,
+) -> dict[str, Any]:
+    """A ``SourceMetadata`` record for an ARCO read.
+
+    ``content_hash`` is ``None`` and that is honest rather than lazy: nothing is
+    downloaded to a file to hash, and hashing the global field a point came from would
+    record 4 MB of the planet as the provenance of one number. What identifies the read
+    instead is the store, its ``last_updated``, and the boundaries that produced the
+    marker -- all of which the manifest carries in its parameters via
+    ``ArcoCoverage.state()``.
+    """
+    moment = retrieved_at or datetime.now(UTC)
+    return {
+        "source": "era5",
+        "source_version": (
+            f"arco-era5 {coverage.store} last_updated={coverage.last_updated} "
+            f"expver={release_marker}"
+        ),
+        "source_url": ARCO_SOURCE_URL,
+        "retrieved_at": moment.isoformat(),
+        "licence": LICENCE,
+        "attribution": f"{ATTRIBUTION_MODIFIED.format(year=moment.year)}. {ARCO_CITATION}",
+        "content_hash": None,
+    }
 
 
 def source_metadata(
