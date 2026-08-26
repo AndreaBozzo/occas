@@ -204,6 +204,9 @@ def main(argv: list[str] | None = None) -> int:
             "required_topics": list(REQUIRED_TOPICS),
             "wind_components": list(WIND_COMPONENTS),
             "position_columns": list(POSITION_COLUMNS),
+            # Which draw this inventory is of. The corpus directory holds more than one,
+            # so the summary is not reproducible without naming the sample that bounds it.
+            "sample": str(args.sample),
         },
     )
 
@@ -218,12 +221,29 @@ def main(argv: list[str] | None = None) -> int:
                 strata[row["log_id"]] = row["stratum"]
                 dates[row["log_id"]] = (row.get("log_date") or "")[:10] or None
 
-    records = [
-        inspect(d, expected_date=dates.get(d.name))
-        for d in sorted(args.parquet.iterdir())
-        if d.is_dir()
-    ]
+    # The inventory is of *this sample*, not of whatever happens to be in the corpus
+    # directory. One directory now holds two draws: the pilot's 100 runs and the H1
+    # draw's 1,600, overlapping in 50. Walking it whole would have pooled the pilot's 50
+    # rotorcraft -- 8% usable against fixed-wing's 72% -- into H1's usable rate, and
+    # symmetrically swept 1,500 H1 runs into a re-run of the pilot's, which is why that
+    # artifact had quietly stopped reproducing. `summarise` did file the strangers under
+    # an "unknown" stratum, so they were visible; they were still counted in the
+    # headline rate, and visible-but-counted is the shape of most pooling errors.
+    #
+    # Same rule as PX4_SITL: populations are separated, never merged under a label. The
+    # count of what was set aside is recorded rather than dropped silently.
+    run_dirs = [d for d in sorted(args.parquet.iterdir()) if d.is_dir()]
+    outside = [d for d in run_dirs if strata and d.name not in strata]
+    if outside:
+        run_dirs = [d for d in run_dirs if d.name in strata]
+        print(
+            f"{len(outside)} converted runs in {args.parquet} are not in {args.sample} "
+            f"and are excluded: a different draw, not a stratum of this one."
+        )
+
+    records = [inspect(d, expected_date=dates.get(d.name)) for d in run_dirs]
     summary = summarise(records, strata)
+    summary["runs_outside_sample_excluded"] = len(outside)
 
     args.per_run.parent.mkdir(parents=True, exist_ok=True)
     args.per_run.write_text(
