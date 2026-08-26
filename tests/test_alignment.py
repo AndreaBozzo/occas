@@ -228,3 +228,38 @@ def test_a_valid_anchor_passes_both_checks() -> None:
     }
     anchor = align.clock_anchor(gps, expected_date="2026-01-15")
     assert anchor.to_utc(BOOT_BASE_US).year == 2026
+
+
+def test_an_unrepresentable_clock_is_rejected_not_raised_as_an_oserror() -> None:
+    """The third clock trap, and the one that only 1,600 runs produced.
+
+    ``MIN_PLAUSIBLE_UTC`` catches an anchor that recovers a representable but impossible
+    date. This is the other kind: an offset far enough out that the sum leaves the
+    platform's epoch range entirely, where ``datetime.fromtimestamp`` raises -- ``OSError``
+    on Windows, not the ``OverflowError`` the documentation implies.
+
+    It has to surface as ``NoAbsoluteTime`` because that is what every caller catches. On
+    2026-08-27 it did not, and one run aborted the inventory of all 1,600 from inside a
+    list comprehension: no summary, no manifest, no partial result.
+    """
+    anchor = align.ClockAnchor(offset_us=-(10**18), spread_s=0.0, samples=10)
+    with pytest.raises(align.NoAbsoluteTime, match="outside representable time"):
+        anchor.to_utc(BOOT_BASE_US)
+
+
+def test_an_unrepresentable_clock_is_fatal_for_its_run_only() -> None:
+    """Fatal for the run, and it must be reachable through clock_anchor's own path.
+
+    The guard belongs where every caller already looks, so that a run with a broken clock
+    is one unusable run rather than a stopped inventory.
+    """
+    # Far enough forward to leave the epoch range rather than land in 1970: a value of 1
+    # here would be caught by MIN_PLAUSIBLE_UTC instead, and this test would pass with
+    # the guard removed -- which it did, on the first attempt at writing it.
+    far_future_us = 10**18
+    gps = {
+        "time_utc_usec": [far_future_us, far_future_us, far_future_us],
+        "timestamp": [BOOT_BASE_US, BOOT_BASE_US + 1, BOOT_BASE_US + 2],
+    }
+    with pytest.raises(align.NoAbsoluteTime, match="outside representable time"):
+        align.clock_anchor(gps)

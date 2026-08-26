@@ -84,7 +84,27 @@ class ClockAnchor:
         return self.spread_s <= MAX_CLOCK_SPREAD_S
 
     def to_utc(self, boot_us: int | float) -> datetime:
-        return datetime.fromtimestamp((boot_us + self.offset_us) / 1e6, UTC)
+        """The wall-clock time of a boot timestamp, or ``NoAbsoluteTime``.
+
+        ``MIN_PLAUSIBLE_UTC`` below catches an anchor that recovers a *representable*
+        but impossible date -- the 1970 case. This catches the one that is not
+        representable at all: an offset far enough out that the sum lands outside the
+        platform's epoch range. ``datetime.fromtimestamp`` then raises, and on Windows it
+        raises ``OSError`` rather than the ``OverflowError``/``ValueError`` the docs
+        suggest, so all three are caught by class rather than by name.
+
+        Found on the H1 draw on 2026-08-27: 1,600 runs contain one that the pilot's 100
+        did not, and it aborted the whole inventory from inside a list comprehension.
+        The condition is the same as an anchor that carries no date -- unusable, fatal
+        for that run, recorded rather than guessed at -- so it is reported as such.
+        """
+        try:
+            return datetime.fromtimestamp((boot_us + self.offset_us) / 1e6, UTC)
+        except (OSError, OverflowError, ValueError) as error:
+            raise NoAbsoluteTime(
+                f"boot timestamp {boot_us} with offset {self.offset_us} us is outside "
+                f"representable time: the recovered clock is not a date ({error})"
+            ) from error
 
 
 def clock_anchor(gps: dict[str, list], *, expected_date: str | None = None) -> ClockAnchor:
