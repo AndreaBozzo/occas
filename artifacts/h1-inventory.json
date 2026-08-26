@@ -1,0 +1,31 @@
+{
+  "runs": 1600,
+  "usable_for_h1": 871,
+  "usable_rate": 0.5444,
+  "unusable_reasons": {
+    "missing:vehicle_global_position": 201,
+    "missing:wind": 623,
+    "no_absolute_time": 259
+  },
+  "topic_presence": {
+    "airspeed": 1228,
+    "airspeed_wind": 1262,
+    "estimator_status": 1516,
+    "vehicle_global_position": 1399,
+    "vehicle_local_position": 1578,
+    "wind": 977
+  },
+  "wind_variance_reconstructible": 977,
+  "wind_variance_rate_of_wind_runs": 1.0,
+  "by_stratum": {
+    "fixed_wing_or_vtol|older": {
+      "runs": 800,
+      "usable": 385
+    },
+    "fixed_wing_or_vtol|within_window": {
+      "runs": 800,
+      "usable": 486
+    }
+  },
+  "runs_outside_sample_excluded": 50
+}
