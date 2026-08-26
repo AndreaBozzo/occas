@@ -54,6 +54,12 @@ The output of H1 is not a single number. It is a set of **regimes**, each with i
 agreement statistics, including the regimes in which the reanalysis is **not** a useful
 proxy. Reporting where it fails is a result, not a caveat.
 
+Where a number over all of them is wanted, it is a *reweighted* one and it says so:
+the H1 draw is 800/800 across retention strata that are 37.1%/62.9% of the frame, so a
+pooled sample statistic would describe the design rather than the population. Weights,
+the estimand, and what reweighting cannot repair are fixed in
+[`adr/0014`](adr/0014-what-population-h1-estimates-over.md).
+
 ## Alignment and tolerances
 
 Every join declares, and every joined row records:

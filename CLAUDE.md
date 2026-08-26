@@ -61,6 +61,11 @@ one means writing an ADR, not editing code.
   10 vehicles per cell, suppressed cells reported with their counts — and publish the
   pipeline instead of the data (ADR-0009,
   [`docs/07-personal-data.md`](docs/07-personal-data.md), [`DATA_LICENSES.md`](DATA_LICENSES.md)).
+- **A pooled H1 number is a reweighted one.** The draw is 800/800 across retention
+  strata that are 37.1%/62.9% of the frame, and usability differs by stratum (72% vs
+  52%), so an unweighted pool puts 58% of its mass on 37% of the population. Strata
+  results are primary; pooled ones carry `N_h`, realised `n_h` and the usable rate
+  (ADR-0014).
 - **Bootstrap by run, never by window.** Windows within a run are not independent.
   The `validation_artifact.json` schema pins `bootstrap.unit` to `run`.
 
