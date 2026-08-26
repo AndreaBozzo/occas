@@ -1,0 +1,20 @@
+{
+  "requested": 1600,
+  "available": 1600,
+  "missing": 0,
+  "unobserved": 0,
+  "availability_rate": 1.0,
+  "oldest_available_log_date": "2017-02-05",
+  "by_stratum": {
+    "fixed_wing_or_vtol|older": {
+      "requested": 800,
+      "available": 800,
+      "unobserved": 0
+    },
+    "fixed_wing_or_vtol|within_window": {
+      "requested": 800,
+      "available": 800,
+      "unobserved": 0
+    }
+  }
+}
