@@ -214,6 +214,44 @@ def find_bash() -> str:
     )
 
 
+def observe(
+    chunk: list[dict[str, Any]],
+    raw: Path,
+    progress: Path,
+    *,
+    chunk_number: int | None,
+    attempt: int,
+) -> int:
+    """Record what actually arrived, and return how many did.
+
+    Must run before the prune, which deletes exactly the successes. Each observation is
+    appended with its attempt number, so a log that failed once and arrived on the retry
+    is distinguishable from one that was never there.
+    """
+    observed_at = datetime.now(UTC).isoformat()
+    arrived = 0
+    with progress.open("a", encoding="utf-8", newline="\n") as handle:
+        for row in chunk:
+            path = raw / f"{row['log_id']}.ulg"
+            available = is_a_real_ulog(path)
+            row["ulg_available"] = available
+            arrived += available
+            handle.write(
+                json.dumps(
+                    {
+                        "log_id": row["log_id"],
+                        "chunk": chunk_number,
+                        "attempt": attempt,
+                        "ulg_available": available,
+                        "bytes": path.stat().st_size if path.exists() else 0,
+                        "observed_at": observed_at,
+                    }
+                )
+                + "\n"
+            )
+    return arrived
+
+
 def convert_chunk(raw: Path, parquet: Path) -> int:
     """Convert what is in ``raw`` and delete the ``.ulg`` files that produced Parquet."""
     return subprocess.run(
@@ -291,6 +329,10 @@ def main(argv: list[str] | None = None) -> int:
                 "prune_raw": True,
                 "ulog_magic_checked": True,
                 "min_plausible_bytes": MIN_PLAUSIBLE_BYTES,
+                # A log is recorded absent only after two attempts on two separate
+                # connections. One exhausted retry budget is a network fact, not an
+                # availability fact, and A8 is about the latter.
+                "attempts_before_recording_absent": 2,
                 "exclusions": exclusions.load().state(),
             },
         )
@@ -312,26 +354,7 @@ def main(argv: list[str] | None = None) -> int:
                 return code
 
             # Observed before the prune, because the prune deletes exactly the successes.
-            observed_at = datetime.now(UTC).isoformat()
-            arrived = 0
-            with args.progress.open("a", encoding="utf-8", newline="\n") as handle:
-                for row in chunk:
-                    path = args.raw / f"{row['log_id']}.ulg"
-                    available = is_a_real_ulog(path)
-                    row["ulg_available"] = available
-                    arrived += available
-                    handle.write(
-                        json.dumps(
-                            {
-                                "log_id": row["log_id"],
-                                "chunk": number,
-                                "ulg_available": available,
-                                "bytes": path.stat().st_size if path.exists() else 0,
-                                "observed_at": observed_at,
-                            }
-                        )
-                        + "\n"
-                    )
+            arrived = observe(chunk, args.raw, args.progress, chunk_number=number, attempt=1)
             write_sample(args.sample, rows)
             print(f"Chunk {number}: {arrived}/{len(chunk)} arrived as real ULogs.", flush=True)
 
@@ -361,6 +384,36 @@ def main(argv: list[str] | None = None) -> int:
 
             if number < len(chunks):
                 time.sleep(DELAY_SECONDS)
+
+        # One failed attempt is not unavailability. Upstream retries a connection five
+        # times and then skips the log; on 2026-08-26 exactly one log in 800 exhausted
+        # that budget while the log requested immediately after it recovered on its first
+        # retry. Recording the first as absent would put a transient network failure into
+        # the evidence for audit row A8 -- which is precisely the question of whether the
+        # retention policy deletes files -- and would understate availability in the
+        # direction of the hypothesis under test. Upstream does distinguish the two cases
+        # in its output ("Log not found (404)" against "Failed after 5 attempts"), but its
+        # stdout is not the artifact and has been wrong before; asking again is.
+        #
+        # So everything still missing is requested once more, and only a log that fails
+        # twice, on two separate connections, is recorded absent.
+        missing = [row for row in rows if row["ulg_available"] is False]
+        if missing:
+            print(f"\n=== second attempt: {len(missing)} logs that did not arrive ===", flush=True)
+            for start in range(0, len(missing), args.chunk_size):
+                batch = missing[start : start + args.chunk_size]
+                code = download_chunk(batch, args.raw, db_info_api)
+                if code != 0:
+                    print(
+                        f"Second attempt stopped: the download wrapper exited {code}. "
+                        "The logs it did not reach stay recorded as not arrived.",
+                        file=sys.stderr,
+                    )
+                    break
+                recovered = observe(batch, args.raw, args.progress, chunk_number=None, attempt=2)
+                print(f"Second attempt: {recovered}/{len(batch)} arrived.", flush=True)
+            convert_chunk(args.raw, args.parquet)
+            write_sample(args.sample, rows)
 
         summary = summarise(rows)
         args.out.parent.mkdir(parents=True, exist_ok=True)
