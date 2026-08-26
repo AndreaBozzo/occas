@@ -140,7 +140,16 @@ def plan(
 
 
 def download_chunk(chunk: list[dict[str, Any]], raw: Path, db_info_api: str) -> int:
-    """One call to the download wrapper, which re-checks both gates before fetching."""
+    """One call to the download wrapper, which re-checks both gates before fetching.
+
+    ``PYTHONUNBUFFERED`` is set for the child, and inherited by *its* child, which is the
+    one that matters: upstream's ``download_logs.py`` prints a line per log, and against
+    a redirected stdout Python block-buffers those at 8 KB. On 2026-08-26 that made a
+    healthy chunk look dead -- the log went 31 minutes without a line while files were
+    landing every 16 seconds, because the chunk happened to hit no connection retries and
+    so had not produced 8 KB of output yet. A retrieval log that lags by a buffer cannot
+    be watched, and the run is long enough that watching it is the point.
+    """
     ids = [row["log_id"] for row in chunk]
     command = [
         sys.executable,
@@ -161,7 +170,9 @@ def download_chunk(chunk: list[dict[str, Any]], raw: Path, db_info_api: str) -> 
         "--db-info-api",
         db_info_api,
     ]
-    return subprocess.run(command, cwd=REPO_ROOT, check=False).returncode
+    return subprocess.run(
+        command, cwd=REPO_ROOT, check=False, env={**os.environ, "PYTHONUNBUFFERED": "1"}
+    ).returncode
 
 
 def for_bash(path: Path) -> str:
