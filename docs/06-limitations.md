@@ -27,10 +27,14 @@ work is added here the day it is discovered.
   estimate is averaged, not at its centre.** A window is the ERA5 hour beginning at its
   stamp and the field is instantaneous at that stamp, so the temporal mismatch measured
   against the window centre is −1800 s for every window in the corpus. This is a constant
-  of the design rather than a property of the data, with two consequences. The
-  sensitivity analysis required by `04-methodology.md` cannot be performed on it, since
-  there is no variation to examine; and any within-hour trend in the wind enters the
-  comparison as bias rather than as dispersion.
+  of the design rather than a property of the data: there is no variation in the recorded
+  column to sweep, and any within-hour trend in the wind enters the comparison as bias
+  rather than as dispersion. **The choice itself was tested rather than only declared.**
+  The whole corpus was re-paired with the field interpolated to the midpoint of each
+  averaging interval, and across all 64 paired regime artifacts the 97.5th percentile of
+  the vector difference magnitude moved by a median of −0.032 m s⁻¹ and no verdict
+  changed ([`10-h1-results.md`](10-h1-results.md),
+  [`adr/0016`](adr/0016-pre-publication-corrections.md) correction 5).
   `analysis/h1_agreement/agreement.py` derives the constancy from the rows rather than
   asserting it, so a window carrying any other value contradicts this paragraph rather
   than being absorbed into it. The distance-to-grid-point component of the same analysis

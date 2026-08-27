@@ -9,8 +9,8 @@ or transcribed by hand.
 > **Status.** These are the numbers after the corrections in
 > [`adr/0016`](adr/0016-pre-publication-corrections.md), which were found in review
 > *after* H1 had been run and are labelled post-hoc there. The estimators changed; no
-> decision threshold did. One robustness analysis — the time-aligned rerun — is still
-> outstanding and is noted at the end.
+> decision threshold did. The time-aligned rerun the ADR called for has since been run
+> over all 1,059 windows; it is reported below and changes nothing.
 
 ## The question, and what was fixed before it was answered
 
@@ -194,13 +194,49 @@ distance to grid point is not driving the disagreement in any simple way. Full t
 `adr/0006` declared primary — 8.42 against 9.19 pooled. That gap is the shear stratifier
 the ADR asked for, pointing against its own expectation. Both fail the band.
 
-**Time alignment — outstanding.** The published comparison places the instantaneous ERA5
-field at the *start* of the hour the onboard estimate is averaged over, a systematic
-−1800 s offset ([`06-limitations.md`](06-limitations.md)). A rerun interpolating the field
-to the midpoint of each averaging interval is in progress; `build_pairs --alignment
-interval_midpoint` implements it. This page will carry the comparison when it lands. It is
-not expected to close a gap of 9 against 3, which is precisely why running it removes an
-easy objection rather than creating one.
+**Time alignment.** The primary comparison places the instantaneous ERA5 field at the
+*start* of the hour the onboard estimate is averaged over, a systematic −1800 s offset
+([`06-limitations.md`](06-limitations.md)). The whole corpus was re-paired with the field
+interpolated to the midpoint of each averaging interval — `build_pairs --alignment
+interval_midpoint`, 1,059 windows, two ERA5 reads each — and re-analysed. Coverage is
+identical and every ERA5 value changes, by a median of 0.183 m s⁻¹ and at most 1.802.
+
+| Regime | \|Δv\| median | | \|Δv\| p97.5 | | Bias `u` | | Useful proxy |
+| | start | midpoint | start | midpoint | start | midpoint | either |
+|---|---:|---:|---:|---:|---:|---:|:--:|
+| `older` | 2.33 | 2.26 | 8.76 | 8.74 | +0.151 | +0.137 | **no** |
+| `within_window` | 2.39 | 2.39 | 9.35 | 9.50 | -0.096 | -0.072 | **no** |
+| pooled | 2.37 | 2.34 | 9.19 | 9.04 | +0.013 | +0.020 | **no** |
+
+| Axis | Cell | \|Δv\| p97.5 start | midpoint | change |
+|---|---|---:|---:|---:|
+| `airframe` | `fixed_wing` | 10.12 | 10.24 | +0.13 |
+| `airframe` | `vtol` | 8.54 | 8.56 | +0.02 |
+| `airspeed_topic` | `absent` | 8.04 | 7.97 | -0.07 |
+| `airspeed_topic` | `present` | 9.23 | 9.14 | -0.09 |
+| `altitude_proxy` | `agl_proxy_50_to_120m` | 7.53 | 7.30 | -0.24 |
+| `altitude_proxy` | `agl_proxy_ge_120m` | 7.55 | 7.42 | -0.14 |
+| `altitude_proxy` | `agl_proxy_lt_50m` | 12.79 | 12.64 | -0.16 |
+| `estimator_sigma` | `sigma_0.5_to_1.0` | 8.89 | 9.14 | +0.25 |
+| `estimator_sigma` | `sigma_ge_1.0` | 26.62 | 26.98 | +0.35 |
+| `estimator_sigma` | `sigma_lt_0.5` | 8.09 | 8.05 | -0.04 |
+| `season` | `DJF` | 11.76 | 11.79 | +0.03 |
+| `season` | `JJA` | 8.42 | 8.19 | -0.23 |
+| `season` | `MAM` | 9.62 | 9.32 | -0.30 |
+| `season` | `SON` | 8.72 | 8.87 | +0.15 |
+
+Across all 64 paired artifacts the 97.5th percentile moves by a **median of −0.032 m s⁻¹**,
+between −0.371 and +0.479. **No verdict flips**, and no regime becomes a useful proxy. The
+altitude gradient survives intact — 12.64 below 50 m against 7.30 between 50 and 120 — so
+it is a property of the surface layer rather than an artifact of comparing an instantaneous
+field against an hour mean.
+
+The offset was a real design choice and `adr/0016` was right that calling it only an
+unavoidable limitation understated what could be tested. Testing it removes the objection
+instead of answering it: a median shift of 0.03 m s⁻¹ against a 6 m s⁻¹ gap to the
+criterion. Artifacts:
+[`h1-agreement-midpoint.json`](../artifacts/h1-agreement-midpoint.json), manifest
+`artifacts/manifests/d8f91079-8f0d-4aa2-84cd-63241f8e48ba.json`.
 
 ## What this does not establish
 
