@@ -249,3 +249,49 @@ def test_the_estimator_relative_ratio_is_reported_per_component() -> None:
     # Same spread over half the sigma: the u ratio must be exactly twice the v ratio.
     assert ratios["u"]["ratio"] == pytest.approx(2 * ratios["v"]["ratio"])
     assert ratios["u"]["n_windows_with_variance"] == 20
+
+
+def _rows_for(stratum: str, *, runs: int, vehicles: int) -> list[dict]:
+    """``runs`` runs spread over ``vehicles`` distinct airframes."""
+    return [
+        {**_row(run_id=f"{stratum}-{i}", stratum=stratum), "vehicle_uuid": f"veh{i % vehicles}"}
+        for i in range(runs)
+    ]
+
+
+def test_a_cell_with_enough_runs_but_too_few_vehicles_is_suppressed() -> None:
+    """The half of the threshold that a run count alone cannot see.
+
+    ``docs/09-dpia.md`` 4.1 is one condition with two halves: 20 runs *and* 10 distinct
+    vehicles. Twenty-five runs flown by three airframes clears the first and is three
+    operators, so it must not be published. A gate checking only the run count passes this
+    fixture with and without the protection, which is to say it guards nothing.
+    """
+    by_stratum = {
+        WITHIN: _rows_for(WITHIN, runs=25, vehicles=3),
+        OLDER: _rows_for(OLDER, runs=25, vehicles=12),
+    }
+    thick, suppressed = agreement.publishable_regimes(by_stratum, min_runs=20, min_vehicles=10)
+
+    assert thick == [OLDER]
+    assert suppressed == {WITHIN: {"n_runs": 25, "n_vehicles": 3}}
+
+
+def test_a_suppressed_cell_is_reported_with_its_counts() -> None:
+    """Suppression that hides its own existence is its own distortion (adr/0009)."""
+    by_stratum = {WITHIN: _rows_for(WITHIN, runs=4, vehicles=2)}
+    thick, suppressed = agreement.publishable_regimes(by_stratum, min_runs=20, min_vehicles=10)
+
+    assert thick == []
+    assert suppressed[WITHIN] == {"n_runs": 4, "n_vehicles": 2}
+    # Counts, never identifiers: adr/0009 forbids emitting a vehicle_uuid raw or hashed.
+    assert all(isinstance(value, int) for value in suppressed[WITHIN].values())
+
+
+def test_a_cell_clearing_both_halves_is_published() -> None:
+    """The gate has to let the ordinary case through, or it is just an outage."""
+    by_stratum = {WITHIN: _rows_for(WITHIN, runs=400, vehicles=180)}
+    thick, suppressed = agreement.publishable_regimes(by_stratum, min_runs=20, min_vehicles=10)
+
+    assert thick == [WITHIN]
+    assert suppressed == {}

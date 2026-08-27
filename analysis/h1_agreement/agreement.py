@@ -72,6 +72,16 @@ FRAME_SIZES = {
 # manifest parameter so a reader can see it was a choice.
 MIN_RUNS_PER_REGIME = 20
 
+# The other half of the same threshold, and not optional. ``docs/09-dpia.md`` 4.1 states
+# it as one condition -- "no published cell draws on fewer than 20 runs from at least 10
+# distinct vehicle_uuids" -- and 20 runs from three vehicles is three operators, not
+# twenty. Enforcing the run count alone would be a gate built one step short of the path
+# it exists to block, which passes with and without the protection.
+#
+# The count is used and never published: adr/0009 forbids emitting a vehicle_uuid at all,
+# "raw or hashed", so what leaves this module is how many there were.
+MIN_VEHICLES_PER_REGIME = 10
+
 VERTICAL_REFERENCES = {
     "era5_100m": ("era5_100m_u", "era5_100m_v"),
     "era5_10m": ("era5_10m_u", "era5_10m_v"),
@@ -354,6 +364,37 @@ def regime_artifact(
     }
 
 
+def publishable_regimes(
+    by_stratum: dict[str, list[dict]], *, min_runs: int, min_vehicles: int
+) -> tuple[list[str], dict[str, dict[str, int]]]:
+    """Which strata may be reported, and the counts of those that may not.
+
+    ``docs/09-dpia.md`` 4.1 states one threshold with two halves -- "no published cell
+    draws on fewer than 20 runs from at least 10 distinct vehicle_uuids" -- so a cell has
+    to clear both. Twenty runs from three airframes is three operators wearing a
+    twenty-run disguise, and the run count alone would not see it.
+
+    Suppressed cells come back **with their counts**, because a suppression that hides its
+    own existence is its own distortion (``adr/0009``). The counts are integers; no
+    identifier leaves this function.
+    """
+    thick = sorted(
+        stratum
+        for stratum, rows in by_stratum.items()
+        if len({r["run_id"] for r in rows}) >= min_runs
+        and len({r["vehicle_uuid"] for r in rows}) >= min_vehicles
+    )
+    suppressed = {
+        stratum: {
+            "n_runs": len({r["run_id"] for r in rows}),
+            "n_vehicles": len({r["vehicle_uuid"] for r in rows}),
+        }
+        for stratum, rows in sorted(by_stratum.items())
+        if stratum not in thick
+    }
+    return thick, suppressed
+
+
 def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> list[dict]:
     """Read the paired rows, attach each run's stratum, and drop excluded runs.
 
@@ -380,6 +421,9 @@ def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> li
         if run_id in excluded.log_ids or vehicles.get(run_id) in excluded.vehicle_uuids:
             continue
         row["stratum"] = strata[run_id]
+        # Carried on the row so a regime can be counted against the k-threshold, and
+        # never written out: every output of this module is built as a fresh dict.
+        row["vehicle_uuid"] = vehicles.get(run_id, "")
         rows.append(row)
     return rows
 
@@ -389,12 +433,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pairs", type=Path, default=Path("data/h1-pairs.jsonl"))
     parser.add_argument("--sample", type=Path, default=Path("data/h1-sample.jsonl"))
     parser.add_argument(
-        "--artifacts", type=Path, default=Path("data/h1-validation-artifacts.jsonl")
+        "--artifacts", type=Path, default=Path("artifacts/h1-validation-artifacts.jsonl")
     )
     parser.add_argument("--out", type=Path, default=Path("artifacts/h1-agreement.json"))
     parser.add_argument("--resamples", type=int, default=BOOTSTRAP_RESAMPLES)
     parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED)
     parser.add_argument("--min-runs", type=int, default=MIN_RUNS_PER_REGIME)
+    parser.add_argument("--min-vehicles", type=int, default=MIN_VEHICLES_PER_REGIME)
     args = parser.parse_args(argv)
 
     excluded = exclusions.load()
@@ -416,6 +461,7 @@ def main(argv: list[str] | None = None) -> int:
             "direction_sweep_ms": list(DIRECTION_SWEEP_MS),
             "useful_proxy_loa_ms": USEFUL_PROXY_LOA_MS,
             "min_runs_per_regime": args.min_runs,
+            "min_vehicles_per_regime": args.min_vehicles,
             "bootstrap_resamples": args.resamples,
             "frame_sizes": FRAME_SIZES,
             "processing_version": PROCESSING_VERSION,
@@ -428,8 +474,10 @@ def main(argv: list[str] | None = None) -> int:
     for row in rows:
         by_stratum[row["stratum"]].append(row)
     runs_in = {s: len({r["run_id"] for r in rs}) for s, rs in by_stratum.items()}
-    thick = sorted(s for s, n in runs_in.items() if n >= args.min_runs)
-    suppressed = {s: n for s, n in sorted(runs_in.items()) if n < args.min_runs}
+    vehicles_in = {s: len({r["vehicle_uuid"] for r in rs}) for s, rs in by_stratum.items()}
+    thick, suppressed = publishable_regimes(
+        by_stratum, min_runs=args.min_runs, min_vehicles=args.min_vehicles
+    )
     poolable = [row for row in rows if row["stratum"] in thick]
 
     artifacts: list[dict] = []
@@ -493,6 +541,7 @@ def main(argv: list[str] | None = None) -> int:
         "realised_by_stratum": {
             stratum: {
                 "n_runs": runs_in[stratum],
+                "n_vehicles": vehicles_in[stratum],
                 "n_windows": len(by_stratum[stratum]),
                 "frame_size": FRAME_SIZES.get(stratum),
                 "design_weight": FRAME_SIZES[stratum] / runs_in[stratum]
