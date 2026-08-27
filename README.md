@@ -43,7 +43,7 @@ engine, not an edge product, and **not a ULog converter** — conversion is dele
 [`PX4/flight-review-rs`](https://github.com/PX4/flight-review-rs) (`ulog-convert`).
 See [`docs/adr/0001-no-ulog-converter.md`](docs/adr/0001-no-ulog-converter.md).
 
-## First deliverable
+## First deliverable — answered
 
 > *How well does ERA5 wind agree with onboard PX4 wind estimates across real-world
 > flights?*
@@ -53,6 +53,13 @@ EKF2 estimate with published variances. The study is therefore an **agreement
 analysis between two uncertain estimates**, stratified by airframe, airspeed sensing,
 estimator mechanism and variance, firmware, altitude, topography, season and
 geography. A negative result is publishable; a non-reproducible one is not.
+
+**The answer, over 871 runs and 1,059 run-hours:** the reanalysis is *unbiased* against
+the onboard estimate — every component bias interval includes zero — and too imprecise
+to substitute for it, with limits of agreement near ±5 m s⁻¹ per component. It is not a
+useful proxy in any regime tested, under a criterion fixed before the result existed.
+Full write-up, sensitivity analyses and limits:
+[`docs/10-h1-results.md`](docs/10-h1-results.md).
 
 ## Layout
 
@@ -87,3 +94,17 @@ uv run pytest
 Code is Apache-2.0 ([`LICENSE`](LICENSE)). Data sources carry their own terms and
 attribution requirements — see [`DATA_LICENSES.md`](DATA_LICENSES.md). Derived and
 aggregated features are published; raw geolocated trajectories are not.
+
+## Contributing, privacy and reporting
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) states the invariants a change must not break and
+how to run what CI runs. [`PRIVACY.md`](PRIVACY.md) sets out the lawful basis, your
+rights and how to object to the use of your flight data — objecting is enough, and no
+reason is required. [`SECURITY.md`](SECURITY.md) is the private channel for anything
+that should not be reported in a public issue.
+
+## Citation
+
+[`CITATION.cff`](CITATION.cff). Every published number carries an `AnalysisManifest` in
+[`artifacts/manifests/`](artifacts/manifests/); cite the manifest id alongside the
+figure so the claim can be checked against the state that produced it.

@@ -5,8 +5,11 @@ abstract: >-
   A reproducible corpus linking real telemetry from autonomous systems to the
   external operating conditions under which it was produced, with a queryable
   schema, full provenance and a machine-readable representation of the
-  operational design domain.
+  operational design domain. Its first result is an agreement analysis between
+  ERA5 reanalysis wind and onboard PX4 EKF2 wind estimates over 871 flights,
+  pre-specified before the result existed.
 type: software
+repository-code: "https://github.com/AndreaBozzo/occas"
 authors:
   - family-names: Bozzo
     given-names: Andrea
@@ -21,3 +24,6 @@ keywords:
   - reanalysis
   - operational design domain
   - reproducibility
+  - agreement analysis
+  - limits of agreement
+  - pre-specification

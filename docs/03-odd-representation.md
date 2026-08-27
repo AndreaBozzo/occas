@@ -28,7 +28,7 @@ claims about a standard that does not cover this domain.
 
 ## Prior art check — blocking
 
-[`../schemas/odd_taxonomy.yaml`](../schemas/odd_taxonomy.yaml) **must not be written**
+`schemas/odd_taxonomy.yaml` **must not be written**
 before this section is filled in. The gap is that ODD machinery is mature for
 automotive and absent for UAS — but adapting automotive ODD to a new domain is an
 already-practised pattern (an agricultural ODD framework built on OpenODD/ISO 34503
