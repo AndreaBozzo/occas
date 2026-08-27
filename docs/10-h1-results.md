@@ -3,7 +3,7 @@
 Every figure on this page is emitted by `analysis/h1_agreement/agreement.py` into
 [`artifacts/h1-agreement.json`](../artifacts/h1-agreement.json) and
 [`artifacts/h1-validation-artifacts.jsonl`](../artifacts/h1-validation-artifacts.jsonl),
-attested by manifest `artifacts/manifests/d416fcf4-1ba3-48e2-b3f3-eb75a1168daf.json`. None is computed elsewhere
+attested by manifest `artifacts/manifests/97cd29f0-7cb3-42d2-ba6f-1a5c8339bfba.json`. None is computed elsewhere
 or transcribed by hand.
 
 > **Status.** These are the numbers after the corrections in
@@ -87,7 +87,11 @@ coverage, read off the distribution instead of assumed from it.
 ## Operational regimes
 
 The axes declared a priori in [`04-methodology.md`](04-methodology.md) that the corpus can
-cut. Every cell clears 20 runs and 10 distinct vehicles, so none is suppressed.
+cut. Every cell below carries at least 20 runs from at least 10 distinct vehicles. One cell
+falls below that floor and is not shown: the 9 runs whose altitude proxy is undefined,
+reported as suppressed with their count in
+[`artifacts/h1-agreement.json`](../artifacts/h1-agreement.json) rather than omitted
+silently ([`adr/0009`](adr/0009-aggregate-only-for-positional-results.md)).
 
 | Axis | Cell | Runs | Vehicles | Windows | \|Δv\| median | \|Δv\| p97.5 | CI on p97.5 | Useful proxy |
 |---|---|---:|---:|---:|---:|---:|---|:--:|
@@ -95,6 +99,9 @@ cut. Every cell clears 20 runs and 10 distinct vehicles, so none is suppressed.
 | `airframe` | `vtol` | 452 | 452 | 555 | 2.32 | 8.54 | [7.58, 9.96] | **no** |
 | `airspeed_topic` | `absent` | 120 | 120 | 135 | 2.71 | 8.04 | [6.54, 12.67] | **no** |
 | `airspeed_topic` | `present` | 751 | 747 | 924 | 2.32 | 9.23 | [8.08, 10.72] | **no** |
+| `altitude_proxy` | `agl_proxy_50_to_120m` | 376 | 375 | 449 | 2.32 | 7.53 | [6.75, 8.85] | **no** |
+| `altitude_proxy` | `agl_proxy_ge_120m` | 143 | 142 | 202 | 1.99 | 7.55 | [5.34, 9.47] | **no** |
+| `altitude_proxy` | `agl_proxy_lt_50m` | 343 | 343 | 397 | 2.80 | 12.79 | [9.85, 14.88] | **no** |
 | `estimator_sigma` | `sigma_0.5_to_1.0` | 157 | 157 | 169 | 2.96 | 8.89 | [6.97, 11.72] | **no** |
 | `estimator_sigma` | `sigma_ge_1.0` | 53 | 53 | 54 | 4.28 | 26.62 | [14.60, 69.04] | **no** |
 | `estimator_sigma` | `sigma_lt_0.5` | 693 | 690 | 836 | 2.23 | 8.09 | [7.16, 9.44] | **no** |
@@ -103,15 +110,25 @@ cut. Every cell clears 20 runs and 10 distinct vehicles, so none is suppressed.
 | `season` | `MAM` | 213 | 213 | 256 | 2.29 | 9.62 | [6.78, 11.72] | **no** |
 | `season` | `SON` | 212 | 212 | 260 | 2.53 | 8.72 | [7.07, 10.04] | **no** |
 
-**No regime rescues the reanalysis.** The best cell is `estimator_sigma < 0.5`, at 8.09 —
-still 2.7× the band.
+**No regime rescues the reanalysis.** The best cell is `altitude_proxy 50–120 m`, at
+7.53 — still 2.5× the band.
 
-**The estimator's own reported uncertainty is the only axis that clearly separates.** The
-97.5th percentile runs 8.09, 8.89, 26.62 across the three sigma bands, and the median
-disagreement runs 2.23, 2.96, 4.28 with it. That gradient should be read carefully rather
-than triumphantly: a noisy onboard estimate disagrees more with *anything*, so what this
-shows is that the comparison is least informative where the filter is least sure of itself
-— not that the reanalysis is worse there. It is the same caution
+**Two axes separate, and they are not equally interesting.**
+
+*Altitude is the substantive one.* Disagreement falls monotonically with height — median
+2.80, 2.32, 1.99 m s⁻¹ — and the 97.5th percentile for flights below 50 m is **12.79**
+against 7.53 between 50 and 120 m, with bootstrap intervals that **do not overlap**
+([9.85, 14.88] against [6.75, 8.85]). This is the one result here with a clean physical
+reading: a 0.25° reanalysis wind at 100 m describes the free atmosphere far better than it
+describes the surface layer a UAS below 50 m is flying in, where roughness, obstacles and
+shear dominate. It is also a caution about the vertical reference rather than a rescue —
+even the best-agreeing altitude band fails the band.
+
+*Estimator uncertainty separates more strongly and means less.* The 97.5th percentile runs
+8.09, 8.89, 26.62 across the three sigma bands and the median runs 2.23, 2.96, 4.28. That
+gradient is partly circular by construction: a noisy onboard estimate disagrees more with
+*anything*, so it locates where the comparison is least informative rather than where the
+reanalysis is worst. It is the same caution
 [`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) attaches to the
 estimator-relative ratio.
 
@@ -119,12 +136,19 @@ estimator-relative ratio.
 and the four seasons all have overlapping bootstrap intervals on the 97.5th percentile. The
 airspeed comparison runs *opposite* to the mechanism one would expect — logs without an
 airspeed topic agree slightly better — which is a further reason to read it as noise rather
-than as a finding. Note also that an airspeed *topic* is a proxy for airspeed *sensing*,
-and is labelled as one.
+than as a finding. An airspeed *topic* is in any case a proxy for airspeed *sensing*, and
+is labelled as one.
 
-**Declared but not cut:** firmware version, which the sampling frame does not carry;
-altitude AGL and topography, which need a DEM this project has not built. Height above
-takeoff is the available altitude proxy and would require a pass over the converted runs.
+**The altitude axis is a proxy and is named as one.** `adr/0006` specifies AGL, which this
+corpus cannot produce: the downward rangefinder that would give it is valid for a median
+0.4% of rows and reads at touchdown. What is cut is height above the takeoff point. Over
+flat ground near the launch site the two agree; over a ridge they do not, and nothing here
+says which a given run is. Nine runs whose median height falls outside a plausible range —
+the extreme is −2,347 m, a reset local origin rather than a flight — are suppressed with
+their count rather than banded. See `analysis/h1_agreement/altitude.py`.
+
+**Declared but not cut:** firmware version, which the sampling frame does not carry, and
+topography, which has the same DEM dependency as true AGL.
 
 ## Direction
 
@@ -186,7 +210,8 @@ easy objection rather than creating one.
   establishes it was not chosen to fit one; it does not make it authoritative.
 - Disagreement does not identify which source is in error. Neither is ground truth.
 - The estimator-sigma gradient is partly circular by construction, as above.
-- Three declared axes remain uncut, so the "under which operational conditions" question is
-  answered for four axes and open for three.
+- Two declared axes remain uncut — firmware and topography — so the "under which
+  operational conditions" question is answered for five axes and open for two. The
+  altitude answer rests on a proxy for AGL, not on AGL.
 
 Full limitations: [`06-limitations.md`](06-limitations.md).
