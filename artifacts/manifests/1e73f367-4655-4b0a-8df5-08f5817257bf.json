@@ -1,0 +1,73 @@
+{
+  "analysis": {
+    "description": "Manuscript figures for H1, drawn from the committed artifacts. Nothing positional is plotted.",
+    "hypothesis": "H1",
+    "name": "h1-figures"
+  },
+  "code": {
+    "dirty": true,
+    "entrypoint": "analysis/h1_agreement/figures.py",
+    "git_commit": "6ff9e510ce224e1c663577db490e5053a46e7c05"
+  },
+  "created_at": "2026-08-27T12:27:51.457274+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "gcsfs": "2026.8.0",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "zarr": "3.3.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [],
+  "manifest_id": "1e73f367-4655-4b0a-8df5-08f5817257bf",
+  "outputs": [
+    {
+      "content_hash": "sha256:94d04374baf329cdfca8fe647849f5fb026b7c0ce4081d373309c66e1c79ae20",
+      "path": "artifacts/figures/fig1-component-agreement.png"
+    },
+    {
+      "content_hash": "sha256:9b09df0f209934babb460857545782102ada99f617568fbc4ab2c6186b29dbcf",
+      "path": "artifacts/figures/fig2-magnitude-distribution.png"
+    },
+    {
+      "content_hash": "sha256:3d5e6f80cf2551c103ca4a0c595c31b59b6a07c22261c804d1c43eaccc7a93c5",
+      "path": "artifacts/figures/fig3-regime-forest.png"
+    },
+    {
+      "content_hash": "sha256:de1b524c88463ff6afc7fbcc8931d84a366567fda72fa9613224e183afa5b2f9",
+      "path": "artifacts/figures/fig4-direction-error.png"
+    },
+    {
+      "content_hash": "sha256:7f7ea386029126f414faf0736d02b940f6f8872fbfd7e7b7c8e0b0245c4cdee3",
+      "path": "artifacts/figures/fig5-time-alignment.png"
+    }
+  ],
+  "parameters": {
+    "direction_thresholds_ms": [
+      2.0,
+      1.0,
+      3.0
+    ],
+    "palette": {
+      "primary": "#0072B2",
+      "secondary": "#D55E00"
+    },
+    "palette_validated": "CVD dE 21.9 worst adjacent (protan); contrast >= 3:1",
+    "processing_version": "figures/1",
+    "useful_proxy_loa_ms": 3.0
+  },
+  "seed": null
+}

@@ -81,7 +81,18 @@ def _ecdf(values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 def component_agreement(rows: list[dict], out: Path) -> Path:
     """Bland-Altman per component: the difference against the mean of the two sources."""
     series = agreement.series_arrays(rows, "era5_100m")
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.0), constrained_layout=True)
+    # One window carries a 69 m/s difference -- an onboard estimate of 66 m/s, which is
+    # not a wind. Left to set the axis it flattens the other 1,058 into a corner and
+    # gives the two panels different scales, so they can no longer be compared. Both
+    # panels share one clipped, symmetric scale and the clipped count is stated.
+    span = 3.2 * max(
+        abs(v)
+        for key in ("u", "v")
+        for v in agreement.bland_altman(series[key])["limits_of_agreement"]
+    )
+    fig, axes = plt.subplots(
+        1, 2, figsize=(7.0, 3.1), constrained_layout=True, sharex=True, sharey=True
+    )
     for ax, key, name in zip(axes, ("u", "v"), ("u (east)", "v (north)"), strict=True):
         era5 = np.array([r[f"era5_100m_{key}"] for r in rows], dtype=float)
         onboard = np.array([r[f"onboard_{key}"] for r in rows], dtype=float)
@@ -105,16 +116,27 @@ def component_agreement(rows: list[dict], out: Path) -> Path:
         )
         ax.annotate(
             f"LoA {lo:.1f}, {hi:.1f}",
-            (0.99, hi),
-            xycoords=("axes fraction", "data"),
+            (0.99, 0.98),
+            xycoords=("axes fraction", "axes fraction"),
             ha="right",
-            va="bottom",
+            va="top",
             fontsize=7,
             color=MUTED,
         )
+        outside = int(((np.abs(diff) > span) | (np.abs(mean) > span)).sum())
+        if outside:
+            ax.annotate(
+                f"{outside} of {diff.size} outside the frame",
+                (0.02, 0.03),
+                xycoords="axes fraction",
+                fontsize=6.5,
+                color=MUTED,
+            )
         ax.set_title(f"Component {name}")
         ax.set_xlabel("mean of ERA5 and onboard (m s$^{-1}$)")
         ax.set_ylabel("ERA5 − onboard (m s$^{-1}$)" if key == "u" else "")
+        ax.set_xlim(-span, span)
+        ax.set_ylim(-span, span)
         _tidy(ax)
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
@@ -127,32 +149,54 @@ def magnitude_distribution(rows: list[dict], band: float, out: Path) -> Path:
     limits = agreement.magnitude_limits(magnitude)
     x, y = _ecdf(magnitude)
 
-    fig, ax = plt.subplots(figsize=(4.6, 3.2), constrained_layout=True)
+    # The tail runs to ~69 m/s on a handful of windows. Letting it set the axis
+    # squeezes everything the reader needs into a fifth of the frame, so the view is
+    # clipped just past p97.5 and the excluded fraction is stated rather than hidden.
+    view_max = math.ceil(limits["p97_5"] * 1.6)
+    beyond = int((magnitude > view_max).sum())
+
+    fig, ax = plt.subplots(figsize=(5.0, 3.2), constrained_layout=True)
     ax.plot(x, y, color=PRIMARY, linewidth=2)
     ax.axvline(band, color=SECONDARY, linewidth=2)
     ax.annotate(
         f"declared band\n{band:.1f} m s$^{{-1}}$",
-        (band, 0.42),
-        xytext=(6, 0),
+        (band, 1.0),
+        xytext=(5, -2),
         textcoords="offset points",
         fontsize=7,
         color=SECONDARY,
-        va="center",
+        va="top",
     )
-    for q, key in ((0.50, "p50"), (0.95, "p95"), (0.975, "p97_5")):
+    # Labels alternate below and above their marker so they cannot collide.
+    for q, key, dy, va in (
+        (0.50, "p50", -12, "top"),
+        (0.95, "p95", -12, "top"),
+        (0.975, "p97_5", -12, "top"),
+    ):
         ax.plot([limits[key]], [q], marker="o", markersize=5, color=INK, zorder=5)
         ax.annotate(
             f"{key.replace('_', '.')} = {limits[key]:.2f}",
             (limits[key], q),
-            xytext=(6, -9),
+            xytext=(6, dy),
             textcoords="offset points",
             fontsize=7,
             color=INK,
+            va=va,
+        )
+    if beyond:
+        ax.annotate(
+            f"{beyond} of {magnitude.size} windows lie beyond {view_max} m s"
+            f"$^{{-1}}$ (max {magnitude.max():.0f}); axis clipped for legibility",
+            (0.98, 0.06),
+            xycoords="axes fraction",
+            ha="right",
+            fontsize=6.5,
+            color=MUTED,
         )
     ax.set_xlabel("|Δv|, vector difference magnitude (m s$^{-1}$)")
     ax.set_ylabel("cumulative fraction of windows")
     ax.set_title("Disagreement is centred near 2.4 and tailed far past the band")
-    ax.set_xlim(left=0)
+    ax.set_xlim(0, view_max)
     ax.set_ylim(0, 1.02)
     _tidy(ax)
     fig.savefig(out, bbox_inches="tight")
@@ -175,37 +219,58 @@ def regime_forest(artifacts: list[dict], band: float, out: Path) -> Path:
         rows.append((axis, cell, m["p97_5"], m["p97_5_ci"], a["n_runs"]))
     rows.sort(key=lambda r: (r[0], -r[2]))
 
-    fig, ax = plt.subplots(figsize=(6.2, 0.30 * len(rows) + 1.4), constrained_layout=True)
+    # One cell -- the thinnest, where the onboard filter reports high uncertainty --
+    # has an interval reaching 69. Letting it set the axis pushes every other row into
+    # the left sixth of the frame. The view is clipped just past the widest point
+    # estimate, and any interval running past the edge gets a caret and its value
+    # printed, so the truncation is visible rather than silent.
+    view_max = math.ceil(max(r[2] for r in rows) * 1.15)
+
+    fig, ax = plt.subplots(figsize=(6.4, 0.30 * len(rows) + 1.5), constrained_layout=True)
     labels, last_axis = [], None
     for i, (axis, cell, value, ci, n) in enumerate(rows):
-        ax.plot(ci, [i, i], color=MUTED, linewidth=1.4, solid_capstyle="round")
+        drawn_hi = min(ci[1], view_max)
+        ax.plot([ci[0], drawn_hi], [i, i], color=MUTED, linewidth=1.4, solid_capstyle="round")
+        if ci[1] > view_max:
+            ax.plot([view_max], [i], marker=">", markersize=5, color=MUTED, clip_on=False)
+            ax.annotate(
+                f"CI to {ci[1]:.0f}",
+                (view_max, i),
+                xytext=(9, -2.5),
+                textcoords="offset points",
+                fontsize=6,
+                color=MUTED,
+            )
         ax.plot([value], [i], marker="o", markersize=5, color=PRIMARY, zorder=5)
-        ax.annotate(
-            f"{value:.1f}",
-            (ci[1], i),
-            xytext=(5, -2.5),
-            textcoords="offset points",
-            fontsize=6.5,
-            color=MUTED,
-        )
+        if ci[1] <= view_max:
+            ax.annotate(
+                f"{value:.1f}",
+                (ci[1], i),
+                xytext=(5, -2.5),
+                textcoords="offset points",
+                fontsize=6.5,
+                color=MUTED,
+            )
         prefix = f"{axis}: " if axis != last_axis else ""
         labels.append(f"{prefix}{cell}  (n={n})")
         last_axis = axis
     ax.axvline(band, color=SECONDARY, linewidth=2, zorder=1)
     ax.annotate(
         f"declared band {band:.1f}",
-        (band, len(rows) - 0.4),
-        xytext=(6, 0),
+        (band, 1.0),
+        xycoords=("data", "axes fraction"),
+        xytext=(5, -2),
         textcoords="offset points",
         fontsize=7,
         color=SECONDARY,
+        va="top",
     )
     ax.set_yticks(range(len(rows)))
     ax.set_yticklabels(labels, fontsize=7)
     ax.invert_yaxis()
     ax.set_xlabel("|Δv| 97.5th percentile, with bootstrap interval (m s$^{-1}$)")
     ax.set_title("No regime approaches the band")
-    ax.set_xlim(left=0)
+    ax.set_xlim(0, view_max)
     ax.grid(axis="y", visible=False)
     _tidy(ax)
     fig.savefig(out, bbox_inches="tight")

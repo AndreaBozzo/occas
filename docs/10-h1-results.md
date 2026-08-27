@@ -182,6 +182,13 @@ and as quantiles of absolute error, not as a linear limit of agreement over wrap
 
 ## Robustness
 
+**The tail does not drive the statistic.** Six of 1,059 windows exceed 15 m s⁻¹ and one
+reaches 69 — an onboard estimate of 66 m s⁻¹, which is not a wind but a broken filter
+output. Removing the worst six moves the pooled 97.5th percentile from 9.19 to 8.47, so
+the conclusion rests on the body of the distribution rather than on its extremes. This is
+the practical case for the quantile: mean ± 1.96 SD would have been pulled appreciably by
+a single 69 m s⁻¹ window.
+
 **Clustering.** The bootstrap resamples runs, so the intervals already account for windows
 sharing a flight. This checks whether the point estimates do:
 
@@ -247,6 +254,21 @@ instead of answering it: a median shift of 0.03 m s⁻¹ against a 6 m s⁻¹ ga
 criterion. Artifacts:
 [`h1-agreement-midpoint.json`](../artifacts/h1-agreement-midpoint.json), manifest
 `artifacts/manifests/d8f91079-8f0d-4aa2-84cd-63241f8e48ba.json`.
+
+## Figures
+
+![Component agreement](../artifacts/figures/fig1-component-agreement.png)
+
+![Magnitude distribution](../artifacts/figures/fig2-magnitude-distribution.png)
+
+![Regime forest](../artifacts/figures/fig3-regime-forest.png)
+
+![Direction error](../artifacts/figures/fig4-direction-error.png)
+
+![Time alignment](../artifacts/figures/fig5-time-alignment.png)
+
+Drawn by `analysis/h1_agreement/figures.py` from the artifacts above, so a figure cannot
+disagree with a number on this page. Nothing positional is plotted.
 
 ## What this does not establish
 
