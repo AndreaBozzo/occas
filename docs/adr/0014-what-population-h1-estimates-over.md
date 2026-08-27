@@ -4,6 +4,11 @@
 - **Date:** 2026-08-26
 - **Extends:** [`0006-what-h1-compares.md`](0006-what-h1-compares.md), which fixed *what*
   is compared and left *over which population* unstated.
+- **Corrected by:** [`0016-pre-publication-corrections.md`](0016-pre-publication-corrections.md).
+  The weight prescribed below, `N_h / n_h` on the realised usable `n_h`, does not match the
+  estimand this ADR declares; the design weight is `N_h / n_drawn_h`. The text is left as
+  written because it is the contemporaneous record. **Do not apply the formula below
+  without reading that correction.**
 
 ## Context
 

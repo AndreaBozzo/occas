@@ -121,8 +121,10 @@ threshold after seeing the result is what `adr/0015` forbids, and none of this d
 - The artifacts and manifests produced on 2026-08-27 before this ADR are superseded, not
   deleted. `adr/0010` keeps a superseded manifest as the attestation of an earlier version
   of the same path, and the results document names which figures changed.
-- **The central finding is unaffected.** The corrected pooled upper limit is 8.808 m s⁻¹
-  and the empirical 97.5th percentile is 9.117, against a band of 3.0. The conclusion did
+- **The central finding is unaffected.** Under both corrections together the pooled 97.5th
+  percentile of the vector difference magnitude is **9.188 m s⁻¹** unweighted and
+  **9.115** reweighted, against a band of 3.0. (The 8.808 above isolates correction 1 on
+  the superseded statistic, and is not a figure the analysis emits.) The conclusion did
   not depend on any of the defects above, which is the position a project wants to be in
   when a review arrives.
 - **Now forbidden:** presenting any correction in this document as though it had been
