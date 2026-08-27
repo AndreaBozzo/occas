@@ -772,12 +772,21 @@ def main(argv: list[str] | None = None) -> int:
     if not rows:
         raise SystemExit(f"{args.pairs} yielded no rows to compare")
 
+    # Named after the pairs it read, as ingest/inventory.py, ingest/sample.py and
+    # analysis/h1_agreement/build_pairs.py are. This is the fourth entrypoint in this
+    # repository found with a hardcoded population in its manifest name; run over the
+    # time-aligned pairs it would have produced a second "h1-agreement" describing a
+    # different comparison. "h1-pairs" reproduces h1-agreement; "h1-pairs-midpoint" gives
+    # h1-midpoint-agreement.
+    variant = args.pairs.stem.replace("-pairs", "", 1)
     manifest = build_manifest(
-        name="h1-agreement",
+        name=f"{variant}-agreement",
         hypothesis="H1",
         entrypoint="analysis/h1_agreement/agreement.py",
-        description="Agreement between ERA5 and the onboard EKF2 wind estimate, per regime "
-        "and per vertical reference. Neither source is ground truth.",
+        description=(
+            "Agreement between ERA5 and the onboard EKF2 wind estimate, per regime and per "
+            f"vertical reference, over {args.pairs.name}. Neither source is ground truth."
+        ),
         seed=args.seed,
         parameters={
             "difference_direction": "era5_minus_onboard",
