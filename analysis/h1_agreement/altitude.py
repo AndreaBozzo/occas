@@ -39,9 +39,20 @@ PROCESSING_VERSION = "altitude/1"
 # existed, which adr/0016 records: they define cells, not a decision threshold.
 ALTITUDE_BANDS = (50.0, 120.0)
 
+# Outside this range the proxy stops meaning what its name says. A median height far below
+# the local origin is a broken or reset origin rather than a flight: the corpus contains
+# one run at -2,347 m and nine below -50 m. Mildly negative values are legitimate -- a
+# launch from high ground flying down a valley -- so the floor is set well below zero
+# rather than at it, and 69 runs with a negative median stay in their bands. Runs outside
+# the range are banded `unknown` and counted, never dropped.
+PLAUSIBLE_HEIGHT_M = (-50.0, 5000.0)
+
 
 def band_of(height_m: float | None) -> str:
     if height_m is None:
+        return "unknown"
+    floor, ceiling = PLAUSIBLE_HEIGHT_M
+    if not (floor <= height_m <= ceiling):
         return "unknown"
     low, high = ALTITUDE_BANDS
     if height_m < low:
@@ -100,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
         "altitude AGL, which this corpus cannot recover.",
         parameters={
             "altitude_bands_m": list(ALTITUDE_BANDS),
+            "plausible_height_m": list(PLAUSIBLE_HEIGHT_M),
             "statistic": "median of -z over rows with z_valid",
             "proxy_for": "altitude_agl",
             "why_not_agl": "dist_bottom_valid is true for a median 0.4% of rows and reads "
