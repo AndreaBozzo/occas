@@ -8,7 +8,7 @@
 [`04-methodology.md`](../04-methodology.md) said "bias and limits of agreement between
 measurement methods" and rejected regression. That is the right family of method and
 it is not yet a specification. Three things were left undefined, and each of them can
-be settled after the fact in whichever way produces the nicer number:
+be settled after the fact in whichever way produces the more favourable number:
 
 **1. Wind is a vector; agreement statistics on a scalar are not the same claim.**
 Bland–Altman on wind *speed* alone can show excellent agreement while the two sources
@@ -68,7 +68,8 @@ reference is recorded per run.
 - `ValidationArtifact` must carry component-wise statistics, not one scalar pair. The
   schema's `statistics` block needs `u` and `v` entries and a `direction` entry with
   its own `n_defined`. **This is a schema change and it is the last one before data.**
-- None of these can be chosen after seeing results, which is the point.
+- None of these may be chosen after results have been seen, which is the reason for
+  recording them here.
 
 ## Alternatives considered
 

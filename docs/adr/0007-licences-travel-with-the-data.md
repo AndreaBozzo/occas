@@ -54,9 +54,9 @@ used**, and recorded in its manifest — not declared once for the repository.
 ## Alternatives considered
 
 **Keep the blanket CC-BY and rely on the escape clause.** The clause is correct and
-unenforceable by a reader: it puts the burden of noticing the exception on the person
-least able to. A licence statement that is right only if you already know the answer is
-not a licence statement.
+unenforceable by a reader: it places the burden of noticing the exception on the
+reader least equipped to do so. A licence statement that is accurate only to someone who
+already knows the answer does not function as a licence statement.
 
 **Drop the DEM and METAR to keep one clean licence.** This would buy tidiness with
 evidence. The DEM is the only global elevation source with terms this permissive, and

@@ -64,9 +64,9 @@ because they are the standard the Italian regulator would apply.
 - The `context_uncertainty` design already points at a `ValidationArtifact` per *regime*
   rather than carrying per-row error. That was decided for statistical reasons, and it
   turns out to be the shape this rule needs as well. Nothing in the schemas has to change.
-- Suppressed cells are part of the result. A coverage matrix with holes in it, labelled
-  as holes with counts, is an honest artifact; one silently missing its sparse cells is a
-  distorted one, and the reader cannot tell the difference.
+- Suppressed cells are part of the result. A coverage matrix with gaps in it, labelled
+  as gaps and carrying their counts, is an accurate artifact; one from which sparse cells
+  have been silently omitted is a distorted one, and the reader cannot distinguish them.
 - `vehicle_uuid` cannot be published, hashed or not — WP216's own table records that
   singling out survives hashing. It stays a grouping key inside the pipeline, including
   for the bootstrap, which is by run and by vehicle.

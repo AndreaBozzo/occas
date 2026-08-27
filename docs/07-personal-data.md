@@ -177,7 +177,8 @@ case-by-case basis").
   constraint is the count in the cell, not the rounding.
 - **Provisional k:** no published cell may draw on fewer than **20 runs from at least 10
   distinct `vehicle_uuid` values**. Cells below that are reported as suppressed, with their
-  count, because suppression that hides its own existence is its own distortion.
+  count, because a suppression that conceals its own occurrence introduces a distortion
+  of its own.
 
 **Forbidden to publish**
 

@@ -5,9 +5,9 @@
 
 ## Context
 
-The project's only durable claim is reproducibility. A number in a post that cannot be
-regenerated is worth less than no number, because it costs credibility when someone
-tries. The corpus also depends on sources that move underneath it: ERA5T is superseded
+The project's only durable claim is reproducibility. A number that cannot be
+regenerated is of less value than no number at all, because publishing it invites a
+reproduction attempt that will fail. The corpus also depends on sources that move underneath it: ERA5T is superseded
 by the final ERA5 product, typically within 2-3 months; `ulog-convert` and PX4 log
 schemas change across firmware versions.
 

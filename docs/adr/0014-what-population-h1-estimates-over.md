@@ -12,7 +12,7 @@ vertical reference — before any outcome could be seen. It says nothing about w
 and neither does [`04-methodology.md`](../04-methodology.md), whose stratification section
 declares the regimes a priori but not how a number over all of them is formed.
 
-That gap has teeth now, because the draw is not proportional to the frame:
+That gap is now material, because the draw is not proportional to the frame:
 
 | Retention stratum | Frame | Drawn | Inclusion probability | Design weight `N_h/n_h` |
 |---|---:|---:|---:|---:|
@@ -87,9 +87,9 @@ agreement statistic computed from any of them** (DPIA §1.1).
 ## Alternatives considered
 
 **Report stratum-specific results only, and no pooled number.** The most defensible
-position, and it fails in practice: readers pool them anyway, by eye and without weights,
-and a paper that declines to state the frame-level figure invites a worse one to be
-inferred from its table.
+position, and one that fails in practice: readers pool the strata regardless, by
+inspection and without weights, and a paper that declines to state the frame-level figure
+invites a less accurate one to be inferred from its table.
 
 **Redraw proportionally.** ~594 recent / 1,006 older would need no weighting at all. It
 also gives up precision in the smaller stratum for no scientific gain, and the draw is

@@ -75,4 +75,4 @@ work is added here the day it is discovered.
 - Raw geolocated trajectories are not redistributed; published coordinates are
   generalised. Some analyses are therefore not exactly reproducible from published
   artifacts alone — they are reproducible from the original source via the published
-  pipeline, which is the weaker but honest guarantee, and it is stated as such.
+  pipeline, which is the weaker but accurate guarantee, and it is stated as such.

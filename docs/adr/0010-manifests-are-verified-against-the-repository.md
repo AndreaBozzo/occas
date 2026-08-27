@@ -44,15 +44,22 @@ the script that computed it.
 
 ## Consequences
 
-- `tests/test_manifest.py::test_every_committed_artifact_is_attested_by_a_committed_manifest`
+- `tests/test_manifest.py::test_every_artifact_in_the_repository_is_attested_by_a_manifest`
   re-hashes what is committed. *Some* manifest, not all: a superseded manifest
   attests an earlier version of the same path, and that history is kept rather than
-  rewritten. Both new tests were confirmed to fail against the unfixed tree first.
+  rewritten. Both tests added with this decision were confirmed to fail against the
+  unfixed tree first.
+- A second check, `test_every_committed_artifact_hash_appears_in_some_manifest`, was
+  added on 2026-08-27. It walks the committed artifacts rather than the paths manifests
+  record, which is the direction this decision states and which does not depend on a
+  recorded path resolving on the reader's machine. The path-keyed test skips what it
+  cannot find, so two early manifests recording an absolute path left
+  `artifacts/h1-availability.json` unverified on every clone.
 - `build_manifest` must be called before the outputs it will describe. Its docstring
   says so; `add_output` already said the converse. Analyses written later inherit the
   constraint whether or not they read this file.
-- `dirty: false` is now reachable, so `require_publishable` becomes a usable gate
-  rather than a decorative one. It is still not wired into the audit entrypoint —
+- `dirty: false` is now reachable, so `require_publishable` becomes an operative gate
+  rather than an inoperative one. It is still not wired into the audit entrypoint —
   exploratory runs are legitimate and must stay cheap. What changed is that the clean
   run is now possible at all.
 - Publication needs one more step than before: commit the code, *then* run, *then*
@@ -67,14 +74,14 @@ the script that computed it.
 
 **Hash with newlines normalised, so the platform stops mattering.** Rejected: it makes
 the hash a hash of an interpretation rather than of a file, and it would silently
-succeed on a genuinely different byte stream. The rule that a hash is over bytes is
-worth more than the convenience.
+succeed on a genuinely different byte stream. The rule that a hash is taken over bytes
+is of greater value than the convenience.
 
 **Write the artifact outside git and commit only the manifest.** Rejected: the artifact
-is 4 KB and is the evidence. A manifest attesting a file nobody has is a receipt for a
-missing parcel.
+is 4 KB and constitutes the evidence. A manifest attesting a file that no reader
+possesses attests nothing.
 
 **Let `require_publishable` reject dirty runs at the entrypoint.** Rejected for now, and
-deliberately: a gate that blocks exploratory runs gets bypassed, and a bypassed gate is
-worse than an unwired one. The gate belongs at the point where a number is published,
-which does not exist yet.
+deliberately: a gate that blocks exploratory runs will be bypassed, and a bypassed gate
+offers less assurance than an unwired one because it appears to be in force. The gate
+belongs at the point where a number is published, which does not yet exist.

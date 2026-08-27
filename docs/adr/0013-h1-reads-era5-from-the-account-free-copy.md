@@ -75,8 +75,8 @@ acceptance is per-dataset and revocable. Reruns cost bandwidth instead of goodwi
 **What becomes harder.** One point read pulls one whole global field per variable — the
 store is chunked `[1, 721, 1440]`, about 4 MB per variable-hour, so a window costs
 roughly 16 MB regardless of how little of the planet it wanted. Around 1,200 windows is
-of the order of 20 GB. The route is cheap in requests and expensive in bytes, which is
-the right way round for a public bucket and the wrong way round for a laptop tether.
+of the order of 20 GB. The route is inexpensive in requests and costly in bytes, which
+suits a public bucket and does not suit a metered connection.
 
 **What is now forbidden.** Reading the store without checking coverage first. Its `time`
 axis runs 1900 → 2050 while its data runs 1940 → a few days ago; an hour outside that

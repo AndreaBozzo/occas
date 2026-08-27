@@ -15,7 +15,7 @@
 
 Therefore: **methods for agreement between measurement methods** — bias and limits of
 agreement — and **not** regression of one on the other as if one were the true value.
-An R-squared between two uncertain estimates answers no question anyone asked.
+An R-squared between two uncertain estimates does not answer the question being posed.
 
 ### What exactly is compared
 

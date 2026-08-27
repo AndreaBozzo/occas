@@ -70,8 +70,8 @@ it from the publication tasks.
 
 ## Alternatives considered
 
-**Treat the screening as the DPIA.** It is not, and calling it one would be the exact
-species of overclaim this project polices elsewhere. A screening asks whether the
+**Treat the screening as the DPIA.** It is not, and calling it one would be precisely
+the kind of overclaim this project rejects elsewhere. A screening asks whether the
 obligation exists; Article 35(7) prescribes what discharges it.
 
 **Conclude no DPIA is needed, on the grounds that the logs are already public.** The
@@ -79,10 +79,10 @@ tempting reading, and WP248 addresses it directly: public availability "may be c
 as a factor in the assessment if the data was expected to be further used for certain
 purposes". It is a factor, weighed against expected use — and an uploader submitting a
 flight report for debugging did not expect population-scale research. The factor runs
-against us. Reaching the convenient answer through the one passage that explicitly
-qualifies it would not survive being asked about.
+against us. Arriving at the convenient answer by way of the one passage that expressly
+qualifies it would not withstand scrutiny.
 
 **Defer the DPIA to just before publication, since only publication can harm anyone.**
-Sympathetic, and wrong on the text. Article 35(1) says prior to the processing, and the
+Understandable, and incorrect on the text. Article 35(1) says prior to the processing, and the
 risk it contemplates is not only disclosure: holding a corpus of geolocated trajectories
 is itself the exposure, whatever is eventually published from it.

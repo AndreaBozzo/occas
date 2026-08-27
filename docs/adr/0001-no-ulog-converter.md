@@ -6,7 +6,7 @@
 ## Context
 
 The project needs ULog files in a columnar format to do anything at all. Writing a
-converter is the obvious first instinct and the most enjoyable part of the work.
+converter is the obvious first step.
 
 It is also already done. `PX4/flight-review-rs` is official PX4 tooling: a Rust
 ULog-to-Parquet converter (ZSTD) built on Auterion's `px4-ulog-rs` with Arrow/Parquet,
@@ -35,6 +35,6 @@ needed. Write no parser in this repository.
 
 ## Alternatives considered
 
-A Python converter via `pyulog` would be trivially embeddable and hopelessly slow over
-10^5 logs. A fork of `flight-review-rs` would remove the upstream coordination cost and
-also remove the reason anyone in the ecosystem would care about this project.
+A Python converter via `pyulog` would be simple to embed and far too slow over 10^5
+logs. A fork of `flight-review-rs` would remove the upstream coordination cost, and with
+it the principal reason the PX4 ecosystem would have to take an interest in this work.

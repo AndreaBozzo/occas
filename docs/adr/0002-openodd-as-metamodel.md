@@ -36,6 +36,6 @@ alignment or conformance.
 
 ## Alternatives considered
 
-Inventing a bespoke ODD representation would be faster and unreusable by anyone.
-Claiming ISO 34503 alignment would sound stronger to non-specialists and would
-discredit the work with the specialists whose opinion is the one that matters.
+Inventing a bespoke ODD representation would be faster and would not be reusable by
+others. Claiming ISO 34503 alignment would appear stronger to non-specialists while
+discrediting the work among the specialists whose assessment matters.

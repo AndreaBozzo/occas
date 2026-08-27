@@ -72,7 +72,8 @@ prefer GRIB, where the marker is native and no conversion sits between us and it
 
 **Keep the GRIB requirement anyway** — it is still the native carrier, and the rule was
 already written. Making the pipeline harder to work with, on a premise now known to be
-false, to avoid revising a decision taken hours earlier is sunk cost dressed as rigour.
+false, in order to avoid revising a decision taken hours earlier, is sunk-cost reasoning
+presented as rigour.
 
 **Trust NetCDF and drop the check** — the marker is there today, so assert nothing. This
 fails the way that costs most: silently, months later, when a rerun disagrees with a

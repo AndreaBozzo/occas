@@ -36,8 +36,8 @@ ship, defaults to a 6-second delay (10 requests/minute), caps at `--max-num 10`,
 above 100 files, backs off on `503` honouring `Retry-After`, and treats `403`/`444` as a
 block. Those limits are the service's published position, expressed in code they
 maintain — a maintainer's opinion could only be equal or more permissive. Operating at
-their own stated floor needs nobody's permission. If asked to stop, stop; that is not a
-condition, it is a consequence.
+their own stated limits requires no further permission. If asked to stop, stop: that is
+a consequence of the position, not a condition on it.
 
 **A6 — is `dbinfo` a supportable interface. Decided: assume it is not.** It is treated as
 a convenience that may vanish without notice. The consequence is already in place: the

@@ -260,11 +260,12 @@ rather than assumed.
 - **No free text** from `description`, `vehicle_name` or `feedback` *(R7)*.
 - **Threshold:** no published cell draws on fewer than **20 runs from at least 10 distinct
   `vehicle_uuid`s**. Suppressed cells are reported *with their count*, because suppression
-  that hides its own existence is its own distortion. The Garante's deontological rules
+  that conceals its own occurrence introduces a distortion of its own. The Garante's
+  deontological rules
   set a floor of three and require it to rise with sensitivity; 20/10 sits well above it
   *(R3)*.
 - **Spatial resolution never finer than the 0.25° analysis grid** — chosen scientifically,
-  coarse by luck, and not relied on as the protection.
+  coarse as a by-product rather than by design, and not relied on as the protection.
 - **Cross-table check:** art. 5(e) of the deontological rules requires published results
   about the same population not to permit linkage between them. Every published table is
   checked against those already published, not only against its own threshold *(R4)*.
