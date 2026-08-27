@@ -205,12 +205,20 @@ def main(argv: list[str] | None = None) -> int:
         def read(window: dict[str, Any]) -> tuple[dict[str, float], dict[str, Any]]:
             return era5_at(window, args.cache)
 
+    # Named after the draw whose usable runs it paired, the same way ingest/inventory.py
+    # is. The inventory is what selects the population here -- the sample only supplies
+    # expected dates -- so the name comes from its stem. "h1-pilot-pairs" reproduces for
+    # pilot-inventory.jsonl; the full draw is "h1-pairs", because prefixing the
+    # hypothesis to a draw already called h1 would say it twice.
+    draw = args.inventory.stem.removesuffix("-inventory")
     manifest = build_manifest(
-        name="h1-pilot-pairs",
+        name="h1-pairs" if draw == "h1" else f"h1-{draw}-pairs",
         hypothesis="H1",
         entrypoint="analysis/h1_agreement/build_pairs.py",
-        description="ERA5 fields paired to onboard wind per run window, for the pilot. "
-        "Builds the input to H1; computes no agreement statistic.",
+        description=(
+            "ERA5 fields paired to onboard wind per run window, for the usable runs in "
+            f"{args.inventory.name}. Builds the input to H1; computes no agreement statistic."
+        ),
         parameters={
             "spatial_tolerance_km": align.SPATIAL_TOLERANCE_KM,
             "temporal_tolerance_s": align.TEMPORAL_TOLERANCE_S,
