@@ -21,7 +21,7 @@
       "implied_usable_population": 3757.3875
     }
   },
-  "validation_artifacts": 52,
+  "validation_artifacts": 64,
   "suppressed_strata": {},
   "implied_usable_population": {
     "fixed_wing_or_vtol|older": 5051.68125,
@@ -57,6 +57,31 @@
         }
       },
       "suppressed": {}
+    },
+    "altitude_proxy": {
+      "cells": {
+        "agl_proxy_50_to_120m": {
+          "n_runs": 376,
+          "n_vehicles": 375,
+          "n_windows": 449
+        },
+        "agl_proxy_ge_120m": {
+          "n_runs": 143,
+          "n_vehicles": 142,
+          "n_windows": 202
+        },
+        "agl_proxy_lt_50m": {
+          "n_runs": 343,
+          "n_vehicles": 343,
+          "n_windows": 397
+        }
+      },
+      "suppressed": {
+        "unknown": {
+          "n_runs": 9,
+          "n_vehicles": 9
+        }
+      }
     },
     "estimator_sigma": {
       "cells": {
@@ -106,7 +131,7 @@
   },
   "regime_axes_declared_but_not_cut": {
     "firmware_version": "not carried by the sampling frame",
-    "altitude_agl": "needs a DEM this project has not built; height above takeoff is the available proxy and requires a pass over the converted runs",
+    "altitude_agl": "not recoverable: the rangefinder that would give it is valid for a median 0.4% of rows and reads at touchdown. The altitude_proxy axis cuts height above the takeoff point instead, and is named as a proxy throughout.",
     "topography": "same DEM dependency"
   },
   "one_window_per_run": {
@@ -564,6 +589,18 @@
     "h1-airspeed_topic=absent-era5_10m-reweighted": false,
     "h1-airspeed_topic=present-era5_10m-sample": false,
     "h1-airspeed_topic=present-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_10m-reweighted": false,
     "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-sample": false,
     "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-reweighted": false,
     "h1-estimator_sigma=sigma_ge_1.0-era5_100m-sample": false,
