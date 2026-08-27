@@ -26,6 +26,7 @@ import argparse
 import json
 from collections import Counter
 from collections.abc import Callable
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,14 @@ from analysis.common.schema import validate
 from context import align, era5
 
 PROCESSING_VERSION = "build_pairs/1"
+
+# Where in the averaging interval the reanalysis value is taken to sit (adr/0016).
+# `hour_start` is the published alignment: the field is instantaneous at the window's
+# stamp, which is the start of the hour the onboard estimate is averaged over, leaving a
+# systematic -1800 s offset. `interval_midpoint` interpolates between the hour and the
+# next to t+30min, where the recorded mismatch is zero. The midpoint of two hourly fields
+# under linear interpolation is their mean, so no interpolation coefficient is needed.
+ALIGNMENTS = {"hour_start": 0, "interval_midpoint": 1800}
 
 # ERA5 variable -> the feature name it is emitted under. 100 m is the primary vertical
 # reference and 10 m the secondary whose difference from it is a shear stratifier
@@ -94,7 +103,10 @@ def era5_at(window: dict[str, Any], cache_dir: Path) -> tuple[dict[str, float], 
 
 
 def arco_at(
-    window: dict[str, Any], dataset: Any, coverage: era5.ArcoCoverage
+    window: dict[str, Any],
+    dataset: Any,
+    coverage: era5.ArcoCoverage,
+    offset_s: int = 0,
 ) -> tuple[dict[str, float], dict[str, Any]]:
     """The same read through the account-free copy (``adr/0013``).
 
@@ -111,6 +123,21 @@ def arco_at(
     when = window["window_start"]
     marker = coverage.release_marker(when)
     values, grid_lat, grid_lon = era5.arco_values_at(dataset, when, window["lat"], window["lon"])
+
+    if offset_s:
+        # Two instantaneous fields, an hour apart, averaged to the midpoint between them.
+        # The second read costs another whole global field per variable, which is why this
+        # alignment is a flag and not the default.
+        later = when + timedelta(seconds=align.ERA5_TEMPORAL_RESOLUTION_S)
+        later_values, _, _ = era5.arco_values_at(dataset, later, window["lat"], window["lon"])
+        values = {name: (values[name] + later_values[name]) / 2.0 for name in values}
+        # The pair straddles the release boundary when only the later hour is preliminary,
+        # so the value inherits the more preliminary of the two markers rather than the
+        # first one read.
+        later_marker = coverage.release_marker(later)
+        if later_marker != marker:
+            marker = max(marker, later_marker)
+
     return values, {
         "grid_lat": grid_lat,
         "grid_lon": grid_lon,
@@ -120,12 +147,17 @@ def arco_at(
     }
 
 
-def pair(window: dict[str, Any], read: Callable) -> tuple[list[dict], dict[str, Any]]:
+def pair(
+    window: dict[str, Any], read: Callable, offset_s: int = 0
+) -> tuple[list[dict], dict[str, Any]]:
     """One window -> its schema-valid context features, plus the paired row H1 reads."""
     values, meta = read(window)
     # ERA5 hourly fields are instantaneous at the stamp, and the window is the hour that
-    # begins there, so the field sits at the window's start.
-    context_time = window["window_start"]
+    # begins there, so at the default alignment the field sits at the window's start and
+    # the mismatch against the window centre is a constant -1800 s. Under
+    # `interval_midpoint` the value has been interpolated to the centre and the recorded
+    # mismatch is zero, which is the point of the alignment (adr/0016).
+    context_time = window["window_start"] + timedelta(seconds=offset_s)
 
     features = [
         align.context_feature(
@@ -175,6 +207,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=Path("artifacts/pilot-join-summary.json"))
     parser.add_argument("--limit", type=int, default=None, help="First N usable runs only.")
     parser.add_argument(
+        "--alignment",
+        choices=tuple(ALIGNMENTS),
+        default="hour_start",
+        help="Where in the averaging interval the reanalysis value sits. hour_start is "
+        "the published alignment; interval_midpoint interpolates to the centre and costs "
+        "a second global field per window (adr/0016).",
+    )
+    parser.add_argument(
         "--route",
         choices=("arco", "cds"),
         default="arco",
@@ -193,13 +233,17 @@ def main(argv: list[str] | None = None) -> int:
     # The route is chosen before the manifest is built, because on the ARCO route the
     # store's declared boundaries are part of what identifies the run and they are only
     # knowable once it is open. They move; a rerun in three months reads different ones.
+    offset_s = ALIGNMENTS[args.alignment]
+    if offset_s and args.route != "arco":
+        raise SystemExit("interval_midpoint is implemented on the arco route only")
+
     dataset = None
     if args.route == "arco":
         dataset, coverage = era5.open_arco()
         route_parameters = {"era5_route": "arco", "arco_coverage": coverage.state()}
 
         def read(window: dict[str, Any]) -> tuple[dict[str, float], dict[str, Any]]:
-            return arco_at(window, dataset, coverage)
+            return arco_at(window, dataset, coverage, offset_s)
     else:
         route_parameters = {"era5_route": "cds", "cds_dataset": era5.DATASET}
 
@@ -227,6 +271,8 @@ def main(argv: list[str] | None = None) -> int:
             "min_samples_per_window": align.MIN_SAMPLES_PER_WINDOW,
             "era5_variables": list(era5.WIND_VARIABLES),
             "processing_version": PROCESSING_VERSION,
+            "time_alignment": args.alignment,
+            "time_alignment_offset_s": offset_s,
             **route_parameters,
         },
     )
@@ -254,7 +300,7 @@ def main(argv: list[str] | None = None) -> int:
                 failures["window:incomplete"] += 1
                 continue
             try:
-                features, row = pair(window, read)
+                features, row = pair(window, read, offset_s)
             except Exception as error:
                 failures[f"era5:{type(error).__name__}"] += 1
                 continue
