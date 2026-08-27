@@ -22,11 +22,15 @@ operating conditions under which it was produced, with provenance and reproducib
 sufficient to be used as evidence. [`docs/00-scope.md`](docs/00-scope.md) is the
 operative scope contract and lists the out-of-scope items explicitly.
 
-The project is **pre-data**: no log has been downloaded. Most modules are deliberately
-unwritten and carry a docstring stating their contract and what blocks them. That is
-the current state, not an omission — do not fill them in speculatively. The next
-artifact due is [`docs/01-source-audit.md`](docs/01-source-audit.md), which must be
-written by looking at real sources, never from recollection.
+**H1 is answered.** 1,600 fixed-wing/VTOL logs retrieved and converted, 871 usable,
+1,059 windows paired with ERA5: the reanalysis is unbiased against the onboard EKF2
+estimate and too imprecise to substitute for it, in every regime tested
+([`artifacts/h1-agreement.json`](artifacts/h1-agreement.json), `adr/0015`).
+
+H2 and H3 remain **pre-data**. Their modules are deliberately unwritten and carry a
+docstring stating their contract and what blocks them. That is the current state, not
+an omission — do not fill them in speculatively. Anything written by looking at real
+sources must be written that way, never from recollection.
 
 ## Invariants
 

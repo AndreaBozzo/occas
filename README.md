@@ -5,11 +5,20 @@ A reproducible corpus linking **real telemetry from autonomous systems** to the
 schema, full provenance, and a machine-readable representation of the operational
 design domain (ODD).
 
-> Current status: **pre-data**. No log has been downloaded. The public metadata for
-> all 450,395 logs has been characterised without downloading any —
-> see [`docs/02b-dbinfo-inventory.md`](docs/02b-dbinfo-inventory.md). The source audit
-> in [`docs/01-source-audit.md`](docs/01-source-audit.md) is in progress; its
-> personal-data section is unresolved and blocks publication. See
+> Current status: **H1 answered, publication not yet prepared**. A stratified draw of
+> 1,600 fixed-wing/VTOL logs has been retrieved and converted, 871 of which carry what
+> H1 requires; 1,059 run-hours are paired with ERA5. The result is that **ERA5 is
+> unbiased against the onboard EKF2 wind estimate and too imprecise to substitute for
+> it** — limits of agreement near ±5 m s⁻¹ per component against a pre-declared 3.0
+> m s⁻¹ usefulness band, in every regime and at both vertical references. See
+> [`artifacts/h1-agreement.json`](artifacts/h1-agreement.json) and
+> [`docs/04-methodology.md`](docs/04-methodology.md).
+>
+> Public metadata for all 450,395 logs was characterised before any download — see
+> [`docs/02b-dbinfo-inventory.md`](docs/02b-dbinfo-inventory.md). Aggregate publication
+> of results is governed by [`docs/09-dpia.md`](docs/09-dpia.md) and
+> [`docs/adr/0009-aggregate-only-for-positional-results.md`](docs/adr/0009-aggregate-only-for-positional-results.md);
+> raw geolocated trajectories are never redistributed. Scope is fixed in
 > [`docs/00-scope.md`](docs/00-scope.md).
 
 ## What this is
