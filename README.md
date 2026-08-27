@@ -1,19 +1,29 @@
 # Operational Context Corpus for Autonomous Systems
 
 A reproducible corpus linking **real telemetry from autonomous systems** to the
-**external operating conditions** under which it was produced — with a queryable
-schema, full provenance, and a machine-readable representation of the operational
-design domain (ODD).
+**external operating conditions** under which it was produced — with a queryable schema
+and full provenance.
 
-> Current status: **H1 answered, publication not yet prepared**. A stratified draw of
-> 1,600 fixed-wing/VTOL logs has been retrieved and converted, 871 of which carry what
-> H1 requires; 1,059 run-hours are paired with ERA5. The result is that **ERA5 is
-> unbiased against the onboard EKF2 wind estimate and too imprecise to substitute for
-> it** — limits of agreement near ±5 m s⁻¹ per component against a pre-declared 3.0
-> m s⁻¹ usefulness band, in every regime and at both vertical references. The result
-> and what it does not establish are set out in
+A machine-readable representation of the operational design domain is *in scope and not
+yet built*: `schemas/odd_taxonomy.yaml` and `ODDAnnotation` do not exist, and
+[`adr/0002`](docs/adr/0002-openodd-as-metamodel.md) blocks them until the M0 prior-art
+check is recorded in [`docs/03-odd-representation.md`](docs/03-odd-representation.md).
+
+> Current status: **result in hand, pre-publication corrections in progress**. A
+> stratified draw of 1,600 fixed-wing/VTOL logs has been retrieved and converted, 871 of
+> which carry what H1 requires; 1,059 run-hours are paired with ERA5. The finding is
+> that **there is no evidence of a systematic component-wise offset between ERA5 and the
+> onboard EKF2 wind estimate, and agreement is far too imprecise for ERA5 to substitute
+> for it** — limits of agreement near ±5 m s⁻¹ per component against a pre-declared
+> 3.0 m s⁻¹ usefulness band, in every regime and at both vertical references. The
+> result and what it does not establish are set out in
 > [`docs/10-h1-results.md`](docs/10-h1-results.md); the method is
 > [`docs/04-methodology.md`](docs/04-methodology.md).
+>
+> This is not yet a frozen analysis. A pre-publication review on 2026-08-27 identified
+> corrections to the pooled weighting and to two statistical summaries, and the
+> operational-regime axes declared a priori have not been cut. They are tracked in
+> [`adr/0016`](docs/adr/0016-pre-publication-corrections.md).
 >
 > Public metadata for all 450,395 logs was characterised before any download — see
 > [`docs/02b-dbinfo-inventory.md`](docs/02b-dbinfo-inventory.md). Aggregate publication
@@ -54,12 +64,17 @@ analysis between two uncertain estimates**, stratified by airframe, airspeed sen
 estimator mechanism and variance, firmware, altitude, topography, season and
 geography. A negative result is publishable; a non-reproducible one is not.
 
-**The answer, over 871 runs and 1,059 run-hours:** the reanalysis is *unbiased* against
-the onboard estimate — every component bias interval includes zero — and too imprecise
-to substitute for it, with limits of agreement near ±5 m s⁻¹ per component. It is not a
-useful proxy in any regime tested, under a criterion fixed before the result existed.
-Full write-up, sensitivity analyses and limits:
-[`docs/10-h1-results.md`](docs/10-h1-results.md).
+**The answer, over 871 runs and 1,059 run-hours:** we find **no evidence of a systematic
+component-wise offset** between the reanalysis and the onboard estimate — every component
+bias interval includes zero — and agreement is far too imprecise for ERA5 to substitute
+for the onboard estimate, with limits of agreement near ±5 m s⁻¹ per component. It is not
+a useful proxy in any regime tested, under a criterion fixed before the result existed.
+
+Failing to reject a zero offset is not the same as establishing one, and this result does
+not claim equivalence. What is answered is the *overall* and retention-stratified
+agreement question; the operational-regime axes declared a priori in
+[`docs/04-methodology.md`](docs/04-methodology.md) have not yet been cut. Full write-up,
+sensitivity analyses and limits: [`docs/10-h1-results.md`](docs/10-h1-results.md).
 
 ## Layout
 

@@ -43,8 +43,9 @@ random subset ([`adr/0014`](adr/0014-what-population-h1-estimates-over.md)).
 
 ## Result
 
-**ERA5 is unbiased against the onboard EKF2 estimate, and too imprecise to substitute
-for it.** `useful_proxy` is false in every regime, at both vertical references.
+**We find no evidence of a systematic component-wise offset between ERA5 and the
+onboard EKF2 estimate, and agreement is too imprecise for ERA5 to substitute for it.**
+`useful_proxy` is false in every regime, at both vertical references.
 
 | Regime | Runs | Windows | Bias `u` | 95% CI | Bias `v` | 95% CI | \|Δ\| upper LoA | CI on that limit | Useful proxy |
 |---|---:|---:|---:|---|---:|---|---:|---|:--:|
@@ -62,10 +63,12 @@ for it.** `useful_proxy` is false in every regime, at both vertical references.
 
 Two statements, and they are separate.
 
-**The bias is indistinguishable from zero.** Every component bias interval includes
-zero, in every regime and at both references. There is no systematic offset between the
-reanalysis and the onboard estimate in this corpus. That is a finding rather than an
-absence of one: it means the disagreement below is dispersion and not calibration.
+**No systematic offset is detected.** Every component bias interval includes zero, in
+every regime and at both references. This is a failure to reject a zero offset, not a
+demonstration that the offset is zero: the intervals are compatible with offsets of up to
+roughly ±0.3–0.5 m s⁻¹, and no equivalence test was performed. What it does establish is
+that the disagreement reported below is dispersion rather than a detectable calibration
+difference.
 
 **The dispersion is large.** Limits of agreement are approximately ±5 m s⁻¹ per
 component. The upper limit on the vector difference magnitude ranges from 7.02 to

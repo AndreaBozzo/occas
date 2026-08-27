@@ -1,6 +1,7 @@
 # ADR-0009 — Positional results are published only in aggregate
 
-- **Status:** accepted, pending the controller's sign-off on the assessment behind it
+- **Status:** accepted. The assessment behind it was adopted on 2026-08-25; see
+  [`../09-dpia.md`](../09-dpia.md)
 - **Date:** 2026-08-24
 - **Tightens:** the standing rule "publish derived and aggregate features with
   generalised coordinates", which was too weak.

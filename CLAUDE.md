@@ -22,9 +22,12 @@ operating conditions under which it was produced, with provenance and reproducib
 sufficient to be used as evidence. [`docs/00-scope.md`](docs/00-scope.md) is the
 operative scope contract and lists the out-of-scope items explicitly.
 
-**H1 is answered.** 1,600 fixed-wing/VTOL logs retrieved and converted, 871 usable,
-1,059 windows paired with ERA5: the reanalysis is unbiased against the onboard EKF2
-estimate and too imprecise to substitute for it, in every regime tested. The result is
+**H1's overall agreement question is answered.** 1,600 fixed-wing/VTOL logs retrieved
+and converted, 871 usable, 1,059 windows paired with ERA5: no evidence of a systematic
+component-wise offset against the onboard EKF2 estimate, and agreement far too imprecise
+for ERA5 to substitute for it. The operational-regime axes declared a priori in
+`docs/04-methodology.md` have not been cut, so "H1 answered" without qualification would
+overstate it. The result is
 [`docs/10-h1-results.md`](docs/10-h1-results.md); every figure in it is emitted by
 `analysis/h1_agreement/agreement.py`, never transcribed.
 
