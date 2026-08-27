@@ -912,6 +912,7 @@ def main(argv: list[str] | None = None) -> int:
             "p97_5_one_per_run": magnitude_limits(drawn[MAGNITUDE_KEY])["p97_5"],
         }
 
+    implied = implied_usable_population(rows)
     summary = {
         "n_runs": len({r["run_id"] for r in rows}),
         "n_windows": len(rows),
@@ -921,14 +922,20 @@ def main(argv: list[str] | None = None) -> int:
                 "n_vehicles": vehicles_in[stratum],
                 "n_windows": len(by_stratum[stratum]),
                 "frame_size": FRAME_SIZES.get(stratum),
-                "design_weight": FRAME_SIZES[stratum] / runs_in[stratum]
+                "n_drawn": N_DRAWN_PER_STRATUM,
+                # N_h / n_drawn_h, matching design_weights. This previously reported
+                # N_h / n_usable_h and would have contradicted the weight actually applied
+                # (adr/0016 correction 1).
+                "design_weight": FRAME_SIZES[stratum] / N_DRAWN_PER_STRATUM
                 if stratum in FRAME_SIZES
                 else None,
+                "implied_usable_population": implied[stratum],
             }
             for stratum in sorted(by_stratum)
         },
         "validation_artifacts": len(artifacts),
         "suppressed_strata": suppressed,
+        "implied_usable_population": implied,
         "regimes": regimes,
         "regime_axes_declared_but_not_cut": {
             "firmware_version": "not carried by the sampling frame",
