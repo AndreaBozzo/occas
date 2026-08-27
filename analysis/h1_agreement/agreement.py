@@ -45,6 +45,7 @@ import numpy as np
 from analysis.common import exclusions
 from analysis.common.manifest import add_output, build_manifest, write_manifest
 from analysis.common.schema import validate
+from analysis.h1_agreement.altitude import band_of as altitude_band
 
 PROCESSING_VERSION = "agreement/1"
 
@@ -159,6 +160,9 @@ REGIME_AXES: dict[str, Any] = {
     "airspeed_topic": lambda row: "present" if row["has_airspeed_topic"] else "absent",
     "estimator_sigma": sigma_band,
     "season": lambda row: row["season"],
+    # A named proxy, not altitude AGL: see analysis/h1_agreement/altitude.py for why
+    # this corpus cannot recover AGL, measured rather than assumed.
+    "altitude_proxy": lambda row: row["altitude_band"],
 }
 
 
@@ -687,7 +691,11 @@ def publishable_regimes(
 
 
 def load_pairs(
-    pairs: Path, sample: Path, inventory: Path, excluded: exclusions.Exclusions
+    pairs: Path,
+    sample: Path,
+    inventory: Path,
+    altitude: Path,
+    excluded: exclusions.Exclusions,
 ) -> list[dict]:
     """Read the paired rows, attach each run's stratum, and drop excluded runs.
 
@@ -706,6 +714,13 @@ def load_pairs(
             strata[entry["log_id"]] = entry["stratum"]
             vehicles[entry["log_id"]] = entry.get("vehicle_uuid") or ""
             airframes[entry["log_id"]] = airframe_class(entry.get("mav_type") or "")
+
+    heights: dict[str, float | None] = {}
+    if altitude.exists():
+        for line in altitude.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                entry = json.loads(line)
+                heights[entry["run_id"]] = entry.get("median_height_m")
 
     airspeed: dict[str, bool] = {}
     for line in inventory.read_text(encoding="utf-8").splitlines():
@@ -728,6 +743,7 @@ def load_pairs(
         row["vehicle_uuid"] = vehicles.get(run_id, "")
         row["airframe_class"] = airframes[run_id]
         row["has_airspeed_topic"] = airspeed.get(run_id, False)
+        row["altitude_band"] = altitude_band(heights.get(run_id))
         row["season"] = season_of(datetime.fromisoformat(row["window_start"]), row["lat"])
         rows.append(row)
     return rows
@@ -738,6 +754,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pairs", type=Path, default=Path("data/h1-pairs.jsonl"))
     parser.add_argument("--sample", type=Path, default=Path("data/h1-sample.jsonl"))
     parser.add_argument("--inventory", type=Path, default=Path("data/h1-inventory.jsonl"))
+    parser.add_argument("--altitude", type=Path, default=Path("data/h1-altitude.jsonl"))
     parser.add_argument(
         "--artifacts", type=Path, default=Path("artifacts/h1-validation-artifacts.jsonl")
     )
@@ -750,7 +767,7 @@ def main(argv: list[str] | None = None) -> int:
 
     excluded = exclusions.load()
     rows, coverage = with_complete_era5(
-        load_pairs(args.pairs, args.sample, args.inventory, excluded)
+        load_pairs(args.pairs, args.sample, args.inventory, args.altitude, excluded)
     )
     if not rows:
         raise SystemExit(f"{args.pairs} yielded no rows to compare")
@@ -774,6 +791,7 @@ def main(argv: list[str] | None = None) -> int:
             "sigma_bands_ms": list(SIGMA_BANDS),
             "regime_axes": sorted(REGIME_AXES),
             "regime_axes_declared_but_not_cut": ["firmware_version", "altitude_agl", "topography"],
+            "altitude_axis_is_a_proxy": "height above takeoff, not AGL",
             "bootstrap_resamples": args.resamples,
             "frame_sizes": FRAME_SIZES,
             "processing_version": PROCESSING_VERSION,
@@ -939,8 +957,9 @@ def main(argv: list[str] | None = None) -> int:
         "regimes": regimes,
         "regime_axes_declared_but_not_cut": {
             "firmware_version": "not carried by the sampling frame",
-            "altitude_agl": "needs a DEM this project has not built; height above takeoff "
-            "is the available proxy and requires a pass over the converted runs",
+            "altitude_agl": "not recoverable: the rangefinder that would give it is valid "
+            "for a median 0.4% of rows and reads at touchdown. The altitude_proxy axis cuts "
+            "height above the takeoff point instead, and is named as a proxy throughout.",
             "topography": "same DEM dependency",
         },
         "one_window_per_run": one_window_summary,
