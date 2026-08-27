@@ -16,6 +16,7 @@ No network: the downloader is replaced by one that writes the files a real one w
 
 from __future__ import annotations
 
+import gzip
 import json
 from pathlib import Path
 
@@ -70,6 +71,14 @@ def harness(tmp_path, monkeypatch):
             {FIRST.replace("-", ""), FLAKY.replace("-", "")},
         ),
     )
+    # The manifest declares the pinned frame as an input and hashes it. The real frame is
+    # a 30 MB dump under gitignored data/, so on any machine that has not run the
+    # download -- CI included -- build_manifest raised FileNotFoundError and these three
+    # tests failed while passing locally. The frame this harness serves is a fake, so the
+    # frame it records has to be one too.
+    frame = tmp_path / "dbinfo.json.gz"
+    frame.write_bytes(gzip.compress(json.dumps({"pinned": "fixture frame"}).encode()))
+    monkeypatch.setattr(retrieve_h1, "DBINFO", frame)
     monkeypatch.setattr(retrieve_h1, "convert_chunk", lambda *_: 0)
     monkeypatch.setattr(
         retrieve_h1,
