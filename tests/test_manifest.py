@@ -122,7 +122,9 @@ def test_every_artifact_in_the_repository_is_attested_by_a_manifest() -> None:
         # it: a CRLF artifact hashed on Windows matches the CRLF hash recorded beside
         # it. The two only disagree once git has round-tripped the file to LF, which
         # is to say in CI and on everyone else's clone.
-        if relative.endswith(".json"):
+        # ".jsonl" does not end with ".json", so the tuple is not redundant: H1 emits
+        # its validation artifacts as JSON Lines and they need the same guard.
+        if relative.endswith((".json", ".jsonl")):
             assert b"\r\n" not in produced.read_bytes(), (
                 f"{relative} contains CRLF; git stores it as LF, so the hash recorded "
                 f"for it here will not reproduce from a clean checkout"
