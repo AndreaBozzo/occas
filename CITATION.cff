@@ -16,8 +16,9 @@ authors:
   - family-names: Bozzo
     given-names: Andrea
 license: Apache-2.0
-version: 0.0.0
-date-released: 2026-08-20
+# version and date-released are deliberately absent: no release has been cut. They are
+# set from the git tag when one is, so that the citation cannot claim a release that
+# does not exist. See docs/adr/0016-pre-publication-corrections.md.
 keywords:
   - UAS
   - PX4
