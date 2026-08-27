@@ -24,8 +24,9 @@ operative scope contract and lists the out-of-scope items explicitly.
 
 **H1 is answered.** 1,600 fixed-wing/VTOL logs retrieved and converted, 871 usable,
 1,059 windows paired with ERA5: the reanalysis is unbiased against the onboard EKF2
-estimate and too imprecise to substitute for it, in every regime tested
-([`artifacts/h1-agreement.json`](artifacts/h1-agreement.json), `adr/0015`).
+estimate and too imprecise to substitute for it, in every regime tested. The result is
+[`docs/10-h1-results.md`](docs/10-h1-results.md); every figure in it is emitted by
+`analysis/h1_agreement/agreement.py`, never transcribed.
 
 H2 and H3 remain **pre-data**. Their modules are deliberately unwritten and carry a
 docstring stating their contract and what blocks them. That is the current state, not

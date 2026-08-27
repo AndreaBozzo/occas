@@ -129,3 +129,8 @@ For ERA5, record `dataset/product ID`, version and `retrieved_at`: the prelimina
 It is not the case that the whole archive is continuously rewritten.
 
 **A negative result is publishable. A non-reproducible result is not.**
+
+## Results
+
+H1 was run over the full corpus on 2026-08-27. The result, the sensitivity analyses and
+the limits of what it establishes are in [`10-h1-results.md`](10-h1-results.md).

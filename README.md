@@ -10,8 +10,9 @@ design domain (ODD).
 > H1 requires; 1,059 run-hours are paired with ERA5. The result is that **ERA5 is
 > unbiased against the onboard EKF2 wind estimate and too imprecise to substitute for
 > it** — limits of agreement near ±5 m s⁻¹ per component against a pre-declared 3.0
-> m s⁻¹ usefulness band, in every regime and at both vertical references. See
-> [`artifacts/h1-agreement.json`](artifacts/h1-agreement.json) and
+> m s⁻¹ usefulness band, in every regime and at both vertical references. The result
+> and what it does not establish are set out in
+> [`docs/10-h1-results.md`](docs/10-h1-results.md); the method is
 > [`docs/04-methodology.md`](docs/04-methodology.md).
 >
 > Public metadata for all 450,395 logs was characterised before any download — see
