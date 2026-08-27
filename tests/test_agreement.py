@@ -358,3 +358,25 @@ def test_the_temporal_mismatch_is_reported_as_a_constant_rather_than_swept() -> 
     contradicted = agreement.temporal_mismatch_report(rows)
     assert contradicted["is_constant_by_construction"] is False
     assert contradicted["distinct_values_s"] == [-1800.0, -900.0]
+
+
+def test_a_window_missing_an_era5_component_is_counted_not_crashed_on() -> None:
+    """Field coverage is recorded, never silently dropped -- and never a numpy TypeError.
+
+    The ARCO route returns all four components for every read, so this partitions nothing
+    on the H1 run. It exists for the CDS route, which adr/0013 keeps authoritative and
+    which omits a variable its response did not carry.
+
+    The failure it prevents is silent. ``np.array([1.0, None], dtype=float)`` yields
+    ``nan`` rather than raising, so one incomplete window makes a whole regime's statistics
+    ``nan`` -- and since ``nan <= 3.0`` is ``False``, that regime gets published as *not a
+    useful proxy* because of one missing number.
+    """
+    good = _row(run_id="good", era5=(3.0, 1.0))
+    absent = {**_row(run_id="absent", era5=(3.0, 1.0)), "era5_10m_u": None}
+    not_a_number = {**_row(run_id="nan", era5=(3.0, 1.0)), "era5_100m_v": float("nan")}
+
+    complete, coverage = agreement.with_complete_era5([good, absent, not_a_number])
+
+    assert [row["run_id"] for row in complete] == ["good"]
+    assert coverage == {"windows_without_complete_era5": 2}

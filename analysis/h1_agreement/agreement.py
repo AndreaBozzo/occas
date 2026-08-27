@@ -455,6 +455,35 @@ def temporal_mismatch_report(rows: Sequence[dict]) -> dict[str, Any]:
     }
 
 
+def with_complete_era5(rows: Sequence[dict]) -> tuple[list[dict], dict[str, int]]:
+    """Split off rows missing an ERA5 component, and count them rather than crash on them.
+
+    On the ARCO route all four components come back for every read, so this is expected to
+    partition nothing. It exists for the CDS route, which ``adr/0013`` keeps as the
+    authoritative one and which omits a variable its response did not carry.
+
+    **Without it the failure is silent, not loud.** ``np.array([1.0, None], dtype=float)``
+    does not raise -- it yields ``nan`` -- so one incomplete window turns an entire
+    regime's bias, limits and bootstrap into ``nan``. And ``nan <= 3.0`` is ``False``, so
+    that regime would be published as *not a useful proxy* on the strength of one missing
+    number. Measured rather than assumed, after the first version of this docstring
+    claimed numpy would raise.
+
+    Counted and reported, not silently dropped: field coverage is recorded in this project,
+    and a run that vanishes between the pairs file and the result is the failure mode that
+    rule exists to prevent.
+    """
+    keys = [key for pair in VERTICAL_REFERENCES.values() for key in pair]
+    complete, missing = [], 0
+    for row in rows:
+        values = [row.get(key) for key in keys]
+        if any(value is None or value != value for value in values):
+            missing += 1
+            continue
+        complete.append(row)
+    return complete, {"windows_without_complete_era5": missing}
+
+
 def publishable_regimes(
     by_stratum: dict[str, list[dict]], *, min_runs: int, min_vehicles: int
 ) -> tuple[list[str], dict[str, dict[str, int]]]:
@@ -534,7 +563,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     excluded = exclusions.load()
-    rows = load_pairs(args.pairs, args.sample, excluded)
+    rows, coverage = with_complete_era5(load_pairs(args.pairs, args.sample, excluded))
     if not rows:
         raise SystemExit(f"{args.pairs} yielded no rows to compare")
 
@@ -644,6 +673,7 @@ def main(argv: list[str] | None = None) -> int:
         },
         "validation_artifacts": len(artifacts),
         "suppressed_strata": suppressed,
+        **coverage,
         "tolerance_sensitivity": {
             level: tolerance_sensitivity(
                 {s: by_stratum[s] for s in thick},
