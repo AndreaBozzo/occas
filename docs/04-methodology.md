@@ -58,10 +58,17 @@ agreement statistics, including the regimes in which the reanalysis is **not** a
 proxy. Reporting where it fails is a result, not a caveat.
 
 *Useful* is a declared predicate rather than a judgement formed on inspection: the
-upper 95% limit of agreement on the vector difference magnitude at or below
-**3.0 m s⁻¹**, reported alongside the estimator-relative ratio per component. Both are
-fixed in [`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md). The band is
-asserted rather than cited, and is identified as such wherever it is published.
+vector difference magnitude at or below **3.0 m s⁻¹**, reported alongside the
+estimator-relative ratio per component, both fixed in
+[`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md). The band is asserted
+rather than cited, and is identified as such wherever it is published.
+
+The **statistic** the band is applied to was corrected after the result was seen. It was
+originally the upper 95% limit of agreement; because the magnitude is bounded below by
+zero, that construction returned an impossible negative lower limit, and it is now the
+**empirical 97.5th percentile**, which preserves the 2.5% upper-tail exceedance the
+original upper endpoint implied. The threshold itself did not move. See
+[`adr/0016`](adr/0016-pre-publication-corrections.md).
 
 Where a number over all of them is wanted, it is a *reweighted* one and it says so:
 the H1 draw is 800/800 across retention strata that are 37.1%/62.9% of the frame, so a

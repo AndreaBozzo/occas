@@ -5,10 +5,12 @@ abstract: >-
   A reproducible corpus linking real telemetry from autonomous systems to the
   external operating conditions under which it was produced, with a queryable
   schema and full provenance. Its first result is an agreement analysis between
-  ERA5 reanalysis wind and onboard PX4 EKF2 wind estimates over 871 flights,
-  pre-specified before the result existed: no evidence of a systematic
-  component-wise offset, and agreement too imprecise for the reanalysis to
-  substitute for the onboard estimate. An operational-design-domain
+  ERA5 reanalysis wind and onboard PX4 EKF2 wind estimates over 871 flights. The
+  analysis plan and its decision thresholds were fixed before any result existed;
+  two statistical summaries and the pooled weighting were corrected afterwards,
+  recorded as post-hoc. The finding: no evidence of a systematic component-wise
+  offset, and agreement too imprecise for the reanalysis to substitute for the
+  onboard estimate. An operational-design-domain
   representation is in scope and not yet built.
 type: software
 repository-code: "https://github.com/AndreaBozzo/occas"

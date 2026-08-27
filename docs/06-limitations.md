@@ -47,8 +47,10 @@ work is added here the day it is discovered.
 - An EKF estimate is not a measurement.
 - A logged parameter is a configuration, not a behaviour.
 - **The 3.0 m s⁻¹ usefulness band is asserted, not cited.** H1 treats the reanalysis as
-  a useful proxy in a regime when the upper 95% limit of agreement on the vector
-  difference magnitude is at most 3.0 m s⁻¹
+  a useful proxy in a regime when the empirical 97.5th percentile of the vector
+  difference magnitude is at most 3.0 m s⁻¹ — originally the upper 95% limit of
+  agreement, corrected post-hoc because the magnitude is bounded below by zero, with the
+  threshold unchanged
   ([`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md)). The magnitude was
   determined against manufacturer-declared small-UAS wind limits of roughly 10–12 m s⁻¹,
   such that a proxy carrying 3 m s⁻¹ of disagreement retains a usable margin against a

@@ -9,7 +9,7 @@ yet built*: `schemas/odd_taxonomy.yaml` and `ODDAnnotation` do not exist, and
 [`adr/0002`](docs/adr/0002-openodd-as-metamodel.md) blocks them until the M0 prior-art
 check is recorded in [`docs/03-odd-representation.md`](docs/03-odd-representation.md).
 
-> Current status: **result in hand, pre-publication corrections in progress**. A
+> Current status: **analysis complete, pending release**. A
 > stratified draw of 1,600 fixed-wing/VTOL logs has been retrieved and converted, 871 of
 > which carry what H1 requires; 1,059 run-hours are paired with ERA5. The finding is
 > that **there is no evidence of a systematic component-wise offset between ERA5 and the
@@ -20,10 +20,13 @@ check is recorded in [`docs/03-odd-representation.md`](docs/03-odd-representatio
 > [`docs/10-h1-results.md`](docs/10-h1-results.md); the method is
 > [`docs/04-methodology.md`](docs/04-methodology.md).
 >
-> This is not yet a frozen analysis. A pre-publication review on 2026-08-27 identified
-> corrections to the pooled weighting and to two statistical summaries, and the
-> operational-regime axes declared a priori have not been cut. They are tracked in
-> [`adr/0016`](docs/adr/0016-pre-publication-corrections.md).
+> A pre-publication review on 2026-08-27 identified corrections to the pooled weighting
+> and to two statistical summaries. All were applied and the analysis regenerated; the
+> corrections are recorded as post-hoc in
+> [`adr/0016`](docs/adr/0016-pre-publication-corrections.md), which deliberately leaves the
+> original pre-specification untouched. No decision threshold moved. The result survives
+> reweighting, clustering, grid-distance tolerance, vertical reference and a full
+> time-aligned rerun.
 >
 > Public metadata for all 450,395 logs was characterised before any download — see
 > [`docs/02b-dbinfo-inventory.md`](docs/02b-dbinfo-inventory.md). Aggregate publication
@@ -71,10 +74,11 @@ for the onboard estimate, with limits of agreement near ±5 m s⁻¹ per compone
 a useful proxy in any regime tested, under a criterion fixed before the result existed.
 
 Failing to reject a zero offset is not the same as establishing one, and this result does
-not claim equivalence. What is answered is the *overall* and retention-stratified
-agreement question; the operational-regime axes declared a priori in
-[`docs/04-methodology.md`](docs/04-methodology.md) have not yet been cut. Full write-up,
-sensitivity analyses and limits: [`docs/10-h1-results.md`](docs/10-h1-results.md).
+not claim equivalence. Five feasible axes or proxies were evaluated — airframe, airspeed
+topic, estimator variance band, season and an altitude proxy; firmware, topography and
+geography remain uncut, and airspeed sensing, estimator mechanism and altitude AGL are
+represented only by the proxies available. Full write-up, sensitivity analyses and limits:
+[`docs/10-h1-results.md`](docs/10-h1-results.md).
 
 ## Layout
 

@@ -81,8 +81,10 @@ The magnitude is summarised by empirical quantiles rather than by mean ± 1.96 S
 non-negative, so the classical construction returned a lower limit of −3.043 m s⁻¹ on this
 sample, below which not one of the 1,059 windows fell
 ([`adr/0016`](adr/0016-pre-publication-corrections.md) correction 2). `useful_proxy` is
-evaluated against the 97.5th percentile — the same declared band and the same intended 95%
-coverage, read off the distribution instead of assumed from it.
+evaluated against the 97.5th percentile, which preserves the 2.5% upper-tail exceedance
+the originally specified upper endpoint implied. The declared band is unchanged. Nothing
+in the conclusion turns on the choice: the pooled empirical 95th percentile is
+7.16 m s⁻¹, also far above 3.0.
 
 ## Operational regimes
 
@@ -118,11 +120,19 @@ silently ([`adr/0009`](adr/0009-aggregate-only-for-positional-results.md)).
 *Altitude is the substantive one.* Disagreement falls monotonically with height — median
 2.80, 2.32, 1.99 m s⁻¹ — and the 97.5th percentile for flights below 50 m is **12.79**
 against 7.53 between 50 and 120 m, with bootstrap intervals that **do not overlap**
-([9.85, 14.88] against [6.75, 8.85]). This is the one result here with a clean physical
-reading: a 0.25° reanalysis wind at 100 m describes the free atmosphere far better than it
-describes the surface layer a UAS below 50 m is flying in, where roughness, obstacles and
-shear dominate. It is also a caution about the vertical reference rather than a rescue —
-even the best-agreeing altitude band fails the band.
+([9.85, 14.88] against [6.75, 8.85]).
+
+The gradient is **consistent with** the greater spatial heterogeneity, roughness and shear
+expected near the surface, where a 0.25° reanalysis wind at 100 m has least to say. It is
+not evidence that altitude *causes* it: this is an observational convenience sample, the
+altitude is a takeoff-relative proxy, terrain is not modelled, and mission profile,
+airframe and geography can all co-vary with height. `04-methodology.md` forbids causal
+language without a design that supports it, and this design does not. What can be said is
+that the gradient is not explained by the temporal-alignment choice, which was tested and
+moves it by 0.16 m s⁻¹.
+
+It is a caution about the vertical reference rather than a rescue in any case — even the
+best-agreeing altitude band fails the declared band.
 
 *Estimator uncertainty separates more strongly and means less.* The 97.5th percentile runs
 8.09, 8.89, 26.62 across the three sigma bands and the median runs 2.23, 2.96, 4.28. That
@@ -228,8 +238,8 @@ identical and every ERA5 value changes, by a median of 0.183 m s⁻¹ and at mos
 Across all 64 paired artifacts the 97.5th percentile moves by a **median of −0.032 m s⁻¹**,
 between −0.371 and +0.479. **No verdict flips**, and no regime becomes a useful proxy. The
 altitude gradient survives intact — 12.64 below 50 m against 7.30 between 50 and 120 — so
-it is a property of the surface layer rather than an artifact of comparing an instantaneous
-field against an hour mean.
+the gradient is not an artifact of comparing an instantaneous field against an hour
+mean.
 
 The offset was a real design choice and `adr/0016` was right that calling it only an
 unavoidable limitation understated what could be tested. Testing it removes the objection
@@ -246,8 +256,13 @@ criterion. Artifacts:
   establishes it was not chosen to fit one; it does not make it authoritative.
 - Disagreement does not identify which source is in error. Neither is ground truth.
 - The estimator-sigma gradient is partly circular by construction, as above.
-- Two declared axes remain uncut — firmware and topography — so the "under which
-  operational conditions" question is answered for five axes and open for two. The
-  altitude answer rests on a proxy for AGL, not on AGL.
+- **The "under which operational conditions" question is partially answered.** Five
+  feasible axes or proxies were evaluated. **Firmware, topography and geography remain
+  uncut** — geography not at all, since latitude is used only to hemisphere-correct the
+  season label. **Airspeed sensing, estimator mechanism and altitude AGL are represented
+  only by proxies**: an airspeed *topic* rather than a sensor, a reported variance band
+  rather than the estimator's mechanism and parameters, and height above takeoff rather
+  than AGL. Each is named as a proxy where it is reported, and none should be read as the
+  axis `04-methodology.md` declared.
 
 Full limitations: [`06-limitations.md`](06-limitations.md).
