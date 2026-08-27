@@ -89,6 +89,11 @@ VERTICAL_REFERENCES = {
 
 SERIES_KEYS = ("u", "v", "vector_difference_magnitude", "speed")
 
+# ``04-methodology.md`` makes this mandatory rather than optional: "if the result moves
+# under plausible tolerance choices, that is the finding." 30 km is the declared spatial
+# tolerance, so the sweep runs from well inside it up to it.
+SENSITIVITY_DISTANCE_KM = (10.0, 15.0, 20.0, 30.0)
+
 
 def wrap_degrees(angle: float) -> float:
     """Wrap a signed angle to (-180, 180], the interval ``adr/0006`` declared."""
@@ -364,6 +369,92 @@ def regime_artifact(
     }
 
 
+def tolerance_sensitivity(
+    by_stratum: dict[str, list[dict]],
+    *,
+    level: str,
+    min_runs: int,
+    min_vehicles: int,
+    caps: Sequence[float] = SENSITIVITY_DISTANCE_KM,
+) -> dict[str, Any]:
+    """Does the verdict survive a tighter join tolerance?
+
+    ``04-methodology.md`` requires this and says what it is for: a result that moves when
+    the distance-to-grid-point cap moves is a result about the cap. The ``useful_proxy``
+    verdict is recomputed at each one, because a verdict that flips between 10 km and
+    30 km is the finding, not a footnote to it.
+
+    The k-threshold is re-applied at every cap. A tighter cap drops windows, and dropping
+    windows drops runs and vehicles with them, so a subset that was publishable at 30 km
+    can fall below the floor at 10 km -- and would otherwise be published anyway, by a
+    gate that only ever ran on the full set.
+
+    No bootstrap here. The question is whether the point estimate and the verdict move,
+    and 2,000 resamples at every cap would cost minutes to answer a question the point
+    estimate already answers.
+    """
+    out: dict[str, Any] = {}
+    for cap in caps:
+        subset = {
+            stratum: [
+                row
+                for row in rows
+                if row.get("distance_to_grid_point_km") is not None
+                and row["distance_to_grid_point_km"] <= cap
+            ]
+            for stratum, rows in by_stratum.items()
+        }
+        subset = {stratum: rows for stratum, rows in subset.items() if rows}
+        thick, suppressed = publishable_regimes(
+            subset, min_runs=min_runs, min_vehicles=min_vehicles
+        )
+        regimes: dict[str, Any] = {}
+        for stratum in thick:
+            rows = subset[stratum]
+            series = series_arrays(rows, level)
+            magnitude = bland_altman(series["vector_difference_magnitude"])
+            upper = magnitude["limits_of_agreement"][1]
+            regimes[stratum] = {
+                "n_runs": len({r["run_id"] for r in rows}),
+                "n_vehicles": len({r["vehicle_uuid"] for r in rows}),
+                "n_windows": len(rows),
+                "bias_u": bland_altman(series["u"])["bias"],
+                "bias_v": bland_altman(series["v"])["bias"],
+                "vector_difference_loa_upper": upper,
+                "useful_proxy": bool(upper <= USEFUL_PROXY_LOA_MS),
+            }
+        out[str(cap)] = {"regimes": regimes, "suppressed": suppressed}
+    return out
+
+
+def temporal_mismatch_report(rows: Sequence[dict]) -> dict[str, Any]:
+    """What the temporal half of the mandated sensitivity analysis can actually say.
+
+    It cannot be swept, and saying so is the honest result. A window is the ERA5 hour that
+    begins at its stamp, the field is instantaneous at that stamp, and ``align`` measures
+    the mismatch against the window's *centre* -- so every window in the corpus is offset
+    by exactly -1800 s by construction. Varying a tolerance over a constant would produce
+    a table of identical rows and call it a sensitivity analysis.
+
+    What it is instead is a systematic: the reanalysis value sits at the start of the
+    interval the onboard estimate was averaged over, not at its middle, so any within-hour
+    trend in the wind enters the comparison as bias rather than as spread. That belongs in
+    the limitations, and this function's job is to prove the constancy rather than assert
+    it -- if a value other than -1800 ever appears, the claim is wrong and the report says
+    so instead of hiding it.
+    """
+    observed = sorted({row["temporal_mismatch_s"] for row in rows})
+    return {
+        "distinct_values_s": observed,
+        "is_constant_by_construction": len(observed) == 1,
+        "note": "A window is the hour beginning at its stamp and the field is "
+        "instantaneous there, so the mismatch against the window centre is -1800 s for "
+        "every window. It is a property of the design, not of the data, and cannot be "
+        "swept. The reanalysis value therefore sits at the start of the averaging "
+        "interval rather than its centre; see docs/06-limitations.md.",
+    }
+
+
 def publishable_regimes(
     by_stratum: dict[str, list[dict]], *, min_runs: int, min_vehicles: int
 ) -> tuple[list[str], dict[str, dict[str, int]]]:
@@ -462,6 +553,7 @@ def main(argv: list[str] | None = None) -> int:
             "useful_proxy_loa_ms": USEFUL_PROXY_LOA_MS,
             "min_runs_per_regime": args.min_runs,
             "min_vehicles_per_regime": args.min_vehicles,
+            "sensitivity_distance_km": list(SENSITIVITY_DISTANCE_KM),
             "bootstrap_resamples": args.resamples,
             "frame_sizes": FRAME_SIZES,
             "processing_version": PROCESSING_VERSION,
@@ -552,6 +644,16 @@ def main(argv: list[str] | None = None) -> int:
         },
         "validation_artifacts": len(artifacts),
         "suppressed_strata": suppressed,
+        "tolerance_sensitivity": {
+            level: tolerance_sensitivity(
+                {s: by_stratum[s] for s in thick},
+                level=level,
+                min_runs=args.min_runs,
+                min_vehicles=args.min_vehicles,
+            )
+            for level in VERTICAL_REFERENCES
+        },
+        "temporal_mismatch": temporal_mismatch_report(rows),
         "direction_sweep": sweep,
         "estimator_relative_ratio": ratios,
         "useful_proxy": {a["validation_model_id"]: a["useful_proxy"] for a in artifacts},

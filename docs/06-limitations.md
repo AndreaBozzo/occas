@@ -23,6 +23,17 @@ work is added here the day it is discovered.
   within 2-3 months. Results record which was retrieved and when.
 - METAR, where used, is a 10 m measurement over open flat terrain by construction, and
   is comparable only under stated restricted conditions.
+- **The reanalysis value sits at the start of the hour the onboard estimate is averaged
+  over, not at its centre.** A window is the ERA5 hour beginning at its stamp and the
+  field is instantaneous there, so the temporal mismatch against the window centre is
+  −1800 s for *every* window in the corpus. It is a constant of the design rather than a
+  property of the data, which has two consequences worth stating plainly: the
+  sensitivity analysis `04-methodology.md` mandates cannot be run on it — there is
+  nothing to vary — and any within-hour trend in the wind enters the comparison as bias
+  rather than as spread. `analysis/h1_agreement/agreement.py` proves the constancy from
+  the rows rather than asserting it, so a window carrying any other value contradicts
+  this paragraph instead of being absorbed by it. The distance-to-grid-point half of the
+  same analysis does vary and is swept from 10 km to the declared 30 km tolerance.
 
 ## Proxies
 

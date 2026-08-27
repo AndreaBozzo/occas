@@ -295,3 +295,66 @@ def test_a_cell_clearing_both_halves_is_published() -> None:
 
     assert thick == [WITHIN]
     assert suppressed == {}
+
+
+def _sensitivity_rows(stratum: str, *, near: int, far: int) -> list[dict]:
+    """``near`` windows inside 10 km that agree, ``far`` windows past it that do not."""
+    rows = []
+    for i in range(near):
+        row = _row(run_id=f"{stratum}-near-{i}", stratum=stratum, era5=(0.2, 0.0))
+        rows.append({**row, "vehicle_uuid": f"veh{i}", "distance_to_grid_point_km": 5.0})
+    for i in range(far):
+        row = _row(run_id=f"{stratum}-far-{i}", stratum=stratum, era5=(8.0, 0.0))
+        rows.append({**row, "vehicle_uuid": f"far{i}", "distance_to_grid_point_km": 25.0})
+    return rows
+
+
+def test_a_verdict_that_depends_on_the_join_tolerance_is_visible_as_one() -> None:
+    """04-methodology.md: if the result moves under plausible tolerance choices, that is
+    the finding.
+
+    The fixture is built so it does move: windows inside 10 km agree to 0.2 m/s and
+    windows out at 25 km disagree by 8. A single number at the declared 30 km tolerance
+    would report one verdict and conceal that it belongs to the far windows.
+    """
+    by_stratum = {WITHIN: _sensitivity_rows(WITHIN, near=30, far=30)}
+    table = agreement.tolerance_sensitivity(
+        by_stratum, level="era5_100m", min_runs=20, min_vehicles=10
+    )
+    assert table["10.0"]["regimes"][WITHIN]["useful_proxy"] is True
+    assert table["30.0"]["regimes"][WITHIN]["useful_proxy"] is False
+    assert table["10.0"]["regimes"][WITHIN]["n_windows"] == 30
+    assert table["30.0"]["regimes"][WITHIN]["n_windows"] == 60
+
+
+def test_a_tighter_tolerance_reapplies_the_publication_threshold() -> None:
+    """Dropping windows drops runs and vehicles with them.
+
+    A cell that clears 20 runs and 10 vehicles at 30 km need not clear them at 10 km, and
+    a gate that only ever ran on the full set would publish the tightened cell anyway.
+    """
+    by_stratum = {WITHIN: _sensitivity_rows(WITHIN, near=4, far=40)}
+    table = agreement.tolerance_sensitivity(
+        by_stratum, level="era5_100m", min_runs=20, min_vehicles=10
+    )
+    assert table["10.0"]["regimes"] == {}
+    assert table["10.0"]["suppressed"][WITHIN] == {"n_runs": 4, "n_vehicles": 4}
+    assert WITHIN in table["30.0"]["regimes"]
+
+
+def test_the_temporal_mismatch_is_reported_as_a_constant_rather_than_swept() -> None:
+    """It is -1800 s by construction, so a sweep over it would be a table of copies.
+
+    The report proves the constancy from the rows rather than asserting it, so that a
+    window carrying some other value contradicts the claim instead of being absorbed
+    by it.
+    """
+    rows = [{"temporal_mismatch_s": -1800.0} for _ in range(50)]
+    report = agreement.temporal_mismatch_report(rows)
+    assert report["distinct_values_s"] == [-1800.0]
+    assert report["is_constant_by_construction"] is True
+
+    rows.append({"temporal_mismatch_s": -900.0})
+    contradicted = agreement.temporal_mismatch_report(rows)
+    assert contradicted["is_constant_by_construction"] is False
+    assert contradicted["distinct_values_s"] == [-1800.0, -900.0]
