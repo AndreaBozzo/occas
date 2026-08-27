@@ -415,5 +415,5 @@
     "h1-all_fixed_wing_or_vtol-era5_10m-sample": false,
     "h1-all_fixed_wing_or_vtol-era5_10m-reweighted": false
   },
-  "note": "Neither source is ground truth; these are limits of agreement between measurement methods, and differences are era5 minus onboard. The 3.0 m s-1 usefulness band is asserted, not cited: adr/0015 and 06-limitations.md."
+  "note": "Neither source is ground truth. These are limits of agreement between two measurement methods; differences are formed as era5 minus onboard. The 3.0 m s-1 usefulness band is asserted rather than cited: see adr/0015 and docs/06-limitations.md."
 }
