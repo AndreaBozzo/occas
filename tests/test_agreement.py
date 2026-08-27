@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 import pytest
 
 from analysis.h1_agreement import agreement
@@ -159,13 +160,56 @@ def test_the_bootstrap_resamples_runs_and_not_windows() -> None:
     assert high == pytest.approx(10.0, abs=0.2)
 
 
-def test_design_weights_use_the_realised_runs_not_the_drawn_ones() -> None:
-    """N_h / n_h on the runs that survived, because dropout is not random (adr/0014)."""
+def test_design_weights_are_the_inverse_inclusion_probability() -> None:
+    """N_h / n_drawn_h, not N_h / n_usable_h (adr/0016 correction 1).
+
+    A usable run's probability of having been drawn does not depend on how many other
+    runs turned out usable. Dividing by the usable count instead forces each stratum's
+    total weight back to its full frame size, which targets the pre-usability frame -- a
+    population adr/0014 explicitly says is not the estimand.
+    """
     rows = [_row(run_id=f"w{i}", stratum=WITHIN) for i in range(4)]
     rows += [_row(run_id=f"o{i}", stratum=OLDER) for i in range(2)]
     weights = agreement.design_weights(rows)
-    assert weights[0] == pytest.approx(agreement.FRAME_SIZES[WITHIN] / 4)
-    assert weights[-1] == pytest.approx(agreement.FRAME_SIZES[OLDER] / 2)
+
+    drawn = agreement.N_DRAWN_PER_STRATUM
+    assert weights[0] == pytest.approx(agreement.FRAME_SIZES[WITHIN] / drawn)
+    assert weights[-1] == pytest.approx(agreement.FRAME_SIZES[OLDER] / drawn)
+    # The weight does not move when the usable count does, which is the whole correction.
+    more = rows + [_row(run_id=f"w{i}", stratum=WITHIN) for i in range(4, 40)]
+    assert agreement.design_weights(more)[0] == pytest.approx(weights[0])
+
+
+def test_unequal_usability_changes_which_population_is_pooled() -> None:
+    """The test the old one could not be: it discriminates the two weightings.
+
+    With equal usable counts per stratum both formulas give the same *relative* weights,
+    so the previous fixture passed either way and guarded nothing. Usability actually
+    differed -- 486 of 800 against 385 of 800 -- and only then do they diverge. Under
+    N_h/n_usable the pooled mass is the frame's 62.9/37.1; under N_h/n_drawn it is the
+    estimated usable population's 57.3/42.7.
+    """
+    rows = [_row(run_id=f"o{i}", stratum=OLDER, era5=(10.0, 0.0)) for i in range(385)]
+    rows += [_row(run_id=f"w{i}", stratum=WITHIN, era5=(0.0, 0.0)) for i in range(486)]
+    series = agreement.series_arrays(rows, "era5_100m")
+
+    implied = agreement.implied_usable_population(rows)
+    older_share = implied[OLDER] / sum(implied.values())
+    assert older_share == pytest.approx(0.5734, abs=5e-4)
+
+    pooled = agreement.bland_altman(series["u"], agreement.design_weights(rows))["bias"]
+    assert pooled == pytest.approx(10.0 * older_share, abs=1e-9)
+
+    # What the superseded weighting would have produced, for contrast.
+    usable = {s: len({r["run_id"] for r in rows if r["stratum"] == s}) for s in (OLDER, WITHIN)}
+    old_style = np.array(
+        [agreement.FRAME_SIZES[r["stratum"]] / usable[r["stratum"]] for r in rows], dtype=float
+    )
+    frame_share = agreement.FRAME_SIZES[OLDER] / sum(agreement.FRAME_SIZES.values())
+    assert agreement.bland_altman(series["u"], old_style)["bias"] == pytest.approx(
+        10.0 * frame_share, abs=1e-9
+    )
+    assert older_share < frame_share
 
 
 def test_reweighting_moves_the_pooled_number_toward_the_undersampled_stratum() -> None:
@@ -383,3 +427,87 @@ def test_a_window_missing_an_era5_component_is_counted_not_crashed_on() -> None:
 
     assert [row["run_id"] for row in complete] == ["good"]
     assert coverage == {"windows_without_complete_era5": 2}
+
+
+def test_a_magnitude_is_not_summarised_with_a_negative_lower_limit() -> None:
+    """adr/0016 correction 2, as the arithmetic that exposed it.
+
+    |dv| is hypot(du, dv) and cannot be negative. On the published run, mean +/- 1.96 sd
+    put the lower limit at -3.043 m/s and not one of the 1,059 windows fell below it: the
+    lower half of that interval described nothing. Empirical quantiles are bounded by the
+    data because they are read from it.
+    """
+    rows = [_row(run_id=f"r{i}", era5=(float(i % 9), 0.0)) for i in range(90)]
+    series = agreement.series_arrays(rows, "era5_100m")
+    magnitude = series["vector_difference_magnitude"]
+
+    classical_lower = magnitude.mean() - 1.96 * magnitude.std(ddof=1)
+    assert classical_lower < 0, "fixture must reproduce the impossible-limit case"
+    assert magnitude.min() >= 0
+
+    limits = agreement.magnitude_limits(magnitude)
+    assert limits["p50"] <= limits["p95"] <= limits["p97_5"]
+    assert limits["p50"] >= 0
+    assert limits["p97_5"] <= magnitude.max()
+
+
+def test_weighted_quantile_converges_on_numpy_at_realistic_sample_sizes() -> None:
+    """The weighted form must reduce to the ordinary one where H1 actually reads it.
+
+    It uses the (i - 0.5)/n plotting position and np.percentile uses (i - 1)/(n - 1), so
+    the two differ at small n -- about 0.9 on eight points -- and converge as the sample
+    grows. H1 reports over roughly a thousand windows, where the difference is immaterial.
+    Asserting an exact match would assert something false.
+    """
+    rng = np.random.default_rng(11)
+    values = np.abs(rng.normal(3.0, 2.0, size=2000))
+    for q in (0.5, 0.9, 0.95, 0.975):
+        assert agreement.weighted_quantile(values, q, None) == pytest.approx(
+            float(np.percentile(values, q * 100)), abs=0.05
+        )
+
+    small = np.array([0.4, 1.1, 2.2, 3.9, 5.0, 7.7, 9.1, 11.4], dtype=float)
+    assert agreement.weighted_quantile(small, 0.9, None) != pytest.approx(
+        float(np.percentile(small, 90)), abs=0.35
+    ), "the two definitions are expected to differ at small n; if they stop, say so here"
+
+    # Weight concentrated on the smallest value must pull the median toward it.
+    weights = np.ones_like(small)
+    weights[0] = 40.0
+    assert agreement.weighted_quantile(small, 0.5, weights) < agreement.weighted_quantile(
+        small, 0.5, None
+    )
+
+
+def test_direction_is_summarised_circularly() -> None:
+    """adr/0016 correction 3: wrapped angles are not real numbers.
+
+    Two windows at +170 and -170 degrees are 20 degrees apart across the wrap point. A
+    linear mean of the wrapped values is 0, which points the wrong way; the circular mean
+    is 180, and the resultant length reports how concentrated they are.
+    """
+    rows = [
+        _row(run_id="a", onboard=(5.0, 0.0), era5=(-4.92, 0.87)),
+        _row(run_id="b", onboard=(5.0, 0.0), era5=(-4.92, -0.87)),
+    ]
+    stats = agreement.direction_statistics(rows, "era5_100m", 2.0)
+
+    assert stats["n_defined"] == 2
+    assert abs(stats["circular_mean_deg"]) == pytest.approx(180.0, abs=1.0)
+    assert stats["circular_resultant_length"] == pytest.approx(0.985, abs=0.02)
+    assert stats["mean_absolute_deg"] == pytest.approx(170.0, abs=1.0)
+    assert "circular_sd_deg" in stats
+
+
+def test_one_window_per_run_removes_clustering_and_is_deterministic() -> None:
+    """The point estimates are computed over windows; this is the check that they do not
+    depend on runs that contributed more of them."""
+    rows = [_row(run_id="busy", era5=(float(i), 0.0)) for i in range(20)]
+    rows += [_row(run_id=f"quiet{i}", era5=(0.0, 0.0)) for i in range(5)]
+
+    drawn = agreement.one_window_per_run(rows, seed=3)
+    assert len(drawn) == 6
+    assert len({r["run_id"] for r in drawn}) == 6
+    assert [r["run_id"] for r in agreement.one_window_per_run(rows, seed=3)] == [
+        r["run_id"] for r in drawn
+    ]

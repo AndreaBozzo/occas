@@ -60,11 +60,12 @@
       "dispersion": 1.48
     },
     "vector_difference_magnitude": {
-      "bias": 1.9,
-      "limits_of_agreement": [
-        0.1,
-        4.4
-      ]
+      "mean": 1.9,
+      "dispersion": 1.4,
+      "p50": 1.6,
+      "p90": 3.7,
+      "p95": 4.1,
+      "p97_5": 4.4
     },
     "speed": {
       "bias": 0.0,
@@ -82,10 +83,12 @@
       "n_defined": 361,
       "n_undefined": 119,
       "mean_absolute_deg": 31.4,
-      "limits_of_agreement_deg": [
-        -78.0,
-        74.0
-      ]
+      "median_absolute_deg": 26.8,
+      "p90_absolute_deg": 68.2,
+      "p95_absolute_deg": 84.9,
+      "circular_mean_deg": -2.1,
+      "circular_resultant_length": 0.71,
+      "circular_sd_deg": 46.3
     },
     "unit": "m/s"
   },

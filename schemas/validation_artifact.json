@@ -163,52 +163,66 @@
         },
         "vector_difference_magnitude": {
           "type": "object",
+          "description": "Magnitude of the vector difference between the two estimates. Non-negative and right-skewed, so it is summarised by empirical quantiles rather than by mean +/- 1.96 sd, which returned an impossible negative lower limit on the 2026-08-27 run. See docs/adr/0016-pre-publication-corrections.md.",
           "required": [
-            "bias",
-            "limits_of_agreement"
+            "mean",
+            "p95",
+            "p97_5"
           ],
           "additionalProperties": false,
           "properties": {
-            "bias": {
+            "mean": {
               "type": "number",
-              "description": "Mean difference between the two estimates."
-            },
-            "bias_ci": {
-              "type": "array",
-              "minItems": 2,
-              "maxItems": 2,
-              "items": {
-                "type": "number"
-              }
-            },
-            "limits_of_agreement": {
-              "type": "array",
-              "minItems": 2,
-              "maxItems": 2,
-              "items": {
-                "type": "number"
-              },
-              "description": "Lower and upper limits of agreement."
-            },
-            "limits_ci": {
-              "type": "array",
-              "items": {
-                "type": "array",
-                "minItems": 2,
-                "maxItems": 2,
-                "items": {
-                  "type": "number"
-                }
-              }
+              "minimum": 0
             },
             "dispersion": {
               "type": [
                 "number",
                 "null"
               ]
+            },
+            "p50": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p90": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p95": {
+              "type": "number",
+              "minimum": 0
+            },
+            "p97_5": {
+              "type": "number",
+              "minimum": 0,
+              "description": "The limit useful_proxy is evaluated against."
+            },
+            "mean_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "p95_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "p97_5_ci": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
             }
-          },
-          "description": "Magnitude of the vector difference between the two estimates."
+          }
         },
         "speed": {
           "type": "object",
@@ -298,7 +312,55 @@
               "maxItems": 2,
               "items": {
                 "type": "number"
-              }
+              },
+              "description": "Superseded. A linear mean +/- 1.96 sd over wrapped angles treats a circular quantity as a real one; retained so that artifacts produced before 2026-08-27 remain valid. Use the absolute-error quantiles and the circular statistics below."
+            },
+            "median_absolute_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 180
+            },
+            "p90_absolute_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 180
+            },
+            "p95_absolute_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 180
+            },
+            "circular_mean_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": -180,
+              "maximum": 180
+            },
+            "circular_resultant_length": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 1
+            },
+            "circular_sd_deg": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
             }
           }
         },

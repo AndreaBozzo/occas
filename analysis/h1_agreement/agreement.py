@@ -36,6 +36,7 @@ import json
 import math
 from collections import defaultdict
 from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -60,11 +61,16 @@ BOOTSTRAP_RESAMPLES = 2000
 BOOTSTRAP_SEED = 20260827
 
 # adr/0014's frame, from the dbinfo dump pinned on 2026-08-20 -- the same file the draw
-# was made from. These are N_h; n_h is whatever the realised usable runs turn out to be.
+# was made from. These are N_h.
 FRAME_SIZES = {
     "fixed_wing_or_vtol|within_window": 6185,
     "fixed_wing_or_vtol|older": 10497,
 }
+
+# Runs drawn per stratum. The draw was 800/800 by design (adr/0014), and this is the
+# denominator of the inclusion probability, so it is the denominator of the design weight
+# -- see design_weights and adr/0016 correction 1.
+N_DRAWN_PER_STRATUM = 800
 
 # A regime thinner than this reports its stratum result alone and is not pooled into a
 # reweighted number, per adr/0014. The value is borrowed from adr/0009's publication
@@ -83,17 +89,77 @@ MIN_RUNS_PER_REGIME = 20
 # all, "raw or hashed", so only the cardinality leaves this module.
 MIN_VEHICLES_PER_REGIME = 10
 
+# Bands of the onboard estimator's own reported sigma, in m s-1. Round numbers chosen for
+# interpretability **after** the distribution was seen, which adr/0016 records: they are
+# manifest parameters and they define cells, not a decision threshold. No verdict moves
+# with them; useful_proxy is still adr/0015's 3.0 m s-1 band.
+SIGMA_BANDS = (0.5, 1.0)
+
 VERTICAL_REFERENCES = {
     "era5_100m": ("era5_100m_u", "era5_100m_v"),
     "era5_10m": ("era5_10m_u", "era5_10m_v"),
 }
 
 SERIES_KEYS = ("u", "v", "vector_difference_magnitude", "speed")
+# The keys a signed Bland-Altman analysis applies to. The vector difference magnitude is
+# deliberately not among them: it is non-negative and right-skewed, so it is summarised by
+# empirical quantiles instead (adr/0016 correction 2).
+LOA_KEYS = ("u", "v", "speed")
+MAGNITUDE_KEY = "vector_difference_magnitude"
 
 # ``04-methodology.md`` makes this mandatory rather than optional: "if the result moves
 # under plausible tolerance choices, that is the finding." 30 km is the declared spatial
 # tolerance, so the sweep runs from well inside it up to it.
 SENSITIVITY_DISTANCE_KM = (10.0, 15.0, 20.0, 30.0)
+
+
+def airframe_class(mav_type: str) -> str:
+    """Fixed-wing against VTOL, the split ``04-methodology.md`` declares as *airframe type*.
+
+    The draw contains one plain fixed-wing label and five VTOL variants -- standard,
+    tiltrotor, and three tailsitter spellings. They are grouped because the mechanism that
+    matters for a wind estimate is whether the airframe flies on a wing in cruise, and
+    because splitting five ways puts most cells under the publication floor.
+    """
+    return "fixed_wing" if mav_type.strip().lower() == "fixed wing" else "vtol"
+
+
+def season_of(when: datetime, lat: float) -> str:
+    """Meteorological season at the window, corrected for hemisphere.
+
+    The corpus is global, so a northern-hemisphere season label would put a January flight
+    in Australia in the same cell as one in Norway. Only the sign of the latitude is used
+    and only a season name is emitted; no coordinate leaves this function.
+    """
+    northern = ("DJF", "MAM", "JJA", "SON")[((when.month % 12) // 3)]
+    if lat >= 0:
+        return northern
+    return {"DJF": "JJA", "MAM": "SON", "JJA": "DJF", "SON": "MAM"}[northern]
+
+
+def sigma_band(row: dict) -> str:
+    """Which band the window's mean onboard sigma falls in."""
+    sigma = math.sqrt((row["onboard_variance_u"] + row["onboard_variance_v"]) / 2.0)
+    low, high = SIGMA_BANDS
+    if sigma < low:
+        return f"sigma_lt_{low}"
+    if sigma < high:
+        return f"sigma_{low}_to_{high}"
+    return f"sigma_ge_{high}"
+
+
+# The a priori axes from docs/04-methodology.md that the data on disk can cut. Firmware
+# version is not carried by the sampling frame, and altitude AGL needs a DEM this project
+# has not built -- both are named in the summary as declared-but-not-cut rather than
+# quietly dropped.
+REGIME_AXES: dict[str, Any] = {
+    "airframe": lambda row: row["airframe_class"],
+    # A topic is not a sensor. This is "the log carries an airspeed topic", which is a
+    # proxy for airspeed sensing and is named as one wherever it is reported.
+    "airspeed_topic": lambda row: "present" if row["has_airspeed_topic"] else "absent",
+    "estimator_sigma": sigma_band,
+    "season": lambda row: row["season"],
+}
 
 
 def wrap_degrees(angle: float) -> float:
@@ -134,6 +200,53 @@ def weighted_mean_and_sd(values: np.ndarray, weights: np.ndarray | None) -> tupl
     return mean, math.sqrt(float((weights * (values - mean) ** 2).sum() / denominator))
 
 
+def weighted_quantile(values: np.ndarray, q: float, weights: np.ndarray | None) -> float:
+    """The ``q``-th weighted quantile, by linear interpolation on the weighted CDF.
+
+    The plotting position is ``(i - 0.5) / n``, which is the usual choice for a weighted
+    quantile. ``np.percentile`` defaults to ``(i - 1) / (n - 1)``. Both are legitimate
+    estimators and they differ at small ``n`` -- by about 0.9 on eight points -- while
+    converging as the sample grows; at the ~1,000 windows H1 reports over the difference
+    is immaterial, and ``tests/test_agreement.py`` asserts the convergence rather than an
+    exact match that does not hold.
+    """
+    order = np.argsort(values)
+    v = np.asarray(values, dtype=float)[order]
+    w = np.ones_like(v) if weights is None else np.asarray(weights, dtype=float)[order]
+    cumulative = np.cumsum(w) - 0.5 * w
+    cumulative /= w.sum()
+    return float(np.interp(q, cumulative, v))
+
+
+def magnitude_limits(values: np.ndarray, weights: np.ndarray | None = None) -> dict[str, Any]:
+    """Empirical upper limits for a non-negative, right-skewed error magnitude.
+
+    **Introduced on 2026-08-27, after H1 had been run** (``adr/0016`` correction 2). The
+    vector difference magnitude is ``hypot(du, dv)`` and cannot be negative, so
+    ``mean +/- 1.96 sd`` is not a limit of agreement on it: on the published run that
+    construction returned a lower limit of -3.043 m s-1 for a quantity whose observed
+    minimum was 0.034, and no window at all fell below it. The upper half was close to the
+    empirical 97.5th percentile, but by coincidence of this sample rather than by
+    construction.
+
+    ``useful_proxy`` is evaluated against ``p97_5``, which is the same 95% coverage the
+    upper limit of agreement was intended to express, read off the distribution instead of
+    assumed from it. The declared 3.0 m s-1 band is unchanged.
+    """
+    array = np.asarray(values, dtype=float)
+    if array.size == 0:
+        raise ValueError("no windows: an agreement statistic over an empty regime is undefined")
+    mean, dispersion = weighted_mean_and_sd(array, weights)
+    return {
+        "mean": mean,
+        "dispersion": dispersion,
+        "p50": weighted_quantile(array, 0.50, weights),
+        "p90": weighted_quantile(array, 0.90, weights),
+        "p95": weighted_quantile(array, 0.95, weights),
+        "p97_5": weighted_quantile(array, 0.975, weights),
+    }
+
+
 def bland_altman(values: np.ndarray, weights: np.ndarray | None = None) -> dict[str, Any]:
     """Bias and 95% limits of agreement for one difference series.
 
@@ -171,25 +284,36 @@ def series_arrays(rows: Sequence[dict], level: str) -> dict[str, np.ndarray]:
 
 
 def design_weights(rows: Sequence[dict]) -> np.ndarray:
-    """Design weight ``N_h / n_h`` per window, on the **realised usable** ``n_h``.
+    """Design weight ``N_h / n_drawn_h`` per window: the inverse inclusion probability.
 
-    On the realised count and not the drawn 800, because the runs that drop out of the
-    draw are not a random subset of it -- usability differs by stratum, 72% against 52%
-    (``adr/0014``).
+    **Corrected on 2026-08-27, after H1 had been run** (``adr/0016`` correction 1). This
+    previously divided by the *usable* count, which forces each stratum's total weight
+    back to its full frame size ``N_h`` and therefore weights the pooled statistic by the
+    composition of the pre-usability frame -- 62.9%/37.1%. ``adr/0014`` states the estimand
+    is the usable subpopulation, so that was the wrong target.
 
-    Computed once, from the data as it stands, and then held fixed through the bootstrap.
-    A resample draws ``n_h`` runs with replacement and so reproduces the design's own
-    sample size; recomputing the weight from the *distinct* runs a replicate happens to
-    contain -- about 63% of them -- would inflate it by half and make every replicate
-    weight a different population.
+    A usable run's inclusion probability is unaffected by how many other runs turned out
+    usable: it is ``n_drawn_h / N_h``, so the weight is ``N_h / n_drawn_h``. Restricting to
+    the usable domain is then done by simply not weighting up the runs that are not in it,
+    and the implied usable population is ``N_h * n_usable_h / n_drawn_h`` -- 57.3%/42.7%
+    over about 8,809 runs.
+
+    Constant within a stratum, so it is also constant through the bootstrap, which draws
+    ``n_h`` runs with replacement and reproduces the design's own sample size.
     """
-    realised = {
-        stratum: len({r["run_id"] for r in rows if r["stratum"] == stratum})
-        for stratum in {r["stratum"] for r in rows}
-    }
     return np.array(
-        [FRAME_SIZES[row["stratum"]] / realised[row["stratum"]] for row in rows], dtype=float
+        [FRAME_SIZES[row["stratum"]] / N_DRAWN_PER_STRATUM for row in rows], dtype=float
     )
+
+
+def implied_usable_population(rows: Sequence[dict]) -> dict[str, float]:
+    """``N_h * n_usable_h / n_drawn_h`` per stratum: what the pooled estimate describes."""
+    return {
+        stratum: FRAME_SIZES[stratum]
+        * len({r["run_id"] for r in rows if r["stratum"] == stratum})
+        / N_DRAWN_PER_STRATUM
+        for stratum in sorted({r["stratum"] for r in rows})
+    }
 
 
 def direction_statistics(rows: Sequence[dict], level: str, threshold: float) -> dict[str, Any]:
@@ -219,13 +343,32 @@ def direction_statistics(rows: Sequence[dict], level: str, threshold: float) -> 
             "limits_of_agreement_deg": None,
         }
     array = np.array(defined, dtype=float)
-    mean, dispersion = weighted_mean_and_sd(array, None)
+    absolute = np.abs(array)
+    # Circular mean and resultant length, not a linear mean and standard deviation.
+    # **Changed on 2026-08-27, after H1 had been run** (adr/0016 correction 3): the wrapped
+    # angles were being summarised with mean +/- 1.96 sd, which treats a circular quantity
+    # as a real one. mean_absolute_deg is unaffected -- it is a mean of |angle| on [0, 180]
+    # and was always a valid summary -- so it stays, and the limits are replaced by
+    # quantiles of absolute angular error, which is what a reader of this table wants.
+    radians = np.radians(array)
+    resultant = float(np.hypot(np.sin(radians).mean(), np.cos(radians).mean()))
     return {
         "speed_threshold_ms": threshold,
         "n_defined": len(defined),
         "n_undefined": undefined,
-        "mean_absolute_deg": float(np.abs(array).mean()),
-        "limits_of_agreement_deg": [mean - LOA_Z * dispersion, mean + LOA_Z * dispersion],
+        "mean_absolute_deg": float(absolute.mean()),
+        "median_absolute_deg": float(np.median(absolute)),
+        "p90_absolute_deg": float(np.percentile(absolute, 90)),
+        "p95_absolute_deg": float(np.percentile(absolute, 95)),
+        "circular_mean_deg": float(
+            np.degrees(np.arctan2(np.sin(radians).mean(), np.cos(radians).mean()))
+        ),
+        "circular_resultant_length": resultant,
+        # 1 - R is the circular variance; sqrt(-2 ln R) is the circular standard deviation
+        # in radians, which is the dispersion measure a circular statistic actually has.
+        "circular_sd_deg": float(np.degrees(math.sqrt(-2.0 * math.log(resultant))))
+        if resultant > 0
+        else None,
     }
 
 
@@ -261,6 +404,23 @@ def estimator_relative_ratio(rows: Sequence[dict], level: str) -> dict[str, Any]
     return out
 
 
+def one_window_per_run(rows: Sequence[dict], seed: int = BOOTSTRAP_SEED) -> list[dict]:
+    """One window drawn at random per run, removing within-run clustering entirely.
+
+    Added on 2026-08-27 after H1 had been run (``adr/0016``). The bootstrap already
+    resamples runs, so the *interval* accounts for clustering, but the point estimates are
+    computed over all windows as though they were one difference distribution. Clustering
+    here is shallow -- 1,059 windows over 871 runs, about 1.22 per run -- so the effect is
+    expected to be small, which is exactly why reporting it is cheap and settles the
+    question rather than arguing about it.
+    """
+    rng = np.random.default_rng(seed)
+    by_run: dict[str, list[dict]] = defaultdict(list)
+    for row in rows:
+        by_run[row["run_id"]].append(row)
+    return [run_rows[int(rng.integers(0, len(run_rows)))] for run_rows in by_run.values()]
+
+
 def _run_indices_by_stratum(rows: Sequence[dict]) -> dict[str, list[np.ndarray]]:
     """Row positions of each run, grouped by the stratum that run was drawn from."""
     positions: dict[str, list[int]] = defaultdict(list)
@@ -294,8 +454,9 @@ def bootstrap(
     runs_by_stratum = _run_indices_by_stratum(rows)
     rng = np.random.default_rng(seed)
     draws: dict[str, dict[str, list[float]]] = {
-        key: {"bias": [], "loa_lower": [], "loa_upper": []} for key in SERIES_KEYS
+        key: {"bias": [], "loa_lower": [], "loa_upper": []} for key in LOA_KEYS
     }
+    magnitude: dict[str, list[float]] = {"mean": [], "p95": [], "p97_5": []}
 
     for _ in range(resamples):
         parts = []
@@ -304,13 +465,16 @@ def bootstrap(
             parts.extend(runs[index] for index in picked)
         index = np.concatenate(parts)
         resampled_weights = None if weights is None else weights[index]
-        for key in SERIES_KEYS:
+        for key in LOA_KEYS:
             statistic = bland_altman(series[key][index], resampled_weights)
             draws[key]["bias"].append(statistic["bias"])
             draws[key]["loa_lower"].append(statistic["limits_of_agreement"][0])
             draws[key]["loa_upper"].append(statistic["limits_of_agreement"][1])
+        limits = magnitude_limits(series[MAGNITUDE_KEY][index], resampled_weights)
+        for name in magnitude:
+            magnitude[name].append(limits[name])
 
-    return {
+    out: dict[str, dict[str, Any]] = {
         key: {
             "bias_ci": _percentiles(draws[key]["bias"]),
             "limits_ci": [
@@ -318,8 +482,10 @@ def bootstrap(
                 _percentiles(draws[key]["loa_upper"]),
             ],
         }
-        for key in SERIES_KEYS
+        for key in LOA_KEYS
     }
+    out[MAGNITUDE_KEY] = {f"{name}_ci": _percentiles(values) for name, values in magnitude.items()}
+    return out
 
 
 def _percentiles(values: Sequence[float]) -> list[float]:
@@ -343,8 +509,9 @@ def regime_artifact(
     weights = design_weights(rows) if weighted else None
     series = series_arrays(rows, level)
     statistics: dict[str, Any] = {"unit": "m s-1"}
-    for key in SERIES_KEYS:
+    for key in LOA_KEYS:
         statistics[key] = bland_altman(series[key], weights)
+    statistics[MAGNITUDE_KEY] = magnitude_limits(series[MAGNITUDE_KEY], weights)
     statistics["direction"] = direction_statistics(rows, level, direction_threshold)
 
     for key, interval in bootstrap(
@@ -352,11 +519,12 @@ def regime_artifact(
     ).items():
         statistics[key].update(interval)
 
-    # adr/0015: the verdict is the absolute band. The estimator-relative ratio is reported
-    # alongside it in the summary and is deliberately not folded into this boolean, since a
-    # regime may satisfy one criterion and fail the other, and that disagreement is a
-    # reported result.
-    upper_loa = statistics["vector_difference_magnitude"]["limits_of_agreement"][1]
+    # adr/0015: the verdict is the absolute band, and adr/0016 correction 2 applies it to
+    # the empirical 97.5th percentile rather than to mean + 1.96 sd. Same declared band,
+    # same intended 95% coverage, read off the distribution instead of assumed from it.
+    # The estimator-relative ratio is reported alongside in the summary and deliberately
+    # not folded into this boolean.
+    upper_limit = statistics[MAGNITUDE_KEY]["p97_5"]
 
     return {
         "validation_model_id": f"h1-{label}-{level}-{'reweighted' if weighted else 'sample'}",
@@ -367,7 +535,7 @@ def regime_artifact(
         "n_windows": len(rows),
         "statistics": statistics,
         "bootstrap": {"unit": "run", "n_resamples": resamples, "seed": seed},
-        "useful_proxy": bool(upper_loa <= USEFUL_PROXY_LOA_MS),
+        "useful_proxy": bool(upper_limit <= USEFUL_PROXY_LOA_MS),
         "manifest_id": manifest_id,
     }
 
@@ -414,15 +582,15 @@ def tolerance_sensitivity(
         for stratum in thick:
             rows = subset[stratum]
             series = series_arrays(rows, level)
-            magnitude = bland_altman(series["vector_difference_magnitude"])
-            upper = magnitude["limits_of_agreement"][1]
+            magnitude = magnitude_limits(series[MAGNITUDE_KEY])
+            upper = magnitude["p97_5"]
             regimes[stratum] = {
                 "n_runs": len({r["run_id"] for r in rows}),
                 "n_vehicles": len({r["vehicle_uuid"] for r in rows}),
                 "n_windows": len(rows),
                 "bias_u": bland_altman(series["u"])["bias"],
                 "bias_v": bland_altman(series["v"])["bias"],
-                "vector_difference_loa_upper": upper,
+                "vector_difference_p97_5": upper,
                 "useful_proxy": bool(upper <= USEFUL_PROXY_LOA_MS),
             }
         out[str(cap)] = {"regimes": regimes, "suppressed": suppressed}
@@ -518,7 +686,9 @@ def publishable_regimes(
     return thick, suppressed
 
 
-def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> list[dict]:
+def load_pairs(
+    pairs: Path, sample: Path, inventory: Path, excluded: exclusions.Exclusions
+) -> list[dict]:
     """Read the paired rows, attach each run's stratum, and drop excluded runs.
 
     This exclusion pass is not redundant with the one applied at retrieval. An objection
@@ -529,11 +699,20 @@ def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> li
     """
     strata: dict[str, str] = {}
     vehicles: dict[str, str] = {}
+    airframes: dict[str, str] = {}
     for line in sample.read_text(encoding="utf-8").splitlines():
         if line.strip():
             entry = json.loads(line)
             strata[entry["log_id"]] = entry["stratum"]
             vehicles[entry["log_id"]] = entry.get("vehicle_uuid") or ""
+            airframes[entry["log_id"]] = airframe_class(entry.get("mav_type") or "")
+
+    airspeed: dict[str, bool] = {}
+    for line in inventory.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            entry = json.loads(line)
+            topic = entry.get("topics", {}).get("airspeed") or {}
+            airspeed[entry["log_id"]] = bool(topic.get("present"))
 
     rows = []
     for line in pairs.read_text(encoding="utf-8").splitlines():
@@ -547,6 +726,9 @@ def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> li
         # Carried on the row so a regime can be counted against the k-threshold, and
         # never written out: every output of this module is built as a fresh dict.
         row["vehicle_uuid"] = vehicles.get(run_id, "")
+        row["airframe_class"] = airframes[run_id]
+        row["has_airspeed_topic"] = airspeed.get(run_id, False)
+        row["season"] = season_of(datetime.fromisoformat(row["window_start"]), row["lat"])
         rows.append(row)
     return rows
 
@@ -555,6 +737,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--pairs", type=Path, default=Path("data/h1-pairs.jsonl"))
     parser.add_argument("--sample", type=Path, default=Path("data/h1-sample.jsonl"))
+    parser.add_argument("--inventory", type=Path, default=Path("data/h1-inventory.jsonl"))
     parser.add_argument(
         "--artifacts", type=Path, default=Path("artifacts/h1-validation-artifacts.jsonl")
     )
@@ -566,7 +749,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     excluded = exclusions.load()
-    rows, coverage = with_complete_era5(load_pairs(args.pairs, args.sample, excluded))
+    rows, coverage = with_complete_era5(
+        load_pairs(args.pairs, args.sample, args.inventory, excluded)
+    )
     if not rows:
         raise SystemExit(f"{args.pairs} yielded no rows to compare")
 
@@ -586,6 +771,9 @@ def main(argv: list[str] | None = None) -> int:
             "min_runs_per_regime": args.min_runs,
             "min_vehicles_per_regime": args.min_vehicles,
             "sensitivity_distance_km": list(SENSITIVITY_DISTANCE_KM),
+            "sigma_bands_ms": list(SIGMA_BANDS),
+            "regime_axes": sorted(REGIME_AXES),
+            "regime_axes_declared_but_not_cut": ["firmware_version", "altitude_agl", "topography"],
             "bootstrap_resamples": args.resamples,
             "frame_sizes": FRAME_SIZES,
             "processing_version": PROCESSING_VERSION,
@@ -641,6 +829,50 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
 
+    # The predeclared operational-regime axes (adr/0016 correction 6). A regime cell spans
+    # both retention strata, so unlike a stratum result it does need the weighting
+    # argument, and both pooled forms are emitted for each cell. Cells below the
+    # publication floor are suppressed with their counts, per adr/0009.
+    regimes: dict[str, Any] = {}
+    for axis, classify in sorted(REGIME_AXES.items()):
+        cells: dict[str, list[dict]] = defaultdict(list)
+        for row in rows:
+            cells[classify(row)].append(row)
+        thick_cells, cell_suppressed = publishable_regimes(
+            cells, min_runs=args.min_runs, min_vehicles=args.min_vehicles
+        )
+        regimes[axis] = {
+            "cells": {
+                cell: {
+                    "n_runs": len({r["run_id"] for r in cells[cell]}),
+                    "n_vehicles": len({r["vehicle_uuid"] for r in cells[cell]}),
+                    "n_windows": len(cells[cell]),
+                }
+                for cell in thick_cells
+            },
+            "suppressed": cell_suppressed,
+        }
+        for level in VERTICAL_REFERENCES:
+            for cell in thick_cells:
+                for weighted in (False, True):
+                    artifacts.append(
+                        regime_artifact(
+                            cells[cell],
+                            label=f"{axis}={cell}",
+                            criteria={
+                                "axis": axis,
+                                "cell": cell,
+                                "airframe": "fixed_wing_or_vtol",
+                                "pooling": "reweighted" if weighted else "unweighted_sample",
+                            },
+                            level=level,
+                            weighted=weighted,
+                            manifest_id=manifest_id,
+                            resamples=args.resamples,
+                            seed=args.seed,
+                        )
+                    )
+
     for artifact in artifacts:
         validate(artifact, "validation_artifact.json")
 
@@ -659,6 +891,27 @@ def main(argv: list[str] | None = None) -> int:
             }
             ratios[key] = estimator_relative_ratio(by_stratum[stratum], level)
 
+    # adr/0016: the bootstrap already resamples runs, so the interval accounts for
+    # clustering; this checks whether the point estimates depend on runs that contributed
+    # more windows than others. Clustering is shallow here, so a large shift would be a
+    # surprise -- which is the point of measuring rather than asserting it.
+    single = one_window_per_run(rows, seed=args.seed)
+    one_window_summary = {
+        "n_runs": len({r["run_id"] for r in single}),
+        "n_windows": len(single),
+    }
+    for level in VERTICAL_REFERENCES:
+        full = series_arrays(rows, level)
+        drawn = series_arrays(single, level)
+        one_window_summary[level] = {
+            "bias_u_all_windows": bland_altman(full["u"])["bias"],
+            "bias_u_one_per_run": bland_altman(drawn["u"])["bias"],
+            "bias_v_all_windows": bland_altman(full["v"])["bias"],
+            "bias_v_one_per_run": bland_altman(drawn["v"])["bias"],
+            "p97_5_all_windows": magnitude_limits(full[MAGNITUDE_KEY])["p97_5"],
+            "p97_5_one_per_run": magnitude_limits(drawn[MAGNITUDE_KEY])["p97_5"],
+        }
+
     summary = {
         "n_runs": len({r["run_id"] for r in rows}),
         "n_windows": len(rows),
@@ -676,6 +929,14 @@ def main(argv: list[str] | None = None) -> int:
         },
         "validation_artifacts": len(artifacts),
         "suppressed_strata": suppressed,
+        "regimes": regimes,
+        "regime_axes_declared_but_not_cut": {
+            "firmware_version": "not carried by the sampling frame",
+            "altitude_agl": "needs a DEM this project has not built; height above takeoff "
+            "is the available proxy and requires a pass over the converted runs",
+            "topography": "same DEM dependency",
+        },
+        "one_window_per_run": one_window_summary,
         **coverage,
         "tolerance_sensitivity": {
             level: tolerance_sensitivity(
