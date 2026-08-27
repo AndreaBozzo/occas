@@ -3,194 +3,190 @@
 Every figure on this page is emitted by `analysis/h1_agreement/agreement.py` into
 [`artifacts/h1-agreement.json`](../artifacts/h1-agreement.json) and
 [`artifacts/h1-validation-artifacts.jsonl`](../artifacts/h1-validation-artifacts.jsonl),
-attested by manifest `artifacts/manifests/6126a705-a271-4f69-9886-ef143981bd42.json`.
-None is computed elsewhere or transcribed by hand.
+attested by manifest `artifacts/manifests/d416fcf4-1ba3-48e2-b3f3-eb75a1168daf.json`. None is computed elsewhere
+or transcribed by hand.
+
+> **Status.** These are the numbers after the corrections in
+> [`adr/0016`](adr/0016-pre-publication-corrections.md), which were found in review
+> *after* H1 had been run and are labelled post-hoc there. The estimators changed; no
+> decision threshold did. One robustness analysis — the time-aligned rerun — is still
+> outstanding and is noted at the end.
 
 ## The question, and what was fixed before it was answered
 
-> In which vehicle, estimator and operational conditions does ERA5 wind show useful
-> agreement with onboard PX4 wind estimates?
+> "In which vehicle, estimator and operational conditions does ERA5 wind show useful
+> agreement with onboard PX4 wind estimates?"
 
 **Neither source is ground truth** ([`adr/0003`](adr/0003-h1-is-agreement-not-calibration.md)).
 What follows are limits of agreement between two measurement methods. Differences are
-formed as `era5 - onboard`, so a positive bias indicates that ERA5 reads higher.
-
-Four decisions were recorded before any of these numbers existed, and each is the kind
-that could otherwise have been selected to suit the result:
+formed as `era5 - onboard`, so a positive bias means ERA5 reads higher.
 
 | Decision | Where | Fixed on |
 |---|---|---|
 | Vector components primary; direction circular; 100 m the declared vertical reference | [`adr/0006`](adr/0006-what-h1-compares.md) | 2026-08-20 |
 | Strata primary; pooled estimates reweighted; bootstrap by run within stratum | [`adr/0014`](adr/0014-what-population-h1-estimates-over.md) | 2026-08-26 |
-| Direction undefined below 2.0 m s⁻¹; `useful_proxy` at 3.0 m s⁻¹ on the upper limit | [`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) | 2026-08-27 |
+| Direction undefined below 2.0 m s⁻¹; `useful_proxy` at 3.0 m s⁻¹ | [`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) | 2026-08-27, before `build_pairs` finished |
 | Aggregate publication only, 20 runs and 10 vehicles per cell | [`adr/0009`](adr/0009-aggregate-only-for-positional-results.md) | 2026-08-24 |
+| *Corrections to the estimators, after the result was seen* | [`adr/0016`](adr/0016-pre-publication-corrections.md) | 2026-08-27, **post-hoc** |
 
 ## Realised sample
 
-Of a stratified draw of 1,600 fixed-wing/VTOL logs, 871 carry the wind topic, absolute
-time and global position that H1 requires. Those runs yield 1,059 ERA5-hour windows.
-No window was lost to an incomplete ERA5 read, and no stratum fell below the
-publication threshold.
+Of 1,600 fixed-wing/VTOL logs drawn 800 per retention stratum, 871 carry the wind topic,
+absolute time and global position H1 requires, yielding 1,059 ERA5-hour windows. No window
+was lost to an incomplete ERA5 read and no cell fell below the publication floor.
 
-| Stratum | Runs | Vehicles | Windows | Frame `N_h` | Design weight |
-|---|---:|---:|---:|---:|---:|
-| `older` | 385 | 384 | 468 | 10,497 | 27.26 |
-| `within_window` | 486 | 484 | 591 | 6,185 | 12.73 |
+| Stratum | Frame `N_h` | Drawn | Usable | Vehicles | Windows | Weight `N_h/n_drawn` | Implied usable |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `older` | 10,497 | 800 | 385 | 384 | 468 | 13.121 | 5,052 |
+| `within_window` | 6,185 | 800 | 486 | 484 | 591 | 7.731 | 3,757 |
 
-Design weights are `N_h / n_h` on the **realised** usable runs rather than the 800 drawn
-per stratum, because usability differs by stratum and the runs that drop out are not a
-random subset ([`adr/0014`](adr/0014-what-population-h1-estimates-over.md)).
+Implied usable population **8,809** runs, 57.3% `older`.
+
+The weight is the inverse inclusion probability `N_h / n_drawn_h`. A usable run's chance of
+having been drawn does not depend on how many other runs turned out usable, so dividing by
+the usable count would target the pre-usability frame instead of the population these
+statistics describe ([`adr/0016`](adr/0016-pre-publication-corrections.md) correction 1).
 
 ## Result
 
-**We find no evidence of a systematic component-wise offset between ERA5 and the
-onboard EKF2 estimate, and agreement is too imprecise for ERA5 to substitute for it.**
-`useful_proxy` is false in every regime, at both vertical references.
+**No evidence of a systematic component-wise offset, and agreement far too imprecise for
+ERA5 to substitute for the onboard estimate.** `useful_proxy` is false in every regime, at
+both vertical references, at every join tolerance.
 
-| Regime | Runs | Windows | Bias `u` | 95% CI | Bias `v` | 95% CI | \|Δ\| upper LoA | CI on that limit | Useful proxy |
-|---|---:|---:|---:|---|---:|---|---:|---|:--:|
-| `older` | 385 | 468 | +0.151 | [-0.094, +0.403] | +0.021 | [-0.261, +0.299] | 7.74 | [6.80, 8.74] | **no** |
-| `within_window` | 486 | 591 | -0.096 | [-0.326, +0.138] | +0.156 | [-0.145, +0.513] | 10.01 | [6.84, 13.73] | **no** |
-| pooled, unweighted | 871 | 1059 | +0.013 | [-0.157, +0.192] | +0.096 | [-0.117, +0.329] | 9.10 | [7.10, 11.79] | **no** |
-| pooled, reweighted | 871 | 1059 | +0.060 | [-0.123, +0.248] | +0.071 | [-0.138, +0.286] | 8.68 | [7.12, 10.78] | **no** |
+| Regime | Runs | Windows | Bias `u` | 95% CI | Bias `v` | 95% CI | \|Δv\| median | \|Δv\| p97.5 | CI on p97.5 | Useful proxy |
+|---|---:|---:|---:|---|---:|---|---:|---:|---|:--:|
+| `older` | 385 | 468 | +0.151 | [-0.094, +0.403] | +0.021 | [-0.261, +0.299] | 2.33 | 8.76 | [7.19, 11.01] | **no** |
+| `within_window` | 486 | 591 | -0.096 | [-0.326, +0.138] | +0.156 | [-0.145, +0.513] | 2.39 | 9.35 | [8.04, 11.78] | **no** |
+| pooled, unweighted | 871 | 1059 | +0.013 | [-0.157, +0.192] | +0.096 | [-0.117, +0.329] | 2.37 | 9.19 | [8.05, 10.82] | **no** |
+| pooled, reweighted | 871 | 1059 | +0.046 | [-0.132, +0.231] | +0.078 | [-0.132, +0.296] | 2.36 | 9.11 | [7.88, 10.82] | **no** |
 
-| Regime | Runs | Windows | Bias `u` | 95% CI | Bias `v` | 95% CI | \|Δ\| upper LoA | CI on that limit | Useful proxy |
-|---|---:|---:|---:|---|---:|---|---:|---|:--:|
-| `older` | 385 | 468 | -0.007 | [-0.229, +0.224] | -0.028 | [-0.290, +0.230] | 7.02 | [6.04, 8.04] | **no** |
-| `within_window` | 486 | 591 | -0.072 | [-0.286, +0.137] | +0.065 | [-0.222, +0.399] | 9.47 | [6.23, 13.24] | **no** |
-| pooled, unweighted | 871 | 1059 | -0.043 | [-0.199, +0.116] | +0.024 | [-0.168, +0.245] | 8.50 | [6.43, 11.27] | **no** |
-| pooled, reweighted | 871 | 1059 | -0.031 | [-0.200, +0.141] | +0.007 | [-0.182, +0.214] | 8.05 | [6.40, 10.25] | **no** |
+| Regime | Runs | Windows | Bias `u` | 95% CI | Bias `v` | 95% CI | \|Δv\| median | \|Δv\| p97.5 | CI on p97.5 | Useful proxy |
+|---|---:|---:|---:|---|---:|---|---:|---:|---|:--:|
+| `older` | 385 | 468 | -0.007 | [-0.229, +0.224] | -0.028 | [-0.290, +0.230] | 2.13 | 9.05 | [6.71, 10.46] | **no** |
+| `within_window` | 486 | 591 | -0.072 | [-0.286, +0.137] | +0.065 | [-0.222, +0.399] | 2.23 | 8.41 | [6.81, 10.85] | **no** |
+| pooled, unweighted | 871 | 1059 | -0.043 | [-0.199, +0.116] | +0.024 | [-0.168, +0.245] | 2.18 | 8.42 | [7.14, 10.19] | **no** |
+| pooled, reweighted | 871 | 1059 | -0.035 | [-0.194, +0.132] | +0.012 | [-0.172, +0.220] | 2.17 | 8.43 | [7.13, 10.07] | **no** |
 
-Two statements, and they are separate.
+**On the offset.** Every component bias interval includes zero, in every regime and at both
+references. This is a failure to reject a zero offset, not a demonstration that the offset
+is zero: the intervals are compatible with offsets up to roughly ±0.3–0.5 m s⁻¹, and no
+equivalence test was performed.
 
-**No systematic offset is detected.** Every component bias interval includes zero, in
-every regime and at both references. This is a failure to reject a zero offset, not a
-demonstration that the offset is zero: the intervals are compatible with offsets of up to
-roughly ±0.3–0.5 m s⁻¹, and no equivalence test was performed. What it does establish is
-that the disagreement reported below is dispersion rather than a detectable calibration
-difference.
+**On the dispersion.** The typical disagreement is a median vector difference of about
+2.4 m s⁻¹, and the 97.5th percentile is 8.8–9.4 m s⁻¹ against the 3.0 m s⁻¹ band declared
+in `adr/0015`. The bootstrap interval on that percentile does not approach 3.0 in any
+regime.
 
-**The dispersion is large.** Limits of agreement are approximately ±5 m s⁻¹ per
-component. The upper limit on the vector difference magnitude ranges from 7.02 to
-10.01 m s⁻¹ against the 3.0 m s⁻¹ band declared in
-[`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md), and the bootstrap
-interval on that limit does not approach 3.0 in any regime. The verdict is not marginal.
+The magnitude is summarised by empirical quantiles rather than by mean ± 1.96 SD. It is
+non-negative, so the classical construction returned a lower limit of −3.043 m s⁻¹ on this
+sample, below which not one of the 1,059 windows fell
+([`adr/0016`](adr/0016-pre-publication-corrections.md) correction 2). `useful_proxy` is
+evaluated against the 97.5th percentile — the same declared band and the same intended 95%
+coverage, read off the distribution instead of assumed from it.
 
-The mean vector difference is 2.99 to 3.06 m s⁻¹ at 100 m — that is, approximately equal
-to the band itself. Had the criterion been defined on the mean rather than on the upper
-limit of agreement, the result would read as borderline. The criterion was fixed on the
-upper limit before these numbers were computed, which is the reason that observation can
-be reported rather than debated.
+## Operational regimes
+
+The axes declared a priori in [`04-methodology.md`](04-methodology.md) that the corpus can
+cut. Every cell clears 20 runs and 10 distinct vehicles, so none is suppressed.
+
+| Axis | Cell | Runs | Vehicles | Windows | \|Δv\| median | \|Δv\| p97.5 | CI on p97.5 | Useful proxy |
+|---|---|---:|---:|---:|---:|---:|---|:--:|
+| `airframe` | `fixed_wing` | 419 | 415 | 504 | 2.45 | 10.12 | [7.87, 12.80] | **no** |
+| `airframe` | `vtol` | 452 | 452 | 555 | 2.32 | 8.54 | [7.58, 9.96] | **no** |
+| `airspeed_topic` | `absent` | 120 | 120 | 135 | 2.71 | 8.04 | [6.54, 12.67] | **no** |
+| `airspeed_topic` | `present` | 751 | 747 | 924 | 2.32 | 9.23 | [8.08, 10.72] | **no** |
+| `estimator_sigma` | `sigma_0.5_to_1.0` | 157 | 157 | 169 | 2.96 | 8.89 | [6.97, 11.72] | **no** |
+| `estimator_sigma` | `sigma_ge_1.0` | 53 | 53 | 54 | 4.28 | 26.62 | [14.60, 69.04] | **no** |
+| `estimator_sigma` | `sigma_lt_0.5` | 693 | 690 | 836 | 2.23 | 8.09 | [7.16, 9.44] | **no** |
+| `season` | `DJF` | 169 | 169 | 199 | 2.31 | 11.76 | [7.89, 14.97] | **no** |
+| `season` | `JJA` | 277 | 275 | 344 | 2.40 | 8.42 | [7.44, 13.06] | **no** |
+| `season` | `MAM` | 213 | 213 | 256 | 2.29 | 9.62 | [6.78, 11.72] | **no** |
+| `season` | `SON` | 212 | 212 | 260 | 2.53 | 8.72 | [7.07, 10.04] | **no** |
+
+**No regime rescues the reanalysis.** The best cell is `estimator_sigma < 0.5`, at 8.09 —
+still 2.7× the band.
+
+**The estimator's own reported uncertainty is the only axis that clearly separates.** The
+97.5th percentile runs 8.09, 8.89, 26.62 across the three sigma bands, and the median
+disagreement runs 2.23, 2.96, 4.28 with it. That gradient should be read carefully rather
+than triumphantly: a noisy onboard estimate disagrees more with *anything*, so what this
+shows is that the comparison is least informative where the filter is least sure of itself
+— not that the reanalysis is worse there. It is the same caution
+[`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) attaches to the
+estimator-relative ratio.
+
+**Nothing else separates.** Fixed-wing against VTOL, airspeed topic present against absent,
+and the four seasons all have overlapping bootstrap intervals on the 97.5th percentile. The
+airspeed comparison runs *opposite* to the mechanism one would expect — logs without an
+airspeed topic agree slightly better — which is a further reason to read it as noise rather
+than as a finding. Note also that an airspeed *topic* is a proxy for airspeed *sensing*,
+and is labelled as one.
+
+**Declared but not cut:** firmware version, which the sampling frame does not carry;
+altitude AGL and topography, which need a DEM this project has not built. Height above
+takeoff is the available altitude proxy and would require a pass over the converted runs.
 
 ## Direction
 
-Directional difference is computed only where both sources report speed above the
-declared cutoff. Below it the window is counted as undefined rather than discarded.
+Reported only where both sources exceed the declared 2.0 m s⁻¹ cutoff; below it the window
+is counted as undefined rather than discarded.
 
-| Stratum | Cutoff | Defined | Undefined | Mean absolute difference |
-|---|---:|---:|---:|---:|
-| `older` | 1.0 m s⁻¹ | 362 | 106 | 37.5° |
-| `older` *(primary)* | 2.0 m s⁻¹ | 259 | 209 | 27.6° |
-| `older` | 3.0 m s⁻¹ | 176 | 292 | 23.0° |
-| `within_window` | 1.0 m s⁻¹ | 488 | 103 | 35.4° |
-| `within_window` *(primary)* | 2.0 m s⁻¹ | 371 | 220 | 31.8° |
-| `within_window` | 3.0 m s⁻¹ | 244 | 347 | 28.3° |
+| Stratum | Defined | Undefined | Mean \|error\| | Median | p90 | Circular mean | Resultant `R` |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `older` | 259 | 209 | 27.6° | 17.1° | 70.3° | -4.1° | 0.799 |
+| `within_window` | 371 | 220 | 31.8° | 18.9° | 79.0° | -3.3° | 0.751 |
+| pooled, unweighted | 630 | 429 | 30.1° | 18.0° | 74.7° | -3.7° | 0.770 |
 
-At the primary cutoff of 2.0 m s⁻¹ and the 100 m reference, 429 of 1,059 windows —
-**40.5%** — are direction-undefined. [`adr/0006`](adr/0006-what-h1-compares.md)
-anticipated that this count would be a primary reported quantity rather than a footnote,
-in a corpus containing 18,348 uploader-declared *Calm* flights.
+At the primary cutoff, **429 of 1,059 windows — 40.5% — are direction-undefined**, which
+`adr/0006` anticipated would be a primary reported quantity in a corpus containing 18,348
+uploader-declared *Calm* flights.
 
-The mean absolute difference falls monotonically as the cutoff rises, from 37.5° at
-1.0 m s⁻¹ to 23.0° at 3.0 m s⁻¹ in the `older` stratum. The highest cutoff therefore
-produces the most favourable figure. The primary value was fixed at 2.0 m s⁻¹ in advance,
-and the sweep is published so that the dependence is visible rather than concealed.
+Direction is *centred but dispersed*: the circular mean error is about −4°, while the 90th
+percentile of absolute error is around 75°. Dispersion is reported as a resultant length
+and as quantiles of absolute error, not as a linear limit of agreement over wrapped angles
+([`adr/0016`](adr/0016-pre-publication-corrections.md) correction 3).
 
-## The estimator's own uncertainty
+## Robustness
 
-[`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) requires a second view
-reported alongside the absolute verdict: the limit-of-agreement half-width divided by the
-mean standard deviation the onboard filter reports for the same component.
+**Clustering.** The bootstrap resamples runs, so the intervals already account for windows
+sharing a flight. This checks whether the point estimates do:
 
-| Stratum | Component | LoA half-width | Mean onboard σ | Ratio |
-|---|:--:|---:|---:|---:|
-| `older` | `u` | 5.045 | 0.465 | 10.85× |
-| `older` | `v` | 5.610 | 0.539 | 10.40× |
-| `within_window` | `u` | 5.006 | 1.016 | 4.92× |
-| `within_window` | `v` | 7.692 | 1.013 | 7.60× |
+| Statistic | All 1059 windows | One per run (871) |
+|---|---:|---:|
+| Bias `u` | +0.0131 | -0.0209 |
+| Bias `v` | +0.0960 | +0.1352 |
+| \|Δv\| p97.5 | 9.188 | 9.226 |
 
-The two sources disagree by between 4.9 and 10.9 times the onboard filter's own stated
-uncertainty. The ADR provided for the case in which the two criteria disagree, and
-required that disagreement to be reported; it does not arise here, as both indicate the
-same conclusion.
+Clustering is shallow — 1.22 windows per run — and the shift is correspondingly small.
 
-The onboard standard deviation is roughly twice as large in `within_window`
-(1.016 and 1.013 m s⁻¹ for `u` and `v`) as in `older` (0.465 and 0.539), which is why the
-ratios differ between strata while the limits of agreement are comparable. EKF2's variance is a filter's
-self-assessment and not an independent measurement; see
-[`06-limitations.md`](06-limitations.md).
+**Join tolerance.** The verdict does not change at any distance cap between 10 km and the
+declared 30 km, and the 30 km tolerance was never binding: the furthest window is 17.82 km
+from its grid point. The two strata move in *opposite* directions as the cap tightens, so
+distance to grid point is not driving the disagreement in any simple way. Full table in
+[`artifacts/h1-agreement.json`](../artifacts/h1-agreement.json) under
+`tolerance_sensitivity`.
 
-## Sensitivity to the join tolerance
+**Vertical reference.** The 10 m reference agrees slightly *better* than the 100 m one
+`adr/0006` declared primary — 8.42 against 9.19 pooled. That gap is the shear stratifier
+the ADR asked for, pointing against its own expectation. Both fail the band.
 
-[`04-methodology.md`](04-methodology.md) requires this analysis. The `useful_proxy`
-verdict is recomputed at each cap, and the publication threshold is re-applied, since a
-tighter cap removes windows and removes runs and vehicles with them.
-
-| Cap | Stratum | Windows | Runs | Vehicles | \|Δ\| upper LoA | Useful proxy |
-|---:|---|---:|---:|---:|---:|:--:|
-| 10 km | `older` | 192 | 163 | 162 | 8.14 | **no** |
-| 10 km | `within_window` | 287 | 242 | 242 | 7.08 | **no** |
-| 15 km | `older` | 436 | 360 | 359 | 7.74 | **no** |
-| 15 km | `within_window` | 563 | 462 | 460 | 10.15 | **no** |
-| 20 km | `older` | 468 | 385 | 384 | 7.74 | **no** |
-| 20 km | `within_window` | 591 | 486 | 484 | 10.01 | **no** |
-| 30 km | `older` | 468 | 385 | 384 | 7.74 | **no** |
-| 30 km | `within_window` | 591 | 486 | 484 | 10.01 | **no** |
-
-**The verdict does not change at any cap**, which is what makes it robust. Two further
-observations:
-
-- The declared 30 km spatial tolerance was never binding. The furthest window in the
-  corpus is 17.82 km from its grid point, so the 30 km and 20 km rows are identical by
-  construction.
-- The two strata move in **opposite** directions as the cap tightens: restricting to
-  10 km makes `older` worse (7.74 to 8.14) and `within_window` better (10.01 to 7.08).
-  Distance to grid point is therefore not driving the disagreement in any simple way.
-
-The temporal half of this analysis cannot be performed. The mismatch is −1800 s for every
-window in the corpus by construction, so there is no variation to examine; the
-consequence, that the reanalysis value is located at the start of the averaging interval
-rather than its centre, is recorded in [`06-limitations.md`](06-limitations.md).
-
-## Two points on which the a priori framing was wrong
-
-Both are reportable, and neither could have been known when the framing was fixed.
-
-**The 10 m reference agrees marginally better than 100 m.**
-[`adr/0006`](adr/0006-what-h1-compares.md) declared 100 m primary on the reasoning that
-most of the corpus flies nearer to it than to 10 m. The upper limit of agreement is
-nevertheless lower at 10 m in every regime — 7.02 against 7.74 in `older`. That
-difference is the shear stratifier the ADR asked for, and it points against the ADR's own
-expectation. Both references fail the band, so this does not change the conclusion.
-
-**The strata are not interchangeable.** `within_window` shows a materially wider upper
-limit than `older` (10.01 against 7.74 at 100 m) on a larger sample. Reporting a single
-pooled figure would have concealed this, which is the reason
-[`adr/0014`](adr/0014-what-population-h1-estimates-over.md) makes stratum-specific results
-primary. The reweighted pooled estimate sits below the unweighted one (8.68 against 9.10),
-because `older` is 62.9% of the frame but 44.2% of the usable sample; that gap is the size
-of the design effect.
+**Time alignment — outstanding.** The published comparison places the instantaneous ERA5
+field at the *start* of the hour the onboard estimate is averaged over, a systematic
+−1800 s offset ([`06-limitations.md`](06-limitations.md)). A rerun interpolating the field
+to the midpoint of each averaging interval is in progress; `build_pairs --alignment
+interval_midpoint` implements it. This page will carry the comparison when it lands. It is
+not expected to close a gap of 9 against 3, which is precisely why running it removes an
+easy objection rather than creating one.
 
 ## What this does not establish
 
-- Public PX4 logs are an observational convenience sample selected on uploader intent.
-  No figure here generalises to a production fleet.
-- The 3.0 m s⁻¹ band is asserted rather than cited. It was fixed before any result
-  existed, which establishes that it was not chosen to fit one; it does not make it
-  authoritative.
+- Public PX4 logs are an observational convenience sample selected on uploader intent. No
+  figure here generalises to a production fleet.
+- The 3.0 m s⁻¹ band is asserted, not cited. It was fixed before any result existed, which
+  establishes it was not chosen to fit one; it does not make it authoritative.
 - Disagreement does not identify which source is in error. Neither is ground truth.
-- The regimes reported here are the retention strata. The remaining axes declared a
-  priori in [`04-methodology.md`](04-methodology.md) — airframe, airspeed sensor,
-  altitude, terrain, season — have not been cut.
+- The estimator-sigma gradient is partly circular by construction, as above.
+- Three declared axes remain uncut, so the "under which operational conditions" question is
+  answered for four axes and open for three.
 
 Full limitations: [`06-limitations.md`](06-limitations.md).
