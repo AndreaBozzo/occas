@@ -23,17 +23,18 @@ work is added here the day it is discovered.
   within 2-3 months. Results record which was retrieved and when.
 - METAR, where used, is a 10 m measurement over open flat terrain by construction, and
   is comparable only under stated restricted conditions.
-- **The reanalysis value sits at the start of the hour the onboard estimate is averaged
-  over, not at its centre.** A window is the ERA5 hour beginning at its stamp and the
-  field is instantaneous there, so the temporal mismatch against the window centre is
-  −1800 s for *every* window in the corpus. It is a constant of the design rather than a
-  property of the data, which has two consequences worth stating plainly: the
-  sensitivity analysis `04-methodology.md` mandates cannot be run on it — there is
-  nothing to vary — and any within-hour trend in the wind enters the comparison as bias
-  rather than as spread. `analysis/h1_agreement/agreement.py` proves the constancy from
-  the rows rather than asserting it, so a window carrying any other value contradicts
-  this paragraph instead of being absorbed by it. The distance-to-grid-point half of the
-  same analysis does vary and is swept from 10 km to the declared 30 km tolerance.
+- **The reanalysis value is located at the start of the hour over which the onboard
+  estimate is averaged, not at its centre.** A window is the ERA5 hour beginning at its
+  stamp and the field is instantaneous at that stamp, so the temporal mismatch measured
+  against the window centre is −1800 s for every window in the corpus. This is a constant
+  of the design rather than a property of the data, with two consequences. The
+  sensitivity analysis required by `04-methodology.md` cannot be performed on it, since
+  there is no variation to examine; and any within-hour trend in the wind enters the
+  comparison as bias rather than as dispersion.
+  `analysis/h1_agreement/agreement.py` derives the constancy from the rows rather than
+  asserting it, so a window carrying any other value contradicts this paragraph rather
+  than being absorbed into it. The distance-to-grid-point component of the same analysis
+  does vary, and is swept from 10 km to the declared 30 km tolerance.
 
 ## Proxies
 
@@ -41,18 +42,19 @@ work is added here the day it is discovered.
 - A DEM is not an obstacle map.
 - An EKF estimate is not a measurement.
 - A logged parameter is a configuration, not a behaviour.
-- **The 3.0 m s⁻¹ usefulness band is asserted, not cited.** H1 calls the reanalysis a
-  useful proxy in a regime when the upper 95% limit of agreement on the vector
+- **The 3.0 m s⁻¹ usefulness band is asserted, not cited.** H1 treats the reanalysis as
+  a useful proxy in a regime when the upper 95% limit of agreement on the vector
   difference magnitude is at most 3.0 m s⁻¹
-  ([`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md)). It was sized
-  against manufacturer-declared small-UAS wind limits of roughly 10–12 m s⁻¹, so that
-  a proxy carrying 3 m s⁻¹ of disagreement still leaves a usable margin against a
-  10 m s⁻¹ limit. No standard states it and no regulator endorses it. It was fixed
-  before any agreement statistic existed, which makes it honest, not authoritative.
+  ([`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md)). The magnitude was
+  determined against manufacturer-declared small-UAS wind limits of roughly 10–12 m s⁻¹,
+  such that a proxy carrying 3 m s⁻¹ of disagreement retains a usable margin against a
+  10 m s⁻¹ limit. No standard specifies it and no regulator endorses it. It was fixed
+  before any agreement statistic had been computed, which establishes that it was not
+  selected to fit a result; it does not make it authoritative.
 - **EKF2's reported variance is a filter's self-assessment.** The estimator-relative
-  ratio reported beside that band is a second view of the disagreement, not a second
-  source of truth, and it passes most easily where the onboard estimate is least sure
-  of itself.
+  ratio reported alongside that band is a second view of the disagreement rather than a
+  second reference, and it is satisfied most readily where the onboard estimate is least
+  certain.
 
 ## Structural
 

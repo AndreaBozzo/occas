@@ -1,12 +1,13 @@
 """H1: agreement between ERA5 and the onboard EKF2 wind estimate, per regime.
 
-**Neither source is ground truth** (``adr/0003``). Everything here is a limit of
-agreement between two measurement methods; nothing is regressed on anything, and the
-onboard estimate is never called truth. The difference is formed in one declared
-direction -- ``era5 - onboard`` -- and that direction is recorded in the manifest, so a
-positive bias means ERA5 reads higher, not that the aircraft was wrong.
+**Neither source is ground truth** (``adr/0003``). Every quantity computed here is a
+limit of agreement between two measurement methods. Neither source is regressed on the
+other, and the onboard estimate is not treated as a reference. The difference is formed
+in one declared direction, ``era5 - onboard``, and that direction is recorded in the
+manifest: a positive bias indicates that ERA5 reads higher, not that the onboard estimate
+is in error.
 
-What is computed was fixed before this file could see a number:
+What is computed was fixed before this module could observe any result:
 
 - ``adr/0006`` -- components are primary, ``u`` east and ``v`` north; the magnitude of
   the vector difference beside them; scalar speed secondary and labelled; direction
@@ -18,12 +19,12 @@ What is computed was fixed before this file could see a number:
   ``useful_proxy`` is the upper limit of agreement on the vector difference magnitude at
   or below 3.0 m s-1, reported beside the estimator-relative ratio per component.
 
-The regime axis here is the retention stratum, which is the one ``adr/0014`` makes
-mandatory. The other axes declared a priori in ``docs/04-methodology.md`` -- airframe,
-airspeed sensor, variance band, altitude, terrain, season -- are a separate pass. Cell
-counts are not an outcome, so choosing which of them to cut *after* seeing how many runs
-land in each is not a retrospective choice about a result; choosing a threshold or an
-estimand that way would be.
+The regime axis used here is the retention stratum, which ``adr/0014`` makes mandatory.
+The remaining axes declared a priori in ``docs/04-methodology.md`` -- airframe, airspeed
+sensor, variance band, altitude, terrain, season -- are deferred to a separate pass. Cell
+counts are not outcomes, so selecting among those axes after observing how many runs fall
+into each is not a retrospective choice about a result; selecting a threshold or an
+estimand in that manner would be.
 
     uv run python -m analysis.h1_agreement.agreement --pairs data/h1-pairs.jsonl
 """
@@ -72,14 +73,14 @@ FRAME_SIZES = {
 # manifest parameter so a reader can see it was a choice.
 MIN_RUNS_PER_REGIME = 20
 
-# The other half of the same threshold, and not optional. ``docs/09-dpia.md`` 4.1 states
-# it as one condition -- "no published cell draws on fewer than 20 runs from at least 10
-# distinct vehicle_uuids" -- and 20 runs from three vehicles is three operators, not
-# twenty. Enforcing the run count alone would be a gate built one step short of the path
-# it exists to block, which passes with and without the protection.
+# The second half of the same threshold. docs/09-dpia.md 4.1 states one condition -- "no
+# published cell draws on fewer than 20 runs from at least 10 distinct vehicle_uuids" --
+# and twenty runs contributed by three vehicles represent three operators rather than
+# twenty. A check on the run count alone is satisfied identically with and without the
+# protection the threshold is intended to provide.
 #
-# The count is used and never published: adr/0009 forbids emitting a vehicle_uuid at all,
-# "raw or hashed", so what leaves this module is how many there were.
+# The count is used and never published: adr/0009 prohibits emitting a vehicle_uuid at
+# all, "raw or hashed", so only the cardinality leaves this module.
 MIN_VEHICLES_PER_REGIME = 10
 
 VERTICAL_REFERENCES = {
@@ -122,7 +123,7 @@ def weighted_mean_and_sd(values: np.ndarray, weights: np.ndarray | None) -> tupl
     the ordinary sample mean and standard deviation.
     """
     if values.size == 0:
-        raise ValueError("no windows: an agreement statistic over an empty regime is not a number")
+        raise ValueError("no windows: an agreement statistic over an empty regime is undefined")
     if weights is None:
         weights = np.ones_like(values)
     total = float(weights.sum())
@@ -150,9 +151,9 @@ def bland_altman(values: np.ndarray, weights: np.ndarray | None = None) -> dict[
 def series_arrays(rows: Sequence[dict], level: str) -> dict[str, np.ndarray]:
     """The four difference series for one vertical reference, all ``era5 - onboard``.
 
-    Computed once for the whole regime and indexed into by the bootstrap, rather than
-    recomputed per resample: 2,000 resamples over a thousand windows is a million rows of
-    arithmetic either way, and only one of the two is worth doing two thousand times.
+    Computed once for the whole regime and indexed into by the bootstrap rather than
+    recomputed per resample, since the resampling selects rows from a fixed set of
+    differences and does not alter them.
     """
     era5_u_key, era5_v_key = VERTICAL_REFERENCES[level]
     era5_u = np.array([row[era5_u_key] for row in rows], dtype=float)
@@ -231,13 +232,14 @@ def direction_statistics(rows: Sequence[dict], level: str, threshold: float) -> 
 def estimator_relative_ratio(rows: Sequence[dict], level: str) -> dict[str, Any]:
     """Limit-of-agreement half-width over the estimator's own sigma, per component.
 
-    ``adr/0015``'s second view. The onboard variance is EKF2's self-assessment and not an
-    independent measurement, so this is reported as a number beside the verdict and never
-    as the verdict: a regime where the filter is very unsure of itself passes it easily.
+    The second view defined by ``adr/0015``. The onboard variance is EKF2's
+    self-assessment rather than an independent measurement, so this quantity is reported
+    alongside the verdict and never as the verdict: a regime in which the filter reports
+    high uncertainty satisfies it readily.
 
-    Per component because ``adr/0006`` makes components primary and because the variance
-    genuinely is anisotropic -- the estimator constrains wind better along the direction
-    its airspeed vector has varied in than across it.
+    Reported per component because ``adr/0006`` makes components primary, and because the
+    variance is anisotropic in practice -- the estimator constrains wind more tightly along
+    the direction in which its airspeed vector has varied than across it.
     """
     series = series_arrays(rows, level)
     out: dict[str, Any] = {}
@@ -351,8 +353,9 @@ def regime_artifact(
         statistics[key].update(interval)
 
     # adr/0015: the verdict is the absolute band. The estimator-relative ratio is reported
-    # beside it, in the summary, and is deliberately not folded into this boolean -- a
-    # regime may pass one and fail the other, and that disagreement is itself the result.
+    # alongside it in the summary and is deliberately not folded into this boolean, since a
+    # regime may satisfy one criterion and fail the other, and that disagreement is a
+    # reported result.
     upper_loa = statistics["vector_difference_magnitude"]["limits_of_agreement"][1]
 
     return {
@@ -379,19 +382,18 @@ def tolerance_sensitivity(
 ) -> dict[str, Any]:
     """Does the verdict survive a tighter join tolerance?
 
-    ``04-methodology.md`` requires this and says what it is for: a result that moves when
-    the distance-to-grid-point cap moves is a result about the cap. The ``useful_proxy``
-    verdict is recomputed at each one, because a verdict that flips between 10 km and
-    30 km is the finding, not a footnote to it.
+    ``04-methodology.md`` requires this analysis and states its purpose: a result that
+    moves when the distance-to-grid-point cap moves is a result about the cap. The
+    ``useful_proxy`` verdict is therefore recomputed at each cap, since a verdict that
+    changes between 10 km and 30 km is itself the finding.
 
-    The k-threshold is re-applied at every cap. A tighter cap drops windows, and dropping
-    windows drops runs and vehicles with them, so a subset that was publishable at 30 km
-    can fall below the floor at 10 km -- and would otherwise be published anyway, by a
-    gate that only ever ran on the full set.
+    The k-threshold is re-applied at every cap. A tighter cap removes windows, and removing
+    windows removes runs and vehicles with them, so a subset that is publishable at 30 km
+    may fall below the floor at 10 km. A threshold evaluated only on the full set would not
+    detect this.
 
-    No bootstrap here. The question is whether the point estimate and the verdict move,
-    and 2,000 resamples at every cap would cost minutes to answer a question the point
-    estimate already answers.
+    No bootstrap is performed here. The question is whether the point estimate and the
+    verdict move under the cap, which the point estimate alone answers.
     """
     out: dict[str, Any] = {}
     for cap in caps:
@@ -430,18 +432,18 @@ def tolerance_sensitivity(
 def temporal_mismatch_report(rows: Sequence[dict]) -> dict[str, Any]:
     """What the temporal half of the mandated sensitivity analysis can actually say.
 
-    It cannot be swept, and saying so is the honest result. A window is the ERA5 hour that
-    begins at its stamp, the field is instantaneous at that stamp, and ``align`` measures
-    the mismatch against the window's *centre* -- so every window in the corpus is offset
-    by exactly -1800 s by construction. Varying a tolerance over a constant would produce
-    a table of identical rows and call it a sensitivity analysis.
+    The mismatch cannot be swept, and reporting that is the accurate result. A window is
+    the ERA5 hour beginning at its stamp, the field is instantaneous at that stamp, and
+    ``align`` measures the mismatch against the window's *centre*, so every window in the
+    corpus is offset by exactly -1800 s by construction. Varying a tolerance across a
+    constant would produce a table of identical rows.
 
-    What it is instead is a systematic: the reanalysis value sits at the start of the
-    interval the onboard estimate was averaged over, not at its middle, so any within-hour
-    trend in the wind enters the comparison as bias rather than as spread. That belongs in
-    the limitations, and this function's job is to prove the constancy rather than assert
-    it -- if a value other than -1800 ever appears, the claim is wrong and the report says
-    so instead of hiding it.
+    The mismatch is instead a systematic effect: the reanalysis value is located at the
+    start of the interval over which the onboard estimate is averaged rather than at its
+    midpoint, so any within-hour trend in the wind enters the comparison as bias rather
+    than as dispersion. That belongs in the limitations. This function derives the
+    constancy from the rows rather than asserting it, so that a value other than -1800
+    contradicts the claim rather than being absorbed into it.
     """
     observed = sorted({row["temporal_mismatch_s"] for row in rows})
     return {
@@ -462,16 +464,17 @@ def with_complete_era5(rows: Sequence[dict]) -> tuple[list[dict], dict[str, int]
     partition nothing. It exists for the CDS route, which ``adr/0013`` keeps as the
     authoritative one and which omits a variable its response did not carry.
 
-    **Without it the failure is silent, not loud.** ``np.array([1.0, None], dtype=float)``
-    does not raise -- it yields ``nan`` -- so one incomplete window turns an entire
-    regime's bias, limits and bootstrap into ``nan``. And ``nan <= 3.0`` is ``False``, so
-    that regime would be published as *not a useful proxy* on the strength of one missing
-    number. Measured rather than assumed, after the first version of this docstring
-    claimed numpy would raise.
+    Without this partition the failure is silent rather than immediate.
+    ``np.array([1.0, None], dtype=float)`` does not raise; it yields ``nan``. A single
+    incomplete window therefore renders an entire regime's bias, limits and bootstrap
+    ``nan``, and since ``nan <= 3.0`` evaluates to ``False``, that regime would be
+    published as *not a useful proxy* on the basis of one missing value. This behaviour
+    was verified rather than assumed, after an earlier version of this docstring stated
+    that numpy would raise.
 
-    Counted and reported, not silently dropped: field coverage is recorded in this project,
-    and a run that vanishes between the pairs file and the result is the failure mode that
-    rule exists to prevent.
+    Incomplete windows are counted and reported rather than silently discarded: field
+    coverage is recorded in this project, and a run disappearing between the pairs file and
+    the result is the failure this rule exists to prevent.
     """
     keys = [key for pair in VERTICAL_REFERENCES.values() for key in pair]
     complete, missing = [], 0
@@ -489,14 +492,14 @@ def publishable_regimes(
 ) -> tuple[list[str], dict[str, dict[str, int]]]:
     """Which strata may be reported, and the counts of those that may not.
 
-    ``docs/09-dpia.md`` 4.1 states one threshold with two halves -- "no published cell
-    draws on fewer than 20 runs from at least 10 distinct vehicle_uuids" -- so a cell has
-    to clear both. Twenty runs from three airframes is three operators wearing a
-    twenty-run disguise, and the run count alone would not see it.
+    ``docs/09-dpia.md`` 4.1 states a single threshold with two components -- "no published
+    cell draws on fewer than 20 runs from at least 10 distinct vehicle_uuids" -- so a cell
+    must satisfy both. Twenty runs contributed by three airframes represent three
+    operators, which a check on the run count alone does not detect.
 
-    Suppressed cells come back **with their counts**, because a suppression that hides its
-    own existence is its own distortion (``adr/0009``). The counts are integers; no
-    identifier leaves this function.
+    Suppressed cells are returned with their counts, since a suppression that conceals its
+    own occurrence introduces its own distortion (``adr/0009``). The counts are integers;
+    no identifier leaves this function.
     """
     thick = sorted(
         stratum
@@ -518,11 +521,11 @@ def publishable_regimes(
 def load_pairs(pairs: Path, sample: Path, excluded: exclusions.Exclusions) -> list[dict]:
     """Read the paired rows, attach each run's stratum, and drop excluded runs.
 
-    The exclusion pass is not redundant with the one at retrieval. An objection arriving
-    after a log is already on disk has to remove it from the *results* too, which is what
-    ``PRIVACY.md`` promises: "later runs do not re-include it". ``exclusions.load`` raises
-    when the list is absent, so a missing list stops H1 rather than quietly meaning that
-    nobody objected.
+    This exclusion pass is not redundant with the one applied at retrieval. An objection
+    arriving after a log is already on disk must also be removed from the results, which is
+    what ``PRIVACY.md`` undertakes: "later runs do not re-include it". ``exclusions.load``
+    raises when the list is absent, so a missing list halts H1 rather than being interpreted
+    as an absence of objections.
     """
     strata: dict[str, str] = {}
     vehicles: dict[str, str] = {}
@@ -641,10 +644,10 @@ def main(argv: list[str] | None = None) -> int:
     for artifact in artifacts:
         validate(artifact, "validation_artifact.json")
 
-    # The sweep and the estimator-relative ratio live in the summary rather than in the
-    # ValidationArtifact: the schema pins one threshold per artifact and one boolean, and
-    # widening it to carry adr/0015's second view would be a schema change made to fit a
-    # result. Both are reported, and reported together, which is what the ADR asks.
+    # The sweep and the estimator-relative ratio are recorded in the summary rather than in
+    # the ValidationArtifact: the schema fixes one threshold and one boolean per artifact,
+    # and widening it to carry adr/0015's second view would be a schema change made to
+    # accommodate a result. Both are reported, and reported together, as the ADR requires.
     sweep: dict[str, Any] = {}
     ratios: dict[str, Any] = {}
     for level in VERTICAL_REFERENCES:
@@ -687,9 +690,10 @@ def main(argv: list[str] | None = None) -> int:
         "direction_sweep": sweep,
         "estimator_relative_ratio": ratios,
         "useful_proxy": {a["validation_model_id"]: a["useful_proxy"] for a in artifacts},
-        "note": "Neither source is ground truth; these are limits of agreement between "
-        "measurement methods, and differences are era5 minus onboard. The 3.0 m s-1 "
-        "usefulness band is asserted, not cited: adr/0015 and 06-limitations.md.",
+        "note": "Neither source is ground truth. These are limits of agreement between "
+        "two measurement methods; differences are formed as era5 minus onboard. The "
+        "3.0 m s-1 usefulness band is asserted rather than cited: see adr/0015 and "
+        "docs/06-limitations.md.",
     }
 
     args.artifacts.parent.mkdir(parents=True, exist_ok=True)

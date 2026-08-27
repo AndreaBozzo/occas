@@ -1,14 +1,14 @@
 """H1's statistics, on fixtures whose answers can be worked out by hand.
 
-Every test here guards a way the agreement analysis could produce a number that looks
-publishable and is not: a difference formed in the wrong direction, so every sentence
-about who reads higher is inverted; a directional error computed across the wrap point;
-low-wind windows dropped instead of counted; a bootstrap that treats consecutive hours of
-one flight as independent evidence and reports an interval the design never earned; a
-pooled number that describes the draw rather than the frame.
+Each test guards against a way the agreement analysis could produce a result that appears
+publishable and is not: a difference formed in the wrong direction, inverting every
+statement about which source reads higher; a directional error computed across the wrap
+point; low-wind windows discarded rather than counted; a bootstrap treating consecutive
+hours of one flight as independent evidence, reporting a narrower interval than the design
+supports; and a pooled estimate describing the draw rather than the frame.
 
-The fixtures describe no real flight. Wind values are small integers chosen so the
-arithmetic is checkable without running the code.
+The fixtures describe no real flight. Wind values are small integers chosen so that the
+arithmetic can be checked without executing the code.
 """
 
 from __future__ import annotations
@@ -47,12 +47,12 @@ def _row(
 
 
 def test_the_difference_is_era5_minus_onboard_not_the_reverse() -> None:
-    """A sign flip here inverts every sentence H1 will ever write.
+    """A sign error here inverts every statement H1 makes about direction of difference.
 
-    "ERA5 reads 1.5 m/s higher than the onboard estimate" and its opposite are the same
-    number with the same magnitude, and only the manifest's declared direction says which
-    one was computed. So the direction is asserted against a fixture where the two sources
-    are unambiguously ordered, not inferred from the code.
+    "ERA5 reads 1.5 m/s higher than the onboard estimate" and its converse are the same
+    magnitude, and only the manifest's declared direction records which was computed. The
+    direction is therefore asserted against a fixture in which the two sources are
+    unambiguously ordered, rather than inferred from the implementation.
     """
     rows = [_row(run_id="a", onboard=(2.0, 0.0), era5=(5.0, 0.0))]
     series = agreement.series_arrays(rows, "era5_100m")
@@ -140,16 +140,16 @@ def test_low_wind_windows_are_counted_undefined_and_not_dropped() -> None:
 
 
 def test_the_bootstrap_resamples_runs_and_not_windows() -> None:
-    """The interval must reflect 2 flights, not 100 hours of them.
+    """The interval must reflect two flights, not one hundred hours of them.
 
     One run carries 99 windows and another carries 1. Resampling *windows* would draw 100
-    of them and land near 9.9 almost every time, giving a narrow interval that the design
-    never earned. Resampling *runs* draws two runs with replacement, so a quarter of the
-    replicates are the single-window run twice and the bias distribution has real mass at
-    0 -- which is what the lower bound has to see.
+    of them and concentrate near 9.9, producing a narrower interval than the design
+    supports. Resampling *runs* draws two runs with replacement, so a quarter of the
+    replicates consist of the single-window run twice and the bias distribution retains
+    mass at 0, which the lower bound must reflect.
 
-    ``validation_artifact.json`` pins ``bootstrap.unit`` to ``run`` for this reason; this
-    is the test that the pin is honoured rather than merely declared.
+    ``validation_artifact.json`` fixes ``bootstrap.unit`` to ``run`` for this reason. This
+    test establishes that the constraint is honoured rather than only declared.
     """
     rows = [_row(run_id="lonely", era5=(0.0, 0.0))]
     rows += [_row(run_id="busy", era5=(10.0, 0.0)) for _ in range(99)]
@@ -172,8 +172,8 @@ def test_reweighting_moves_the_pooled_number_toward_the_undersampled_stratum() -
     """The whole point of adr/0014, as a number.
 
     Ten runs per stratum, disagreeing by 0 in one and by 10 in the other. The unweighted
-    pool splits the difference because the draw is 50/50. The frame is not: ``older`` is
-    10,497 of 16,682, so the reweighted pool has to sit above 5 and near 6.29.
+    pool divides the difference evenly because the draw is 50/50. The frame is not:
+    ``older`` is 10,497 of 16,682, so the reweighted pool must exceed 5 and approach 6.29.
     """
     rows = [_row(run_id=f"w{i}", stratum=WITHIN, era5=(0.0, 0.0)) for i in range(10)]
     rows += [_row(run_id=f"o{i}", stratum=OLDER, era5=(10.0, 0.0)) for i in range(10)]
@@ -234,10 +234,10 @@ def test_a_regime_outside_the_band_is_reported_as_not_a_useful_proxy() -> None:
 def test_the_estimator_relative_ratio_is_reported_per_component() -> None:
     """adr/0015's second view, and it must not collapse the two components into one.
 
-    The fixture's onboard variance is deliberately anisotropic -- 0.25 against 1.0, so
-    sigma is 0.5 against 1.0 -- and the u and v disagreements are equal. If the two were
-    averaged anywhere in the chain the two ratios would come back equal, which is exactly
-    the collapse adr/0015 was written to stop.
+    The fixture's onboard variance is deliberately anisotropic -- 0.25 against 1.0, giving
+    sigma of 0.5 against 1.0 -- while the u and v disagreements are equal. Were the two
+    averaged at any point in the chain, the ratios would be equal, which is the collapse
+    adr/0015 was written to prevent.
     """
     rows = [
         _row(run_id=f"r{i}", era5=(float(i % 4), float(i % 4)), variance=(0.25, 1.0))
@@ -262,10 +262,10 @@ def _rows_for(stratum: str, *, runs: int, vehicles: int) -> list[dict]:
 def test_a_cell_with_enough_runs_but_too_few_vehicles_is_suppressed() -> None:
     """The half of the threshold that a run count alone cannot see.
 
-    ``docs/09-dpia.md`` 4.1 is one condition with two halves: 20 runs *and* 10 distinct
-    vehicles. Twenty-five runs flown by three airframes clears the first and is three
-    operators, so it must not be published. A gate checking only the run count passes this
-    fixture with and without the protection, which is to say it guards nothing.
+    ``docs/09-dpia.md`` 4.1 states one condition with two components: 20 runs *and* 10
+    distinct vehicles. Twenty-five runs flown by three airframes satisfies the first while
+    representing three operators, and must not be published. A check on the run count alone
+    is satisfied by this fixture with and without the protection.
     """
     by_stratum = {
         WITHIN: _rows_for(WITHIN, runs=25, vehicles=3),
@@ -278,7 +278,9 @@ def test_a_cell_with_enough_runs_but_too_few_vehicles_is_suppressed() -> None:
 
 
 def test_a_suppressed_cell_is_reported_with_its_counts() -> None:
-    """Suppression that hides its own existence is its own distortion (adr/0009)."""
+    """A suppression that conceals its own occurrence introduces its own distortion
+    (adr/0009).
+    """
     by_stratum = {WITHIN: _rows_for(WITHIN, runs=4, vehicles=2)}
     thick, suppressed = agreement.publishable_regimes(by_stratum, min_runs=20, min_vehicles=10)
 
@@ -289,7 +291,7 @@ def test_a_suppressed_cell_is_reported_with_its_counts() -> None:
 
 
 def test_a_cell_clearing_both_halves_is_published() -> None:
-    """The gate has to let the ordinary case through, or it is just an outage."""
+    """The threshold must admit the ordinary case, or it suppresses everything."""
     by_stratum = {WITHIN: _rows_for(WITHIN, runs=400, vehicles=180)}
     thick, suppressed = agreement.publishable_regimes(by_stratum, min_runs=20, min_vehicles=10)
 
@@ -313,9 +315,10 @@ def test_a_verdict_that_depends_on_the_join_tolerance_is_visible_as_one() -> Non
     """04-methodology.md: if the result moves under plausible tolerance choices, that is
     the finding.
 
-    The fixture is built so it does move: windows inside 10 km agree to 0.2 m/s and
-    windows out at 25 km disagree by 8. A single number at the declared 30 km tolerance
-    would report one verdict and conceal that it belongs to the far windows.
+    The fixture is constructed so that it does move: windows within 10 km agree to
+    0.2 m/s, and windows at 25 km disagree by 8. A single figure reported at the declared
+    30 km tolerance would state one verdict without disclosing that it is attributable to
+    the more distant windows.
     """
     by_stratum = {WITHIN: _sensitivity_rows(WITHIN, near=30, far=30)}
     table = agreement.tolerance_sensitivity(
@@ -330,8 +333,8 @@ def test_a_verdict_that_depends_on_the_join_tolerance_is_visible_as_one() -> Non
 def test_a_tighter_tolerance_reapplies_the_publication_threshold() -> None:
     """Dropping windows drops runs and vehicles with them.
 
-    A cell that clears 20 runs and 10 vehicles at 30 km need not clear them at 10 km, and
-    a gate that only ever ran on the full set would publish the tightened cell anyway.
+    A cell satisfying 20 runs and 10 vehicles at 30 km need not satisfy them at 10 km, and
+    a threshold evaluated only on the full set would publish the restricted cell regardless.
     """
     by_stratum = {WITHIN: _sensitivity_rows(WITHIN, near=4, far=40)}
     table = agreement.tolerance_sensitivity(
@@ -345,9 +348,9 @@ def test_a_tighter_tolerance_reapplies_the_publication_threshold() -> None:
 def test_the_temporal_mismatch_is_reported_as_a_constant_rather_than_swept() -> None:
     """It is -1800 s by construction, so a sweep over it would be a table of copies.
 
-    The report proves the constancy from the rows rather than asserting it, so that a
-    window carrying some other value contradicts the claim instead of being absorbed
-    by it.
+    The report derives the constancy from the rows rather than asserting it, so that a
+    window carrying a different value contradicts the claim rather than being absorbed
+    into it.
     """
     rows = [{"temporal_mismatch_s": -1800.0} for _ in range(50)]
     report = agreement.temporal_mismatch_report(rows)
@@ -368,9 +371,9 @@ def test_a_window_missing_an_era5_component_is_counted_not_crashed_on() -> None:
     which omits a variable its response did not carry.
 
     The failure it prevents is silent. ``np.array([1.0, None], dtype=float)`` yields
-    ``nan`` rather than raising, so one incomplete window makes a whole regime's statistics
-    ``nan`` -- and since ``nan <= 3.0`` is ``False``, that regime gets published as *not a
-    useful proxy* because of one missing number.
+    ``nan`` rather than raising, so a single incomplete window renders an entire regime's
+    statistics ``nan``; and since ``nan <= 3.0`` evaluates to ``False``, that regime is
+    published as *not a useful proxy* on the basis of one missing value.
     """
     good = _row(run_id="good", era5=(3.0, 1.0))
     absent = {**_row(run_id="absent", era5=(3.0, 1.0)), "era5_10m_u": None}

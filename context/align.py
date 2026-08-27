@@ -225,12 +225,12 @@ def run_windows(
         cell = bucket(anchor.to_utc(ts))
         cell["u"].append(east)  # east component, ADR-0006's "u"
         cell["v"].append(north)
-        # Kept apart, not averaged into one number. ADR-0006's whole argument is that
-        # collapsing a vector quantity into a scalar makes a weaker claim look like a
-        # stronger one, and the estimator's own uncertainty is a vector too: EKF2
-        # constrains wind better along the direction the airspeed vector has varied in
-        # than across it. A single isotropic sigma compared against a component-wise
-        # limit of agreement (adr/0015) would be that same error, one level down.
+        # Kept separate rather than averaged into one value. ADR-0006 argues that
+        # collapsing a vector quantity into a scalar presents a weaker claim as a stronger
+        # one, and the estimator's own uncertainty is also a vector: EKF2 constrains wind
+        # more tightly along the direction in which the airspeed vector has varied than
+        # across it. Comparing a single isotropic sigma against a component-wise limit of
+        # agreement (adr/0015) would reproduce that error at the level of the variance.
         if vn is not None and ve is not None:
             cell["var_u"].append(ve)  # east, ADR-0006's "u"
             cell["var_v"].append(vn)

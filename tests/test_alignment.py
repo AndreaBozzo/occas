@@ -315,13 +315,13 @@ def test_the_two_wind_variances_reach_the_window_apart() -> None:
     """The estimator's uncertainty is a vector, and averaging it answers no question.
 
     ``adr/0015`` compares a component-wise limit of agreement against the estimator's own
-    sigma on the *same* component. Until 2026-08-27 this function averaged
-    ``variance_north`` and ``variance_east`` into one scalar, which cannot serve that
-    comparison and is ADR-0006's own error -- a vector collapsed to a scalar, then used
-    to make the stronger claim -- one level down.
+    sigma for the *same* component. Until 2026-08-27 this function averaged
+    ``variance_north`` and ``variance_east`` into a single scalar, which cannot support
+    that comparison and reproduces ADR-0006's error at the level of the variance: a vector
+    collapsed to a scalar and then used to support the stronger claim.
 
-    The asymmetry here is not hypothetical: the first real run measured after the split
-    reported 0.048 against 0.087, anisotropic by 1.8x.
+    The asymmetry is not hypothetical. The first real run measured after the split reported
+    0.048 against 0.087, an anisotropy of 1.8x.
     """
     import tempfile
     from pathlib import Path as _Path

@@ -206,11 +206,11 @@ def main(argv: list[str] | None = None) -> int:
         def read(window: dict[str, Any]) -> tuple[dict[str, float], dict[str, Any]]:
             return era5_at(window, args.cache)
 
-    # Named after the draw whose usable runs it paired, the same way ingest/inventory.py
-    # is. The inventory is what selects the population here -- the sample only supplies
-    # expected dates -- so the name comes from its stem. "h1-pilot-pairs" reproduces for
-    # pilot-inventory.jsonl; the full draw is "h1-pairs", because prefixing the
-    # hypothesis to a draw already called h1 would say it twice.
+    # Named after the draw whose usable runs it paired, as ingest/inventory.py is. The
+    # inventory selects the population here -- the sample supplies only expected dates --
+    # so the name derives from its stem. This reproduces "h1-pilot-pairs" for
+    # pilot-inventory.jsonl; the full draw is named "h1-pairs", since prefixing the
+    # hypothesis to a draw already identified as h1 would state it twice.
     draw = args.inventory.stem.removesuffix("-inventory")
     manifest = build_manifest(
         name="h1-pairs" if draw == "h1" else f"h1-{draw}-pairs",

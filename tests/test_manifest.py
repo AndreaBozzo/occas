@@ -141,16 +141,15 @@ def test_every_committed_artifact_hash_appears_in_some_manifest() -> None:
     """ADR-0010 states the requirement in this direction: "every committed artifact must
     re-hash to a hash some committed manifest records".
 
-    The path-keyed test above is the weaker reading of that sentence. It walks the paths
-    manifests recorded and skips any it cannot find, so an artifact recorded under a path
-    that does not resolve on this machine is not checked -- it is passed over. Two early
-    manifests record an absolute ``C:/dev/occas/...`` path for
-    ``artifacts/h1-availability.json``, which resolves only on the machine that wrote it
+    The path-keyed test above implements the weaker reading of that requirement. It
+    traverses the paths recorded by manifests and skips any it cannot locate, so an
+    artifact recorded under a path that does not resolve on the current machine is not
+    checked. Two early manifests record an absolute ``C:/dev/occas/...`` path for
+    ``artifacts/h1-availability.json``, which resolves only on the machine that produced it
     and is therefore unverified on every clone.
 
-    Walking the artifacts instead of the paths removes the dependency on the path string
-    entirely, which is right: the hash is what attests the file, and the path is a label
-    on it.
+    Traversing the artifacts rather than the paths removes the dependency on the path
+    string: the hash attests the file, and the path is a label applied to it.
     """
     recorded = {
         output["content_hash"]
