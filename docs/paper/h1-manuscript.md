@@ -4,7 +4,8 @@
 
 *Draft manuscript. Every number is read from the artifacts in
 [`../../artifacts/`](../../artifacts/) by `scripts/build_manuscript.py`; none is typed by
-hand.*
+hand. Generated from the `v0.1.0` release, archived at
+[doi:10.5281/zenodo.22127670](https://doi.org/10.5281/zenodo.22127670).*
 
 ## Abstract
 
@@ -204,6 +205,11 @@ aggregate artifacts are published so the failure can be checked rather than beli
 ## Data and code availability
 
 Pipeline, schemas, decision records and aggregate artifacts:
-<https://github.com/AndreaBozzo/occas>. Raw geolocated trajectories are not redistributed;
-the source logs remain public at PX4 Flight Review. Every number above traces to an
-`AnalysisManifest` under `artifacts/manifests/`.
+<https://github.com/AndreaBozzo/occas>, archived at
+[doi:10.5281/zenodo.22127670](https://doi.org/10.5281/zenodo.22127670) — the `v0.1.0` release this manuscript is
+generated from. The concept DOI [10.5281/zenodo.22127669](https://doi.org/10.5281/zenodo.22127669) resolves to the
+latest version.
+
+Raw geolocated trajectories are not redistributed; the source logs remain public at PX4
+Flight Review. Every number above traces to an `AnalysisManifest` under
+`artifacts/manifests/`.

@@ -14,6 +14,16 @@ abstract: >-
   representation is in scope and not yet built.
 type: software
 repository-code: "https://github.com/AndreaBozzo/occas"
+doi: "10.5281/zenodo.22127669"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22127669"
+    description: Concept DOI, resolving to the latest archived version.
+  - type: doi
+    value: "10.5281/zenodo.22127670"
+    description: >-
+      Version DOI for v0.1.0, the frozen state the H1 manuscript is generated
+      from.
 authors:
   - family-names: Bozzo
     given-names: Andrea

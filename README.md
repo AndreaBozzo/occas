@@ -1,5 +1,7 @@
 # Operational Context Corpus for Autonomous Systems
 
+[![DOI](https://zenodo.org/badge/1341150603.svg)](https://doi.org/10.5281/zenodo.22127669)
+
 A reproducible corpus linking **real telemetry from autonomous systems** to the
 **external operating conditions** under which it was produced — with a queryable schema
 and full provenance.
