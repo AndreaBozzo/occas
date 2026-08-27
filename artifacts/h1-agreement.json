@@ -1,0 +1,419 @@
+{
+  "n_runs": 871,
+  "n_windows": 1059,
+  "realised_by_stratum": {
+    "fixed_wing_or_vtol|older": {
+      "n_runs": 385,
+      "n_vehicles": 384,
+      "n_windows": 468,
+      "frame_size": 10497,
+      "design_weight": 27.264935064935067
+    },
+    "fixed_wing_or_vtol|within_window": {
+      "n_runs": 486,
+      "n_vehicles": 484,
+      "n_windows": 591,
+      "frame_size": 6185,
+      "design_weight": 12.72633744855967
+    }
+  },
+  "validation_artifacts": 8,
+  "suppressed_strata": {},
+  "windows_without_complete_era5": 0,
+  "tolerance_sensitivity": {
+    "era5_100m": {
+      "10.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 163,
+            "n_vehicles": 162,
+            "n_windows": 192,
+            "bias_u": 0.21132306128276523,
+            "bias_v": -0.1576223837260602,
+            "vector_difference_loa_upper": 8.143254946142791,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 242,
+            "n_vehicles": 242,
+            "n_windows": 287,
+            "bias_u": 0.12123319701515749,
+            "bias_v": -0.0616004920180895,
+            "vector_difference_loa_upper": 7.077812535366823,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "15.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 360,
+            "n_vehicles": 359,
+            "n_windows": 436,
+            "bias_u": 0.12033358512165415,
+            "bias_v": -0.03838569469578922,
+            "vector_difference_loa_upper": 7.743943463428432,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 462,
+            "n_vehicles": 460,
+            "n_windows": 563,
+            "bias_u": -0.10923225419232083,
+            "bias_v": 0.11660322630281203,
+            "vector_difference_loa_upper": 10.149465066677946,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "20.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": 0.15140686024704758,
+            "bias_v": 0.0205068203411667,
+            "vector_difference_loa_upper": 7.74245835331433,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.0963627776218756,
+            "bias_v": 0.15580218548972513,
+            "vector_difference_loa_upper": 10.009889308435696,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "30.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": 0.15140686024704758,
+            "bias_v": 0.0205068203411667,
+            "vector_difference_loa_upper": 7.74245835331433,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.0963627776218756,
+            "bias_v": 0.15580218548972513,
+            "vector_difference_loa_upper": 10.009889308435696,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      }
+    },
+    "era5_10m": {
+      "10.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 163,
+            "n_vehicles": 162,
+            "n_windows": 192,
+            "bias_u": -0.007723460649121383,
+            "bias_v": -0.1540820730278092,
+            "vector_difference_loa_upper": 7.237287060390062,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 242,
+            "n_vehicles": 242,
+            "n_windows": 287,
+            "bias_u": 0.15531892568457328,
+            "bias_v": -0.10178913948725121,
+            "vector_difference_loa_upper": 6.462330116903568,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "15.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 360,
+            "n_vehicles": 359,
+            "n_windows": 436,
+            "bias_u": -0.015114495664943677,
+            "bias_v": -0.09286696566661713,
+            "vector_difference_loa_upper": 7.0305544323107885,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 462,
+            "n_vehicles": 460,
+            "n_windows": 563,
+            "bias_u": -0.08041640160499616,
+            "bias_v": 0.04704166958008803,
+            "vector_difference_loa_upper": 9.64185024837682,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "20.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": -0.007491272200201294,
+            "bias_v": -0.027586925223381707,
+            "vector_difference_loa_upper": 7.020313731834008,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.07179872876976594,
+            "bias_v": 0.0654295814538377,
+            "vector_difference_loa_upper": 9.472197427765916,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "30.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": -0.007491272200201294,
+            "bias_v": -0.027586925223381707,
+            "vector_difference_loa_upper": 7.020313731834008,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.07179872876976594,
+            "bias_v": 0.0654295814538377,
+            "vector_difference_loa_upper": 9.472197427765916,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      }
+    }
+  },
+  "temporal_mismatch": {
+    "distinct_values_s": [
+      -1800.0
+    ],
+    "is_constant_by_construction": true,
+    "note": "A window is the hour beginning at its stamp and the field is instantaneous there, so the mismatch against the window centre is -1800 s for every window. It is a property of the design, not of the data, and cannot be swept. The reanalysis value therefore sits at the start of the averaging interval rather than its centre; see docs/06-limitations.md."
+  },
+  "direction_sweep": {
+    "fixed_wing_or_vtol|older|era5_100m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 362,
+        "n_undefined": 106,
+        "mean_absolute_deg": 37.475788241609024,
+        "limits_of_agreement_deg": [
+          -113.07401235084555,
+          96.09506284942574
+        ]
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 259,
+        "n_undefined": 209,
+        "mean_absolute_deg": 27.57758746310863,
+        "limits_of_agreement_deg": [
+          -86.770325117552,
+          76.2511866480086
+        ]
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 176,
+        "n_undefined": 292,
+        "mean_absolute_deg": 23.016386245072823,
+        "limits_of_agreement_deg": [
+          -74.95337123315656,
+          68.56598903839256
+        ]
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_100m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 488,
+        "n_undefined": 103,
+        "mean_absolute_deg": 35.37047606442047,
+        "limits_of_agreement_deg": [
+          -104.05653444718087,
+          99.0349761106497
+        ]
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 371,
+        "n_undefined": 220,
+        "mean_absolute_deg": 31.834143789067475,
+        "limits_of_agreement_deg": [
+          -97.09236276593623,
+          92.94383542715869
+        ]
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 244,
+        "n_undefined": 347,
+        "mean_absolute_deg": 28.300440550811285,
+        "limits_of_agreement_deg": [
+          -87.99385725244757,
+          90.28869754793827
+        ]
+      }
+    },
+    "fixed_wing_or_vtol|older|era5_10m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 346,
+        "n_undefined": 122,
+        "mean_absolute_deg": 35.5597223597139,
+        "limits_of_agreement_deg": [
+          -105.69788427691363,
+          94.87677330831856
+        ]
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 240,
+        "n_undefined": 228,
+        "mean_absolute_deg": 26.39150205702915,
+        "limits_of_agreement_deg": [
+          -83.80992241216677,
+          74.55605868951511
+        ]
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 133,
+        "n_undefined": 335,
+        "mean_absolute_deg": 21.96716553583996,
+        "limits_of_agreement_deg": [
+          -70.14451326454164,
+          71.1387406758607
+        ]
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_10m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 473,
+        "n_undefined": 118,
+        "mean_absolute_deg": 35.05145496344737,
+        "limits_of_agreement_deg": [
+          -103.23752120166534,
+          99.35662896800557
+        ]
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 308,
+        "n_undefined": 283,
+        "mean_absolute_deg": 30.038928855420014,
+        "limits_of_agreement_deg": [
+          -92.08152982314145,
+          89.20941521233853
+        ]
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 176,
+        "n_undefined": 415,
+        "mean_absolute_deg": 23.892321387155242,
+        "limits_of_agreement_deg": [
+          -81.281694676658,
+          74.7048884132211
+        ]
+      }
+    }
+  },
+  "estimator_relative_ratio": {
+    "fixed_wing_or_vtol|older|era5_100m": {
+      "u": {
+        "loa_half_width_ms": 5.0452832010705455,
+        "mean_onboard_sigma_ms": 0.465025544005774,
+        "ratio": 10.849475402168231,
+        "n_windows_with_variance": 468
+      },
+      "v": {
+        "loa_half_width_ms": 5.609569813633739,
+        "mean_onboard_sigma_ms": 0.5392989315234751,
+        "ratio": 10.401596379557374,
+        "n_windows_with_variance": 468
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_100m": {
+      "u": {
+        "loa_half_width_ms": 5.005629025330441,
+        "mean_onboard_sigma_ms": 1.0163797868833992,
+        "ratio": 4.924959242528399,
+        "n_windows_with_variance": 591
+      },
+      "v": {
+        "loa_half_width_ms": 7.692303256675679,
+        "mean_onboard_sigma_ms": 1.0127208942453803,
+        "ratio": 7.595679422026271,
+        "n_windows_with_variance": 591
+      }
+    },
+    "fixed_wing_or_vtol|older|era5_10m": {
+      "u": {
+        "loa_half_width_ms": 4.593233037511178,
+        "mean_onboard_sigma_ms": 0.465025544005774,
+        "ratio": 9.877377913360704,
+        "n_windows_with_variance": 468
+      },
+      "v": {
+        "loa_half_width_ms": 5.028075355488556,
+        "mean_onboard_sigma_ms": 0.5392989315234751,
+        "ratio": 9.323354936537065,
+        "n_windows_with_variance": 468
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_10m": {
+      "u": {
+        "loa_half_width_ms": 4.53752699814667,
+        "mean_onboard_sigma_ms": 1.0163797868833992,
+        "ratio": 4.464401060218273,
+        "n_windows_with_variance": 591
+      },
+      "v": {
+        "loa_half_width_ms": 7.356825256340668,
+        "mean_onboard_sigma_ms": 1.0127208942453803,
+        "ratio": 7.26441539632945,
+        "n_windows_with_variance": 591
+      }
+    }
+  },
+  "useful_proxy": {
+    "h1-fixed_wing_or_vtol|older-era5_100m-sample": false,
+    "h1-fixed_wing_or_vtol|within_window-era5_100m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_100m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_100m-reweighted": false,
+    "h1-fixed_wing_or_vtol|older-era5_10m-sample": false,
+    "h1-fixed_wing_or_vtol|within_window-era5_10m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_10m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_10m-reweighted": false
+  },
+  "note": "Neither source is ground truth; these are limits of agreement between measurement methods, and differences are era5 minus onboard. The 3.0 m s-1 usefulness band is asserted, not cited: adr/0015 and 06-limitations.md."
+}
