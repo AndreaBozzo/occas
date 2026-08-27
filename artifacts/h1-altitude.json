@@ -1,0 +1,17 @@
+{
+  "runs": 871,
+  "with_height": 871,
+  "without_height": 0,
+  "median_height_m": {
+    "min": -2346.6,
+    "median": 62.9,
+    "max": 999.1
+  },
+  "bands": {
+    "agl_proxy_50_to_120m": 376,
+    "agl_proxy_ge_120m": 143,
+    "agl_proxy_lt_50m": 343,
+    "unknown": 9
+  },
+  "note": "Height above the takeoff point, a proxy for altitude AGL and labelled as one. The rangefinder that would give true AGL is valid for a median 0.4% of rows and reads at touchdown; see the module docstring and adr/0006."
+}

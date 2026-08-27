@@ -1,0 +1,57 @@
+{
+  "analysis": {
+    "description": "Height above the takeoff point per usable run, as a named proxy for altitude AGL, which this corpus cannot recover.",
+    "hypothesis": "H1",
+    "name": "h1-altitude"
+  },
+  "code": {
+    "dirty": false,
+    "entrypoint": "analysis/h1_agreement/altitude.py",
+    "git_commit": "9d2900fc73e0f6b4b5b17c688dd0121e3a8d8ad4"
+  },
+  "created_at": "2026-08-27T11:17:19.752426+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "gcsfs": "2026.8.0",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "zarr": "3.3.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [],
+  "manifest_id": "39790950-7fde-4e84-80da-35bd1c53d138",
+  "outputs": [
+    {
+      "content_hash": "sha256:caf06031548ab192a9e2e653eaf1a03eef2c0840ec384f2e19c17b17fd1075a6",
+      "path": "artifacts/h1-altitude.json"
+    }
+  ],
+  "parameters": {
+    "altitude_bands_m": [
+      50.0,
+      120.0
+    ],
+    "plausible_height_m": [
+      -50.0,
+      5000.0
+    ],
+    "processing_version": "altitude/1",
+    "proxy_for": "altitude_agl",
+    "statistic": "median of -z over rows with z_valid",
+    "why_not_agl": "dist_bottom_valid is true for a median 0.4% of rows and reads at touchdown; a terrain model would be needed and none is built"
+  },
+  "seed": null
+}
