@@ -1,0 +1,66 @@
+{
+  "analysis": {
+    "description": "ERA5 fields paired to onboard wind per run window, for the usable runs in h1-inventory.jsonl. Builds the input to H1; computes no agreement statistic.",
+    "hypothesis": "H1",
+    "name": "h1-pairs"
+  },
+  "code": {
+    "dirty": false,
+    "entrypoint": "analysis/h1_agreement/build_pairs.py",
+    "git_commit": "a97067a1f9da87117c6d62ebcb88bdb66c202512"
+  },
+  "created_at": "2026-08-27T09:57:59.803337+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "gcsfs": "2026.8.0",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "zarr": "3.3.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [],
+  "manifest_id": "b4f5e64f-507e-47ea-a359-b95bd29beea5",
+  "outputs": [
+    {
+      "content_hash": "sha256:a1cada899b03c4f5e3839a71104ce7f27bd735db80000114d54c82dceb5b5a12",
+      "path": "artifacts/h1-join-summary-midpoint.json"
+    }
+  ],
+  "parameters": {
+    "arco_coverage": {
+      "last_updated": "2026-08-27 03:06:29.062321+00:00",
+      "store": "gs://gcp-public-data-arco-era5/ar/full_37-1h-0p25deg-chunk-1.zarr-v3",
+      "valid_time_start": "1940-01-01",
+      "valid_time_stop": "2026-04-30",
+      "valid_time_stop_era5t": "2026-08-21"
+    },
+    "era5_route": "arco",
+    "era5_variables": [
+      "100m_u_component_of_wind",
+      "100m_v_component_of_wind",
+      "10m_u_component_of_wind",
+      "10m_v_component_of_wind"
+    ],
+    "grid_deg": 0.25,
+    "min_samples_per_window": 5,
+    "processing_version": "build_pairs/1",
+    "spatial_tolerance_km": 30.0,
+    "temporal_tolerance_s": 1800.0,
+    "time_alignment": "interval_midpoint",
+    "time_alignment_offset_s": 1800
+  },
+  "seed": null
+}

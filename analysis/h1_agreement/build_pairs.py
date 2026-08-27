@@ -256,8 +256,16 @@ def main(argv: list[str] | None = None) -> int:
     # pilot-inventory.jsonl; the full draw is named "h1-pairs", since prefixing the
     # hypothesis to a draw already identified as h1 would state it twice.
     draw = args.inventory.stem.removesuffix("-inventory")
+    base = "h1-pairs" if draw == "h1" else f"h1-{draw}-pairs"
+    # The alignment is part of what identifies this run, not just a parameter of it. Two
+    # runs over the same inventory at different alignments are different comparisons, and
+    # naming both "h1-pairs" leaves the provenance directory unable to tell them apart by
+    # name -- the fifth variant of that defect in this repository. The default alignment
+    # keeps the bare name so the published artifact stays reproducible.
     manifest = build_manifest(
-        name="h1-pairs" if draw == "h1" else f"h1-{draw}-pairs",
+        name=base
+        if args.alignment == "hour_start"
+        else f"{base}-{args.alignment.replace('_', '-')}",
         hypothesis="H1",
         entrypoint="analysis/h1_agreement/build_pairs.py",
         description=(
