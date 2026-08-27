@@ -139,10 +139,20 @@ def build_manifest(
 
 
 def add_output(manifest: dict[str, Any], path: Path) -> dict[str, Any]:
-    """Record a produced file and its hash. Call after the file is written."""
-    manifest["outputs"].append(
-        {"path": Path(path).as_posix(), "content_hash": hash_file(Path(path))}
-    )
+    """Record a produced file and its hash. Call after the file is written.
+
+    The path is recorded relative to the repository root whenever the file sits inside
+    it. An absolute path identifies the artifact for one checkout and for no other, so a
+    reader of a clone cannot resolve it and a test looking for it can only skip what it
+    does not find. Two manifests written before this rule record an absolute path; the
+    hash beside it is unaffected, and it is the hash that attests the artifact.
+    """
+    resolved = Path(path).resolve()
+    try:
+        recorded = resolved.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        recorded = resolved.as_posix()
+    manifest["outputs"].append({"path": recorded, "content_hash": hash_file(resolved)})
     return manifest
 
 

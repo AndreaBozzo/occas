@@ -152,12 +152,20 @@ def main(argv: list[str] | None = None) -> int:
     if headers_path(args.cache).exists():
         headers = json.loads(headers_path(args.cache).read_text(encoding="utf-8"))
 
+    # Named after the draw it made, as ingest/inventory.py and
+    # analysis/h1_agreement/build_pairs.py are. This is the third entrypoint to have
+    # carried "pilot" in a hardcoded manifest name: run over the H1 draw it produced
+    # artifacts/h1-sample-summary.json under the name px4-pilot-sample, so the provenance
+    # record named a population the summary beside it did not describe.
+    draw = args.out.stem.removesuffix("-sample")
     manifest = build_manifest(
-        name="px4-pilot-sample",
+        name=f"px4-{draw}-sample",
         hypothesis="none",
         entrypoint="ingest/sample.py",
-        description="Stratified pilot sample of the >=300 s non-SITL frame, for gate G2. "
-        "Draws ids only; no logs retrieved.",
+        description=(
+            f"Stratified {draw} sample of the >=300 s non-SITL frame, for gate G2. "
+            "Draws ids only; no logs retrieved."
+        ),
         inputs=[
             {
                 "path": args.cache.as_posix(),

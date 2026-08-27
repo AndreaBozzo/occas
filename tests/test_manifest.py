@@ -135,3 +135,40 @@ def test_every_artifact_in_the_repository_is_attested_by_a_manifest() -> None:
         )
         checked += 1
     assert checked, "no committed output was actually re-hashed"
+
+
+def test_every_committed_artifact_hash_appears_in_some_manifest() -> None:
+    """ADR-0010 states the requirement in this direction: "every committed artifact must
+    re-hash to a hash some committed manifest records".
+
+    The path-keyed test above is the weaker reading of that sentence. It walks the paths
+    manifests recorded and skips any it cannot find, so an artifact recorded under a path
+    that does not resolve on this machine is not checked -- it is passed over. Two early
+    manifests record an absolute ``C:/dev/occas/...`` path for
+    ``artifacts/h1-availability.json``, which resolves only on the machine that wrote it
+    and is therefore unverified on every clone.
+
+    Walking the artifacts instead of the paths removes the dependency on the path string
+    entirely, which is right: the hash is what attests the file, and the path is a label
+    on it.
+    """
+    recorded = {
+        output["content_hash"]
+        for path in m.MANIFEST_DIR.glob("*.json")
+        for output in json.loads(path.read_text(encoding="utf-8"))["outputs"]
+    }
+    assert recorded, "no manifest records an output"
+
+    artifacts = [
+        path
+        for pattern in ("*.json", "*.jsonl")
+        for path in (m.REPO_ROOT / "artifacts").glob(pattern)
+    ]
+    assert artifacts, "no committed artifact found to check"
+
+    unattested = [
+        path.relative_to(m.REPO_ROOT).as_posix()
+        for path in sorted(artifacts)
+        if m.hash_file(path) not in recorded
+    ]
+    assert not unattested, f"committed artifacts no manifest attests: {unattested}"
