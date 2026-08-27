@@ -1,0 +1,94 @@
+{
+  "analysis": {
+    "description": "Agreement between ERA5 and the onboard EKF2 wind estimate, per regime and per vertical reference, over h1-pairs-midpoint.jsonl. Neither source is ground truth.",
+    "hypothesis": "H1",
+    "name": "h1-midpoint-agreement"
+  },
+  "code": {
+    "dirty": false,
+    "entrypoint": "analysis/h1_agreement/agreement.py",
+    "git_commit": "36a8da864c4f716ef7a6a4c6c3923c4dd91a4fe7"
+  },
+  "created_at": "2026-08-27T12:05:10.215483+00:00",
+  "environment": {
+    "dependencies": {
+      "cdsapi": "0.7.7",
+      "duckdb": "1.5.5",
+      "gcsfs": "2026.8.0",
+      "httpx": "0.28.1",
+      "jsonschema": "4.26.0",
+      "matplotlib": "3.11.1",
+      "netcdf4": "1.7.4",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "25.0.1",
+      "pyyaml": "6.0.3",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "zarr": "3.3.0"
+    },
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.13.14"
+  },
+  "external_tools": [],
+  "inputs": [],
+  "manifest_id": "d8f91079-8f0d-4aa2-84cd-63241f8e48ba",
+  "outputs": [
+    {
+      "content_hash": "sha256:5008b7501fd6877c9e9df523acfdcf3007c6ba526b9d930a410d9d067a12bb79",
+      "path": "artifacts/h1-agreement-midpoint.json"
+    },
+    {
+      "content_hash": "sha256:f8ed802d3ec6addc3a30a73bf5f9b53f45b0092a3efcd20011e608aeb29af7b0",
+      "path": "artifacts/h1-validation-artifacts-midpoint.jsonl"
+    }
+  ],
+  "parameters": {
+    "altitude_axis_is_a_proxy": "height above takeoff, not AGL",
+    "bootstrap_resamples": 2000,
+    "difference_direction": "era5_minus_onboard",
+    "direction_speed_threshold_ms": 2.0,
+    "direction_sweep_ms": [
+      1.0,
+      3.0
+    ],
+    "exclusions": {
+      "count": 0,
+      "digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "latest_received": null,
+      "path": "data/exclusions.jsonl"
+    },
+    "frame_sizes": {
+      "fixed_wing_or_vtol|older": 10497,
+      "fixed_wing_or_vtol|within_window": 6185
+    },
+    "loa_z": 1.96,
+    "min_runs_per_regime": 20,
+    "min_vehicles_per_regime": 10,
+    "processing_version": "agreement/1",
+    "regime_axes": [
+      "airframe",
+      "airspeed_topic",
+      "altitude_proxy",
+      "estimator_sigma",
+      "season"
+    ],
+    "regime_axes_declared_but_not_cut": [
+      "firmware_version",
+      "altitude_agl",
+      "topography"
+    ],
+    "sensitivity_distance_km": [
+      10.0,
+      15.0,
+      20.0,
+      30.0
+    ],
+    "sigma_bands_ms": [
+      0.5,
+      1.0
+    ],
+    "useful_proxy_loa_ms": 3.0
+  },
+  "seed": 20260827
+}

@@ -1,0 +1,634 @@
+{
+  "n_runs": 871,
+  "n_windows": 1059,
+  "realised_by_stratum": {
+    "fixed_wing_or_vtol|older": {
+      "n_runs": 385,
+      "n_vehicles": 384,
+      "n_windows": 468,
+      "frame_size": 10497,
+      "n_drawn": 800,
+      "design_weight": 13.12125,
+      "implied_usable_population": 5051.68125
+    },
+    "fixed_wing_or_vtol|within_window": {
+      "n_runs": 486,
+      "n_vehicles": 484,
+      "n_windows": 591,
+      "frame_size": 6185,
+      "n_drawn": 800,
+      "design_weight": 7.73125,
+      "implied_usable_population": 3757.3875
+    }
+  },
+  "validation_artifacts": 64,
+  "suppressed_strata": {},
+  "implied_usable_population": {
+    "fixed_wing_or_vtol|older": 5051.68125,
+    "fixed_wing_or_vtol|within_window": 3757.3875
+  },
+  "regimes": {
+    "airframe": {
+      "cells": {
+        "fixed_wing": {
+          "n_runs": 419,
+          "n_vehicles": 415,
+          "n_windows": 504
+        },
+        "vtol": {
+          "n_runs": 452,
+          "n_vehicles": 452,
+          "n_windows": 555
+        }
+      },
+      "suppressed": {}
+    },
+    "airspeed_topic": {
+      "cells": {
+        "absent": {
+          "n_runs": 120,
+          "n_vehicles": 120,
+          "n_windows": 135
+        },
+        "present": {
+          "n_runs": 751,
+          "n_vehicles": 747,
+          "n_windows": 924
+        }
+      },
+      "suppressed": {}
+    },
+    "altitude_proxy": {
+      "cells": {
+        "agl_proxy_50_to_120m": {
+          "n_runs": 376,
+          "n_vehicles": 375,
+          "n_windows": 449
+        },
+        "agl_proxy_ge_120m": {
+          "n_runs": 143,
+          "n_vehicles": 142,
+          "n_windows": 202
+        },
+        "agl_proxy_lt_50m": {
+          "n_runs": 343,
+          "n_vehicles": 343,
+          "n_windows": 397
+        }
+      },
+      "suppressed": {
+        "unknown": {
+          "n_runs": 9,
+          "n_vehicles": 9
+        }
+      }
+    },
+    "estimator_sigma": {
+      "cells": {
+        "sigma_0.5_to_1.0": {
+          "n_runs": 157,
+          "n_vehicles": 157,
+          "n_windows": 169
+        },
+        "sigma_ge_1.0": {
+          "n_runs": 53,
+          "n_vehicles": 53,
+          "n_windows": 54
+        },
+        "sigma_lt_0.5": {
+          "n_runs": 693,
+          "n_vehicles": 690,
+          "n_windows": 836
+        }
+      },
+      "suppressed": {}
+    },
+    "season": {
+      "cells": {
+        "DJF": {
+          "n_runs": 169,
+          "n_vehicles": 169,
+          "n_windows": 199
+        },
+        "JJA": {
+          "n_runs": 277,
+          "n_vehicles": 275,
+          "n_windows": 344
+        },
+        "MAM": {
+          "n_runs": 213,
+          "n_vehicles": 213,
+          "n_windows": 256
+        },
+        "SON": {
+          "n_runs": 212,
+          "n_vehicles": 212,
+          "n_windows": 260
+        }
+      },
+      "suppressed": {}
+    }
+  },
+  "regime_axes_declared_but_not_cut": {
+    "firmware_version": "not carried by the sampling frame",
+    "altitude_agl": "not recoverable: the rangefinder that would give it is valid for a median 0.4% of rows and reads at touchdown. The altitude_proxy axis cuts height above the takeoff point instead, and is named as a proxy throughout.",
+    "topography": "same DEM dependency"
+  },
+  "one_window_per_run": {
+    "n_runs": 871,
+    "n_windows": 871,
+    "era5_100m": {
+      "bias_u_all_windows": 0.020287314138357965,
+      "bias_u_one_per_run": -0.013054822795717326,
+      "bias_v_all_windows": 0.10311967136074189,
+      "bias_v_one_per_run": 0.14416553027311582,
+      "p97_5_all_windows": 9.044570829121055,
+      "p97_5_one_per_run": 9.215205547981611
+    },
+    "era5_10m": {
+      "bias_u_all_windows": -0.03563488243283744,
+      "bias_u_one_per_run": -0.07042825858503662,
+      "bias_v_all_windows": 0.03142034062802304,
+      "bias_v_one_per_run": 0.06983448031070393,
+      "p97_5_all_windows": 8.336092041941125,
+      "p97_5_one_per_run": 8.29629487339656
+    }
+  },
+  "windows_without_complete_era5": 0,
+  "tolerance_sensitivity": {
+    "era5_100m": {
+      "10.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 163,
+            "n_vehicles": 162,
+            "n_windows": 192,
+            "bias_u": 0.20574431387554246,
+            "bias_v": -0.11345098036985331,
+            "vector_difference_p97_5": 9.190654080256138,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 242,
+            "n_vehicles": 242,
+            "n_windows": 287,
+            "bias_u": 0.14944493581258786,
+            "bias_v": -0.028578448343216774,
+            "vector_difference_p97_5": 8.461411400424959,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "15.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 360,
+            "n_vehicles": 359,
+            "n_windows": 436,
+            "bias_u": 0.10751508533725017,
+            "bias_v": -0.007785342166865531,
+            "vector_difference_p97_5": 9.145174157405178,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 462,
+            "n_vehicles": 460,
+            "n_windows": 563,
+            "bias_u": -0.08051660472150157,
+            "bias_v": 0.10495335542502096,
+            "vector_difference_p97_5": 9.801149879041185,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "20.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": 0.13670073637205518,
+            "bias_v": 0.04735246724389451,
+            "vector_difference_p97_5": 8.739376710723112,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.07189793392487433,
+            "bias_v": 0.14728050304717943,
+            "vector_difference_p97_5": 9.49837009958501,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "30.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": 0.13670073637205518,
+            "bias_v": 0.04735246724389451,
+            "vector_difference_p97_5": 8.739376710723112,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.07189793392487433,
+            "bias_v": 0.14728050304717943,
+            "vector_difference_p97_5": 9.49837009958501,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      }
+    },
+    "era5_10m": {
+      "10.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 163,
+            "n_vehicles": 162,
+            "n_windows": 192,
+            "bias_u": -0.013957188130958456,
+            "bias_v": -0.11512903922803804,
+            "vector_difference_p97_5": 8.90752958804308,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 242,
+            "n_vehicles": 242,
+            "n_windows": 287,
+            "bias_u": 0.17244940212340631,
+            "bias_v": -0.07820446565057972,
+            "vector_difference_p97_5": 8.25448184107874,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "15.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 360,
+            "n_vehicles": 359,
+            "n_windows": 436,
+            "bias_u": -0.02369086372357378,
+            "bias_v": -0.06702820171798464,
+            "vector_difference_p97_5": 8.47322393654853,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 462,
+            "n_vehicles": 460,
+            "n_windows": 563,
+            "bias_u": -0.0573956868586149,
+            "bias_v": 0.03876381520905951,
+            "vector_difference_p97_5": 8.395602023515565,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "20.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": -0.017704020678821753,
+            "bias_v": -0.00408449416968159,
+            "vector_difference_p97_5": 8.68350298416399,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.04983394047155038,
+            "bias_v": 0.05953584432569775,
+            "vector_difference_p97_5": 8.32504278420322,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      },
+      "30.0": {
+        "regimes": {
+          "fixed_wing_or_vtol|older": {
+            "n_runs": 385,
+            "n_vehicles": 384,
+            "n_windows": 468,
+            "bias_u": -0.017704020678821753,
+            "bias_v": -0.00408449416968159,
+            "vector_difference_p97_5": 8.68350298416399,
+            "useful_proxy": false
+          },
+          "fixed_wing_or_vtol|within_window": {
+            "n_runs": 486,
+            "n_vehicles": 484,
+            "n_windows": 591,
+            "bias_u": -0.04983394047155038,
+            "bias_v": 0.05953584432569775,
+            "vector_difference_p97_5": 8.32504278420322,
+            "useful_proxy": false
+          }
+        },
+        "suppressed": {}
+      }
+    }
+  },
+  "temporal_mismatch": {
+    "distinct_values_s": [
+      0.0
+    ],
+    "is_constant_by_construction": true,
+    "note": "A window is the hour beginning at its stamp and the field is instantaneous there, so the mismatch against the window centre is -1800 s for every window. It is a property of the design, not of the data, and cannot be swept. The reanalysis value therefore sits at the start of the averaging interval rather than its centre; see docs/06-limitations.md."
+  },
+  "direction_sweep": {
+    "fixed_wing_or_vtol|older|era5_100m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 361,
+        "n_undefined": 107,
+        "mean_absolute_deg": 37.13792757930466,
+        "median_absolute_deg": 24.191183946567236,
+        "p90_absolute_deg": 94.24311002536746,
+        "p95_absolute_deg": 115.72542468661423,
+        "circular_mean_deg": -8.873689581733034,
+        "circular_resultant_length": 0.6949589882315406,
+        "circular_sd_deg": 48.879878414202
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 260,
+        "n_undefined": 208,
+        "mean_absolute_deg": 27.06849641801351,
+        "median_absolute_deg": 16.42931576400423,
+        "p90_absolute_deg": 70.83449899014022,
+        "p95_absolute_deg": 96.45043344689923,
+        "circular_mean_deg": -5.092976216220006,
+        "circular_resultant_length": 0.8067960237950984,
+        "circular_sd_deg": 37.54376954350717
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 178,
+        "n_undefined": 290,
+        "mean_absolute_deg": 22.718113725742537,
+        "median_absolute_deg": 12.092966023962404,
+        "p90_absolute_deg": 61.446956102266206,
+        "p95_absolute_deg": 79.47139207137772,
+        "circular_mean_deg": -3.3140212734989176,
+        "circular_resultant_length": 0.8466915248690267,
+        "circular_sd_deg": 33.05513124868235
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_100m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 493,
+        "n_undefined": 98,
+        "mean_absolute_deg": 35.31298955969841,
+        "median_absolute_deg": 21.50173444723987,
+        "p90_absolute_deg": 91.18593360511552,
+        "p95_absolute_deg": 123.17306852333282,
+        "circular_mean_deg": -4.176402906168395,
+        "circular_resultant_length": 0.7118513389126793,
+        "circular_sd_deg": 47.239401349732226
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 373,
+        "n_undefined": 218,
+        "mean_absolute_deg": 31.25790708879226,
+        "median_absolute_deg": 18.347800804870218,
+        "p90_absolute_deg": 76.12999739750781,
+        "p95_absolute_deg": 115.82193483913936,
+        "circular_mean_deg": -4.155794559628481,
+        "circular_resultant_length": 0.7588979636225207,
+        "circular_sd_deg": 42.56023262869497
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 250,
+        "n_undefined": 341,
+        "mean_absolute_deg": 27.791152954966755,
+        "median_absolute_deg": 16.182954594885274,
+        "p90_absolute_deg": 62.86675464644167,
+        "p95_absolute_deg": 104.70369532262148,
+        "circular_mean_deg": -1.8735624248715725,
+        "circular_resultant_length": 0.7951263062955584,
+        "circular_sd_deg": 38.796842021766324
+      }
+    },
+    "fixed_wing_or_vtol|older|era5_10m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 347,
+        "n_undefined": 121,
+        "mean_absolute_deg": 36.106757599339126,
+        "median_absolute_deg": 21.496698552273216,
+        "p90_absolute_deg": 94.56660976595478,
+        "p95_absolute_deg": 111.41056872103978,
+        "circular_mean_deg": -6.579680871346299,
+        "circular_resultant_length": 0.7014488722388758,
+        "circular_sd_deg": 48.25156957430357
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 235,
+        "n_undefined": 233,
+        "mean_absolute_deg": 25.879635679688395,
+        "median_absolute_deg": 14.680130542161606,
+        "p90_absolute_deg": 70.84406764047671,
+        "p95_absolute_deg": 96.14705620628614,
+        "circular_mean_deg": -3.9235444704304916,
+        "circular_resultant_length": 0.8132957083496647,
+        "circular_sd_deg": 36.83548388952073
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 122,
+        "n_undefined": 346,
+        "mean_absolute_deg": 21.605908110579772,
+        "median_absolute_deg": 11.352833165106603,
+        "p90_absolute_deg": 69.19387283536572,
+        "p95_absolute_deg": 82.1478156622663,
+        "circular_mean_deg": -0.516040675833402,
+        "circular_resultant_length": 0.8502702924401748,
+        "circular_sd_deg": 32.63355440251295
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_10m": {
+      "1.0": {
+        "speed_threshold_ms": 1.0,
+        "n_defined": 479,
+        "n_undefined": 112,
+        "mean_absolute_deg": 34.64117323727815,
+        "median_absolute_deg": 22.81635269993106,
+        "p90_absolute_deg": 83.52155583430485,
+        "p95_absolute_deg": 120.72248435005427,
+        "circular_mean_deg": -2.77265858201938,
+        "circular_resultant_length": 0.7219436928108143,
+        "circular_sd_deg": 46.250729747609
+      },
+      "2.0": {
+        "speed_threshold_ms": 2.0,
+        "n_defined": 317,
+        "n_undefined": 274,
+        "mean_absolute_deg": 29.737799259703053,
+        "median_absolute_deg": 18.796771171852924,
+        "p90_absolute_deg": 66.90620006615606,
+        "p95_absolute_deg": 110.69383182873335,
+        "circular_mean_deg": -2.75555316494141,
+        "circular_resultant_length": 0.7771020206208313,
+        "circular_sd_deg": 40.69078626616212
+      },
+      "3.0": {
+        "speed_threshold_ms": 3.0,
+        "n_defined": 173,
+        "n_undefined": 418,
+        "mean_absolute_deg": 23.41733627895385,
+        "median_absolute_deg": 13.222292996670575,
+        "p90_absolute_deg": 47.9620670928688,
+        "p95_absolute_deg": 71.139246340435,
+        "circular_mean_deg": -3.417744138925902,
+        "circular_resultant_length": 0.8470031314259429,
+        "circular_sd_deg": 33.01856771924724
+      }
+    }
+  },
+  "estimator_relative_ratio": {
+    "fixed_wing_or_vtol|older|era5_100m": {
+      "u": {
+        "loa_half_width_ms": 5.047030432507557,
+        "mean_onboard_sigma_ms": 0.465025544005774,
+        "ratio": 10.853232682729555,
+        "n_windows_with_variance": 468
+      },
+      "v": {
+        "loa_half_width_ms": 5.577961647632128,
+        "mean_onboard_sigma_ms": 0.5392989315234751,
+        "ratio": 10.342986647266008,
+        "n_windows_with_variance": 468
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_100m": {
+      "u": {
+        "loa_half_width_ms": 4.984808561380803,
+        "mean_onboard_sigma_ms": 1.0163797868833992,
+        "ratio": 4.904474317288512,
+        "n_windows_with_variance": 591
+      },
+      "v": {
+        "loa_half_width_ms": 7.637864918713172,
+        "mean_onboard_sigma_ms": 1.0127208942453803,
+        "ratio": 7.541924889783633,
+        "n_windows_with_variance": 591
+      }
+    },
+    "fixed_wing_or_vtol|older|era5_10m": {
+      "u": {
+        "loa_half_width_ms": 4.598325361631987,
+        "mean_onboard_sigma_ms": 0.465025544005774,
+        "ratio": 9.888328546474193,
+        "n_windows_with_variance": 468
+      },
+      "v": {
+        "loa_half_width_ms": 4.985159054972731,
+        "mean_onboard_sigma_ms": 0.5392989315234751,
+        "ratio": 9.243776991899589,
+        "n_windows_with_variance": 468
+      }
+    },
+    "fixed_wing_or_vtol|within_window|era5_10m": {
+      "u": {
+        "loa_half_width_ms": 4.514320561854629,
+        "mean_onboard_sigma_ms": 1.0163797868833992,
+        "ratio": 4.441568614520784,
+        "n_windows_with_variance": 591
+      },
+      "v": {
+        "loa_half_width_ms": 7.329471076745306,
+        "mean_onboard_sigma_ms": 1.0127208942453803,
+        "ratio": 7.237404815476622,
+        "n_windows_with_variance": 591
+      }
+    }
+  },
+  "useful_proxy": {
+    "h1-fixed_wing_or_vtol|older-era5_100m-sample": false,
+    "h1-fixed_wing_or_vtol|within_window-era5_100m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_100m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_100m-reweighted": false,
+    "h1-fixed_wing_or_vtol|older-era5_10m-sample": false,
+    "h1-fixed_wing_or_vtol|within_window-era5_10m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_10m-sample": false,
+    "h1-all_fixed_wing_or_vtol-era5_10m-reweighted": false,
+    "h1-airframe=fixed_wing-era5_100m-sample": false,
+    "h1-airframe=fixed_wing-era5_100m-reweighted": false,
+    "h1-airframe=vtol-era5_100m-sample": false,
+    "h1-airframe=vtol-era5_100m-reweighted": false,
+    "h1-airframe=fixed_wing-era5_10m-sample": false,
+    "h1-airframe=fixed_wing-era5_10m-reweighted": false,
+    "h1-airframe=vtol-era5_10m-sample": false,
+    "h1-airframe=vtol-era5_10m-reweighted": false,
+    "h1-airspeed_topic=absent-era5_100m-sample": false,
+    "h1-airspeed_topic=absent-era5_100m-reweighted": false,
+    "h1-airspeed_topic=present-era5_100m-sample": false,
+    "h1-airspeed_topic=present-era5_100m-reweighted": false,
+    "h1-airspeed_topic=absent-era5_10m-sample": false,
+    "h1-airspeed_topic=absent-era5_10m-reweighted": false,
+    "h1-airspeed_topic=present-era5_10m-sample": false,
+    "h1-airspeed_topic=present-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_100m-sample": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_100m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_50_to_120m-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_ge_120m-era5_10m-reweighted": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_10m-sample": false,
+    "h1-altitude_proxy=agl_proxy_lt_50m-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_10m-reweighted": false,
+    "h1-season=DJF-era5_100m-sample": false,
+    "h1-season=DJF-era5_100m-reweighted": false,
+    "h1-season=JJA-era5_100m-sample": false,
+    "h1-season=JJA-era5_100m-reweighted": false,
+    "h1-season=MAM-era5_100m-sample": false,
+    "h1-season=MAM-era5_100m-reweighted": false,
+    "h1-season=SON-era5_100m-sample": false,
+    "h1-season=SON-era5_100m-reweighted": false,
+    "h1-season=DJF-era5_10m-sample": false,
+    "h1-season=DJF-era5_10m-reweighted": false,
+    "h1-season=JJA-era5_10m-sample": false,
+    "h1-season=JJA-era5_10m-reweighted": false,
+    "h1-season=MAM-era5_10m-sample": false,
+    "h1-season=MAM-era5_10m-reweighted": false,
+    "h1-season=SON-era5_10m-sample": false,
+    "h1-season=SON-era5_10m-reweighted": false
+  },
+  "note": "Neither source is ground truth. These are limits of agreement between two measurement methods; differences are formed as era5 minus onboard. The 3.0 m s-1 usefulness band is asserted rather than cited: see adr/0015 and docs/06-limitations.md."
+}
