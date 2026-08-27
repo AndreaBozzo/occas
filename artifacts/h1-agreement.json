@@ -7,18 +7,128 @@
       "n_vehicles": 384,
       "n_windows": 468,
       "frame_size": 10497,
-      "design_weight": 27.264935064935067
+      "n_drawn": 800,
+      "design_weight": 13.12125,
+      "implied_usable_population": 5051.68125
     },
     "fixed_wing_or_vtol|within_window": {
       "n_runs": 486,
       "n_vehicles": 484,
       "n_windows": 591,
       "frame_size": 6185,
-      "design_weight": 12.72633744855967
+      "n_drawn": 800,
+      "design_weight": 7.73125,
+      "implied_usable_population": 3757.3875
     }
   },
-  "validation_artifacts": 8,
+  "validation_artifacts": 52,
   "suppressed_strata": {},
+  "implied_usable_population": {
+    "fixed_wing_or_vtol|older": 5051.68125,
+    "fixed_wing_or_vtol|within_window": 3757.3875
+  },
+  "regimes": {
+    "airframe": {
+      "cells": {
+        "fixed_wing": {
+          "n_runs": 419,
+          "n_vehicles": 415,
+          "n_windows": 504
+        },
+        "vtol": {
+          "n_runs": 452,
+          "n_vehicles": 452,
+          "n_windows": 555
+        }
+      },
+      "suppressed": {}
+    },
+    "airspeed_topic": {
+      "cells": {
+        "absent": {
+          "n_runs": 120,
+          "n_vehicles": 120,
+          "n_windows": 135
+        },
+        "present": {
+          "n_runs": 751,
+          "n_vehicles": 747,
+          "n_windows": 924
+        }
+      },
+      "suppressed": {}
+    },
+    "estimator_sigma": {
+      "cells": {
+        "sigma_0.5_to_1.0": {
+          "n_runs": 157,
+          "n_vehicles": 157,
+          "n_windows": 169
+        },
+        "sigma_ge_1.0": {
+          "n_runs": 53,
+          "n_vehicles": 53,
+          "n_windows": 54
+        },
+        "sigma_lt_0.5": {
+          "n_runs": 693,
+          "n_vehicles": 690,
+          "n_windows": 836
+        }
+      },
+      "suppressed": {}
+    },
+    "season": {
+      "cells": {
+        "DJF": {
+          "n_runs": 169,
+          "n_vehicles": 169,
+          "n_windows": 199
+        },
+        "JJA": {
+          "n_runs": 277,
+          "n_vehicles": 275,
+          "n_windows": 344
+        },
+        "MAM": {
+          "n_runs": 213,
+          "n_vehicles": 213,
+          "n_windows": 256
+        },
+        "SON": {
+          "n_runs": 212,
+          "n_vehicles": 212,
+          "n_windows": 260
+        }
+      },
+      "suppressed": {}
+    }
+  },
+  "regime_axes_declared_but_not_cut": {
+    "firmware_version": "not carried by the sampling frame",
+    "altitude_agl": "needs a DEM this project has not built; height above takeoff is the available proxy and requires a pass over the converted runs",
+    "topography": "same DEM dependency"
+  },
+  "one_window_per_run": {
+    "n_runs": 871,
+    "n_windows": 871,
+    "era5_100m": {
+      "bias_u_all_windows": 0.013133152994419065,
+      "bias_u_one_per_run": -0.02087309617021378,
+      "bias_v_all_windows": 0.09601159919177862,
+      "bias_v_one_per_run": 0.13516132946120415,
+      "p97_5_all_windows": 9.18785650679568,
+      "p97_5_one_per_run": 9.226467486306465
+    },
+    "era5_10m": {
+      "bias_u_all_windows": -0.04337956949256457,
+      "bias_u_one_per_run": -0.0809027336364873,
+      "bias_v_all_windows": 0.024323136576652936,
+      "bias_v_one_per_run": 0.06025509898367566,
+      "p97_5_all_windows": 8.422458696456692,
+      "p97_5_one_per_run": 8.363329074952082
+    }
+  },
   "windows_without_complete_era5": 0,
   "tolerance_sensitivity": {
     "era5_100m": {
@@ -30,7 +140,7 @@
             "n_windows": 192,
             "bias_u": 0.21132306128276523,
             "bias_v": -0.1576223837260602,
-            "vector_difference_loa_upper": 8.143254946142791,
+            "vector_difference_p97_5": 8.930958578089218,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -39,7 +149,7 @@
             "n_windows": 287,
             "bias_u": 0.12123319701515749,
             "bias_v": -0.0616004920180895,
-            "vector_difference_loa_upper": 7.077812535366823,
+            "vector_difference_p97_5": 8.31753985165455,
             "useful_proxy": false
           }
         },
@@ -53,7 +163,7 @@
             "n_windows": 436,
             "bias_u": 0.12033358512165415,
             "bias_v": -0.03838569469578922,
-            "vector_difference_loa_upper": 7.743943463428432,
+            "vector_difference_p97_5": 9.11591668470177,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -62,7 +172,7 @@
             "n_windows": 563,
             "bias_u": -0.10923225419232083,
             "bias_v": 0.11660322630281203,
-            "vector_difference_loa_upper": 10.149465066677946,
+            "vector_difference_p97_5": 9.485349261671647,
             "useful_proxy": false
           }
         },
@@ -76,7 +186,7 @@
             "n_windows": 468,
             "bias_u": 0.15140686024704758,
             "bias_v": 0.0205068203411667,
-            "vector_difference_loa_upper": 7.74245835331433,
+            "vector_difference_p97_5": 8.76178937060883,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -85,7 +195,7 @@
             "n_windows": 591,
             "bias_u": -0.0963627776218756,
             "bias_v": 0.15580218548972513,
-            "vector_difference_loa_upper": 10.009889308435696,
+            "vector_difference_p97_5": 9.351156565446239,
             "useful_proxy": false
           }
         },
@@ -99,7 +209,7 @@
             "n_windows": 468,
             "bias_u": 0.15140686024704758,
             "bias_v": 0.0205068203411667,
-            "vector_difference_loa_upper": 7.74245835331433,
+            "vector_difference_p97_5": 8.76178937060883,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -108,7 +218,7 @@
             "n_windows": 591,
             "bias_u": -0.0963627776218756,
             "bias_v": 0.15580218548972513,
-            "vector_difference_loa_upper": 10.009889308435696,
+            "vector_difference_p97_5": 9.351156565446239,
             "useful_proxy": false
           }
         },
@@ -124,7 +234,7 @@
             "n_windows": 192,
             "bias_u": -0.007723460649121383,
             "bias_v": -0.1540820730278092,
-            "vector_difference_loa_upper": 7.237287060390062,
+            "vector_difference_p97_5": 8.602059492212216,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -133,7 +243,7 @@
             "n_windows": 287,
             "bias_u": 0.15531892568457328,
             "bias_v": -0.10178913948725121,
-            "vector_difference_loa_upper": 6.462330116903568,
+            "vector_difference_p97_5": 8.354904513402687,
             "useful_proxy": false
           }
         },
@@ -147,7 +257,7 @@
             "n_windows": 436,
             "bias_u": -0.015114495664943677,
             "bias_v": -0.09286696566661713,
-            "vector_difference_loa_upper": 7.0305544323107885,
+            "vector_difference_p97_5": 8.881075704361285,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -156,7 +266,7 @@
             "n_windows": 563,
             "bias_u": -0.08041640160499616,
             "bias_v": 0.04704166958008803,
-            "vector_difference_loa_upper": 9.64185024837682,
+            "vector_difference_p97_5": 8.435691987148845,
             "useful_proxy": false
           }
         },
@@ -170,7 +280,7 @@
             "n_windows": 468,
             "bias_u": -0.007491272200201294,
             "bias_v": -0.027586925223381707,
-            "vector_difference_loa_upper": 7.020313731834008,
+            "vector_difference_p97_5": 9.054693436812027,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -179,7 +289,7 @@
             "n_windows": 591,
             "bias_u": -0.07179872876976594,
             "bias_v": 0.0654295814538377,
-            "vector_difference_loa_upper": 9.472197427765916,
+            "vector_difference_p97_5": 8.405922464231802,
             "useful_proxy": false
           }
         },
@@ -193,7 +303,7 @@
             "n_windows": 468,
             "bias_u": -0.007491272200201294,
             "bias_v": -0.027586925223381707,
-            "vector_difference_loa_upper": 7.020313731834008,
+            "vector_difference_p97_5": 9.054693436812027,
             "useful_proxy": false
           },
           "fixed_wing_or_vtol|within_window": {
@@ -202,7 +312,7 @@
             "n_windows": 591,
             "bias_u": -0.07179872876976594,
             "bias_v": 0.0654295814538377,
-            "vector_difference_loa_upper": 9.472197427765916,
+            "vector_difference_p97_5": 8.405922464231802,
             "useful_proxy": false
           }
         },
@@ -224,30 +334,36 @@
         "n_defined": 362,
         "n_undefined": 106,
         "mean_absolute_deg": 37.475788241609024,
-        "limits_of_agreement_deg": [
-          -113.07401235084555,
-          96.09506284942574
-        ]
+        "median_absolute_deg": 23.999319733242885,
+        "p90_absolute_deg": 97.86525563454056,
+        "p95_absolute_deg": 124.73587902836188,
+        "circular_mean_deg": -7.521911709845738,
+        "circular_resultant_length": 0.6865625498424859,
+        "circular_sd_deg": 49.68954429050181
       },
       "2.0": {
         "speed_threshold_ms": 2.0,
         "n_defined": 259,
         "n_undefined": 209,
         "mean_absolute_deg": 27.57758746310863,
-        "limits_of_agreement_deg": [
-          -86.770325117552,
-          76.2511866480086
-        ]
+        "median_absolute_deg": 17.126895514117166,
+        "p90_absolute_deg": 70.28622819910262,
+        "p95_absolute_deg": 97.01536455768104,
+        "circular_mean_deg": -4.1217569371000335,
+        "circular_resultant_length": 0.7985455023834649,
+        "circular_sd_deg": 38.432045016828084
       },
       "3.0": {
         "speed_threshold_ms": 3.0,
         "n_defined": 176,
         "n_undefined": 292,
         "mean_absolute_deg": 23.016386245072823,
-        "limits_of_agreement_deg": [
-          -74.95337123315656,
-          68.56598903839256
-        ]
+        "median_absolute_deg": 11.82618373370282,
+        "p90_absolute_deg": 60.18697307405611,
+        "p95_absolute_deg": 82.71413676807546,
+        "circular_mean_deg": -2.09934418292161,
+        "circular_resultant_length": 0.8430670612898572,
+        "circular_sd_deg": 33.47846607214313
       }
     },
     "fixed_wing_or_vtol|within_window|era5_100m": {
@@ -256,30 +372,36 @@
         "n_defined": 488,
         "n_undefined": 103,
         "mean_absolute_deg": 35.37047606442047,
-        "limits_of_agreement_deg": [
-          -104.05653444718087,
-          99.0349761106497
-        ]
+        "median_absolute_deg": 22.817572955130245,
+        "p90_absolute_deg": 88.32466984092471,
+        "p95_absolute_deg": 122.07404599914588,
+        "circular_mean_deg": -3.3386040907454584,
+        "circular_resultant_length": 0.7108732349142483,
+        "circular_sd_deg": 47.33485588923479
       },
       "2.0": {
         "speed_threshold_ms": 2.0,
         "n_defined": 371,
         "n_undefined": 220,
         "mean_absolute_deg": 31.834143789067475,
-        "limits_of_agreement_deg": [
-          -97.09236276593623,
-          92.94383542715869
-        ]
+        "median_absolute_deg": 18.90749570441423,
+        "p90_absolute_deg": 78.9553109251828,
+        "p95_absolute_deg": 116.59945247965379,
+        "circular_mean_deg": -3.3073781917926977,
+        "circular_resultant_length": 0.7508012810161719,
+        "circular_sd_deg": 43.37969892064564
       },
       "3.0": {
         "speed_threshold_ms": 3.0,
         "n_defined": 244,
         "n_undefined": 347,
         "mean_absolute_deg": 28.300440550811285,
-        "limits_of_agreement_deg": [
-          -87.99385725244757,
-          90.28869754793827
-        ]
+        "median_absolute_deg": 15.328411554686582,
+        "p90_absolute_deg": 64.57888114550758,
+        "p95_absolute_deg": 105.21215128419992,
+        "circular_mean_deg": -1.0607971104862277,
+        "circular_resultant_length": 0.7864216369330116,
+        "circular_sd_deg": 39.717358037728445
       }
     },
     "fixed_wing_or_vtol|older|era5_10m": {
@@ -288,30 +410,36 @@
         "n_defined": 346,
         "n_undefined": 122,
         "mean_absolute_deg": 35.5597223597139,
-        "limits_of_agreement_deg": [
-          -105.69788427691363,
-          94.87677330831856
-        ]
+        "median_absolute_deg": 22.571120824536592,
+        "p90_absolute_deg": 92.44325752618295,
+        "p95_absolute_deg": 110.58647743699741,
+        "circular_mean_deg": -5.150867502778874,
+        "circular_resultant_length": 0.7075942476387035,
+        "circular_sd_deg": 47.65441545364792
       },
       "2.0": {
         "speed_threshold_ms": 2.0,
         "n_defined": 240,
         "n_undefined": 228,
         "mean_absolute_deg": 26.39150205702915,
-        "limits_of_agreement_deg": [
-          -83.80992241216677,
-          74.55605868951511
-        ]
+        "median_absolute_deg": 15.906694070713897,
+        "p90_absolute_deg": 69.95783850390943,
+        "p95_absolute_deg": 96.65607509450051,
+        "circular_mean_deg": -3.640212121647997,
+        "circular_resultant_length": 0.8088958493018875,
+        "circular_sd_deg": 37.31579683456959
       },
       "3.0": {
         "speed_threshold_ms": 3.0,
         "n_defined": 133,
         "n_undefined": 335,
         "mean_absolute_deg": 21.96716553583996,
-        "limits_of_agreement_deg": [
-          -70.14451326454164,
-          71.1387406758607
-        ]
+        "median_absolute_deg": 11.168263431277694,
+        "p90_absolute_deg": 63.04416727456754,
+        "p95_absolute_deg": 89.78054296137144,
+        "circular_mean_deg": 0.826472701036949,
+        "circular_resultant_length": 0.8457854156785842,
+        "circular_sd_deg": 33.16130014463124
       }
     },
     "fixed_wing_or_vtol|within_window|era5_10m": {
@@ -320,30 +448,36 @@
         "n_defined": 473,
         "n_undefined": 118,
         "mean_absolute_deg": 35.05145496344737,
-        "limits_of_agreement_deg": [
-          -103.23752120166534,
-          99.35662896800557
-        ]
+        "median_absolute_deg": 22.609769549474066,
+        "p90_absolute_deg": 87.56259241667472,
+        "p95_absolute_deg": 122.7146010726083,
+        "circular_mean_deg": -1.729965791321727,
+        "circular_resultant_length": 0.714043849518964,
+        "circular_sd_deg": 47.025205507109135
       },
       "2.0": {
         "speed_threshold_ms": 2.0,
         "n_defined": 308,
         "n_undefined": 283,
         "mean_absolute_deg": 30.038928855420014,
-        "limits_of_agreement_deg": [
-          -92.08152982314145,
-          89.20941521233853
-        ]
+        "median_absolute_deg": 17.577278226659203,
+        "p90_absolute_deg": 70.20345650705706,
+        "p95_absolute_deg": 109.30098370906168,
+        "circular_mean_deg": -2.3760224483828223,
+        "circular_resultant_length": 0.7705193929643065,
+        "circular_sd_deg": 41.37139789191555
       },
       "3.0": {
         "speed_threshold_ms": 3.0,
         "n_defined": 176,
         "n_undefined": 415,
         "mean_absolute_deg": 23.892321387155242,
-        "limits_of_agreement_deg": [
-          -81.281694676658,
-          74.7048884132211
-        ]
+        "median_absolute_deg": 12.336030428451295,
+        "p90_absolute_deg": 57.62840988227714,
+        "p95_absolute_deg": 79.64361414942265,
+        "circular_mean_deg": -1.883843396926521,
+        "circular_resultant_length": 0.8332767850563947,
+        "circular_sd_deg": 34.604887989903105
       }
     }
   },
@@ -413,7 +547,51 @@
     "h1-fixed_wing_or_vtol|older-era5_10m-sample": false,
     "h1-fixed_wing_or_vtol|within_window-era5_10m-sample": false,
     "h1-all_fixed_wing_or_vtol-era5_10m-sample": false,
-    "h1-all_fixed_wing_or_vtol-era5_10m-reweighted": false
+    "h1-all_fixed_wing_or_vtol-era5_10m-reweighted": false,
+    "h1-airframe=fixed_wing-era5_100m-sample": false,
+    "h1-airframe=fixed_wing-era5_100m-reweighted": false,
+    "h1-airframe=vtol-era5_100m-sample": false,
+    "h1-airframe=vtol-era5_100m-reweighted": false,
+    "h1-airframe=fixed_wing-era5_10m-sample": false,
+    "h1-airframe=fixed_wing-era5_10m-reweighted": false,
+    "h1-airframe=vtol-era5_10m-sample": false,
+    "h1-airframe=vtol-era5_10m-reweighted": false,
+    "h1-airspeed_topic=absent-era5_100m-sample": false,
+    "h1-airspeed_topic=absent-era5_100m-reweighted": false,
+    "h1-airspeed_topic=present-era5_100m-sample": false,
+    "h1-airspeed_topic=present-era5_100m-reweighted": false,
+    "h1-airspeed_topic=absent-era5_10m-sample": false,
+    "h1-airspeed_topic=absent-era5_10m-reweighted": false,
+    "h1-airspeed_topic=present-era5_10m-sample": false,
+    "h1-airspeed_topic=present-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_100m-sample": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_100m-reweighted": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_0.5_to_1.0-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_ge_1.0-era5_10m-reweighted": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_10m-sample": false,
+    "h1-estimator_sigma=sigma_lt_0.5-era5_10m-reweighted": false,
+    "h1-season=DJF-era5_100m-sample": false,
+    "h1-season=DJF-era5_100m-reweighted": false,
+    "h1-season=JJA-era5_100m-sample": false,
+    "h1-season=JJA-era5_100m-reweighted": false,
+    "h1-season=MAM-era5_100m-sample": false,
+    "h1-season=MAM-era5_100m-reweighted": false,
+    "h1-season=SON-era5_100m-sample": false,
+    "h1-season=SON-era5_100m-reweighted": false,
+    "h1-season=DJF-era5_10m-sample": false,
+    "h1-season=DJF-era5_10m-reweighted": false,
+    "h1-season=JJA-era5_10m-sample": false,
+    "h1-season=JJA-era5_10m-reweighted": false,
+    "h1-season=MAM-era5_10m-sample": false,
+    "h1-season=MAM-era5_10m-reweighted": false,
+    "h1-season=SON-era5_10m-sample": false,
+    "h1-season=SON-era5_10m-reweighted": false
   },
   "note": "Neither source is ground truth. These are limits of agreement between two measurement methods; differences are formed as era5 minus onboard. The 3.0 m s-1 usefulness band is asserted rather than cited: see adr/0015 and docs/06-limitations.md."
 }
