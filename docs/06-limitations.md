@@ -30,6 +30,18 @@ work is added here the day it is discovered.
 - A DEM is not an obstacle map.
 - An EKF estimate is not a measurement.
 - A logged parameter is a configuration, not a behaviour.
+- **The 3.0 m s⁻¹ usefulness band is asserted, not cited.** H1 calls the reanalysis a
+  useful proxy in a regime when the upper 95% limit of agreement on the vector
+  difference magnitude is at most 3.0 m s⁻¹
+  ([`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md)). It was sized
+  against manufacturer-declared small-UAS wind limits of roughly 10–12 m s⁻¹, so that
+  a proxy carrying 3 m s⁻¹ of disagreement still leaves a usable margin against a
+  10 m s⁻¹ limit. No standard states it and no regulator endorses it. It was fixed
+  before any agreement statistic existed, which makes it honest, not authoritative.
+- **EKF2's reported variance is a filter's self-assessment.** The estimator-relative
+  ratio reported beside that band is a second view of the disagreement, not a second
+  source of truth, and it passes most easily where the onboard estimate is least sure
+  of itself.
 
 ## Structural
 

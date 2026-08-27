@@ -263,3 +263,78 @@ def test_an_unrepresentable_clock_is_fatal_for_its_run_only() -> None:
     }
     with pytest.raises(align.NoAbsoluteTime, match="outside representable time"):
         align.clock_anchor(gps)
+
+
+def _one_window_run(tmp_path, *, variance_north: float, variance_east: float):
+    """A one-hour run whose wind variance differs by component. Returns the run dir.
+
+    Six samples of each topic, so no ``few_*_samples`` flag fires and the window under
+    test is an ordinary one rather than a flagged edge case.
+    """
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    run_dir = tmp_path / "0000aaaa-0000-0000-0000-00000000aaaa"
+    run_dir.mkdir()
+    steps = list(range(6))
+    pq.write_table(
+        pa.table(
+            {
+                "time_utc_usec": [UTC_BASE_US + i for i in steps],
+                "timestamp": [BOOT_BASE_US + i for i in steps],
+            }
+        ),
+        run_dir / "vehicle_gps_position.parquet",
+    )
+    pq.write_table(
+        pa.table(
+            {
+                "timestamp": [BOOT_BASE_US + i for i in steps],
+                "windspeed_north": [3.0] * 6,
+                "windspeed_east": [4.0] * 6,
+                "variance_north": [variance_north] * 6,
+                "variance_east": [variance_east] * 6,
+            }
+        ),
+        run_dir / "wind.parquet",
+    )
+    pq.write_table(
+        pa.table(
+            {
+                "timestamp": [BOOT_BASE_US + i for i in steps],
+                "lat": [45.5] * 6,
+                "lon": [9.25] * 6,
+            }
+        ),
+        run_dir / "vehicle_global_position.parquet",
+    )
+    return run_dir
+
+
+def test_the_two_wind_variances_reach_the_window_apart() -> None:
+    """The estimator's uncertainty is a vector, and averaging it answers no question.
+
+    ``adr/0015`` compares a component-wise limit of agreement against the estimator's own
+    sigma on the *same* component. Until 2026-08-27 this function averaged
+    ``variance_north`` and ``variance_east`` into one scalar, which cannot serve that
+    comparison and is ADR-0006's own error -- a vector collapsed to a scalar, then used
+    to make the stronger claim -- one level down.
+
+    The asymmetry here is not hypothetical: the first real run measured after the split
+    reported 0.048 against 0.087, anisotropic by 1.8x.
+    """
+    import tempfile
+    from pathlib import Path as _Path
+
+    with tempfile.TemporaryDirectory() as raw:
+        run_dir = _one_window_run(_Path(raw), variance_north=0.09, variance_east=0.04)
+        windows = align.run_windows(run_dir)
+
+    assert len(windows) == 1
+    window = windows[0]
+    # v is north and u is east, the mapping ADR-0006 fixed and build_pairs relies on.
+    # Averaging would put 0.065 in both, so an assertion that they merely exist passes
+    # against the old code; asserting each carries its own component does not.
+    assert window["onboard_variance_v"] == pytest.approx(0.09)
+    assert window["onboard_variance_u"] == pytest.approx(0.04)
+    assert "onboard_variance" not in window, "the collapsed scalar must not come back"

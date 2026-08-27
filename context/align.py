@@ -208,7 +208,9 @@ def run_windows(
 
     def bucket(moment: datetime) -> dict[str, list]:
         hour = moment.replace(minute=0, second=0, microsecond=0)
-        return buckets.setdefault(hour, {"u": [], "v": [], "var": [], "lat": [], "lon": []})
+        return buckets.setdefault(
+            hour, {"u": [], "v": [], "var_u": [], "var_v": [], "lat": [], "lon": []}
+        )
 
     for ts, north, east, vn, ve in zip(
         _column(wind, "timestamp"),
@@ -223,8 +225,15 @@ def run_windows(
         cell = bucket(anchor.to_utc(ts))
         cell["u"].append(east)  # east component, ADR-0006's "u"
         cell["v"].append(north)
+        # Kept apart, not averaged into one number. ADR-0006's whole argument is that
+        # collapsing a vector quantity into a scalar makes a weaker claim look like a
+        # stronger one, and the estimator's own uncertainty is a vector too: EKF2
+        # constrains wind better along the direction the airspeed vector has varied in
+        # than across it. A single isotropic sigma compared against a component-wise
+        # limit of agreement (adr/0015) would be that same error, one level down.
         if vn is not None and ve is not None:
-            cell["var"].append((vn + ve) / 2)
+            cell["var_u"].append(ve)  # east, ADR-0006's "u"
+            cell["var_v"].append(vn)
 
     for ts, lat, lon in zip(
         _column(position, "timestamp"),
@@ -260,7 +269,8 @@ def run_windows(
                 "window_end": hour + timedelta(hours=1),
                 "onboard_u": _mean(cell["u"]),
                 "onboard_v": _mean(cell["v"]),
-                "onboard_variance": _mean(cell["var"]),
+                "onboard_variance_u": _mean(cell["var_u"]),
+                "onboard_variance_v": _mean(cell["var_v"]),
                 "wind_samples": len(cell["u"]),
                 "position_samples": len(cell["lat"]),
                 "lat": _mean(cell["lat"]),

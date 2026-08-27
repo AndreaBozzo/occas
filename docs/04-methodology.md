@@ -30,6 +30,9 @@ before any outcome is inspected:
   (−180°, 180°], so 359° against 1° is a 2° difference. Reported only where both
   sources exceed a declared speed threshold; below it the window is counted as
   *direction undefined* rather than dropped. That count is part of the result.
+  The threshold is **2.0 m s⁻¹**, swept at 1.0 and 3.0 as a sensitivity table, fixed
+  in [`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md) before any
+  agreement statistic existed.
 - **Vertical reference declared: 100 m primary.** ERA5 single levels publishes
   `100m_u/v_component_of_wind` as well as 10 m. Most of the corpus flies nearer 100 m.
   The 10 m comparison is kept as a secondary, and the gap between the two is reported
@@ -53,6 +56,12 @@ season and geography
 The output of H1 is not a single number. It is a set of **regimes**, each with its own
 agreement statistics, including the regimes in which the reanalysis is **not** a useful
 proxy. Reporting where it fails is a result, not a caveat.
+
+*Useful* is a declared predicate, not a judgement made on the day: the upper 95% limit
+of agreement on the vector difference magnitude at or below **3.0 m s⁻¹**, reported
+beside the estimator-relative ratio per component, both fixed in
+[`adr/0015`](adr/0015-what-makes-the-reanalysis-a-useful-proxy.md). The band is asserted
+rather than cited, and says so wherever it is published.
 
 Where a number over all of them is wanted, it is a *reweighted* one and it says so:
 the H1 draw is 800/800 across retention strata that are 37.1%/62.9% of the frame, so a
